@@ -1,0 +1,191 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        /* Your exact 5-color palette in HSL */
+        --color-0: 221 69% 11%;
+        /* #0B132B */
+        --color-1: 219 48% 20%;
+        /* #1C2541 */
+        --color-2: 213 35% 33%;
+        /* #3A506B */
+        --color-3: 178 54% 60%;
+        /* #5BC0BE */
+        --color-4: 168 100% 82%;
+        /* #6FFFE9 */
+
+        /* Semantic mapping */
+        --background: var(--color-0);
+        --foreground: var(--color-4);
+
+        --card: var(--color-1);
+        --card-foreground: var(--color-4);
+
+        --primary: var(--color-3);
+        /* Teal = main actions */
+        --primary-foreground: var(--color-0);
+
+        --secondary: var(--color-2);
+        /* Mid blue-gray */
+        --secondary-foreground: var(--color-4);
+
+        --muted: var(--color-1);
+        --muted-foreground: var(--color-2);
+
+        --accent: var(--color-3);
+        --accent-foreground: var(--color-0);
+
+        --border: var(--color-2);
+        --input: var(--color-2);
+        --ring: var(--color-3);
+
+        --radius: 0.5rem;
+        --grid-size: 36px;
+    }
+
+    * {
+        box-sizing: border-box;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    html {
+        font-feature-settings: "ss02" 1, "cv05" 1;
+        letter-spacing: -0.01em;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: hsl(var(--background));
+        color: hsl(var(--foreground));
+        font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+        font-weight: 400;
+        line-height: 1.6;
+        overflow-x: hidden;
+
+        /* Subtle cyan glow texture */
+        background-image:
+            radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.06) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, hsl(var(--color-4) / 0.04) 0%, transparent 50%);
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        color: hsl(var(--color-4));
+        font-weight: 600;
+        letter-spacing: -0.02em;
+    }
+
+    a {
+        color: hsl(var(--primary));
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    a:hover {
+        color: hsl(var(--color-4));
+    }
+
+    code,
+    pre,
+    kbd {
+        background: hsl(var(--card));
+        color: hsl(var(--primary));
+        border: 1px solid hsl(var(--border));
+        font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    }
+
+    ::selection {
+        background: hsl(var(--primary) / 0.3);
+        color: hsl(var(--color-0));
+    }
+}
+
+@layer components {
+    .card {
+        @apply bg-card border border-border rounded-lg shadow-xl backdrop-blur-sm;
+    }
+
+    .surface-primary {
+        background: hsl(var(--primary));
+        color: hsl(var(--primary-foreground));
+    }
+
+    .surface-primary:hover {
+        background: hsl(var(--color-4));
+        color: hsl(var(--color-0));
+        box-shadow: 0 0 20px hsl(var(--color-4) / 0.4);
+    }
+
+    .surface-secondary {
+        background: hsl(var(--secondary));
+        color: hsl(var(--color-4));
+        border: 1px solid hsl(var(--border));
+    }
+
+    .glass {
+        background: hsl(var(--card) / 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid hsl(var(--border) / 0.5);
+    }
+}
+
+@layer utilities {
+    .text-glow {
+        text-shadow: 0 0 20px hsl(var(--color-4) / 0.5);
+    }
+
+    .bg-grid {
+        background-image:
+            linear-gradient(hsl(var(--border) / 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(var(--border) / 0.1) 1px, transparent 1px);
+        background-size: var(--grid-size) var(--grid-size);
+    }
+
+    .hover-lift {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px -10px hsl(var(--color-0) / 0.6);
+    }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: hsl(var(--card));
+}
+
+::-webkit-scrollbar-thumb {
+    background: hsl(var(--secondary));
+    border-radius: 5px;
+    border: 2px solid hsl(var(--card));
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary));
+}
+
+/* Animations */
+@keyframes glow {
+    from {
+        box-shadow: 0 0 10px hsl(var(--color-4) / 0.2);
+    }
+
+    to {
+        box-shadow: 0 0 30px hsl(var(--color-4) / 0.5);
+    }
+}
