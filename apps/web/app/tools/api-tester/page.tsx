@@ -216,7 +216,7 @@ export default function ApiTesterPage() {
                     <select
                       value={config.method}
                       onChange={(e) => setConfig({ ...config, method: e.target.value as HttpMethod })}
-                      className='h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      className='h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                     >
                       <option>GET</option>
                       <option>POST</option>
@@ -353,7 +353,7 @@ export default function ApiTesterPage() {
                 <Card>
                   <CardContent className='pt-6'>
                     <h3 className='text-sm font-semibold text-gray-300 mb-3'>Response Headers</h3>
-                    <div className='bg-gray-950 rounded-md p-3 max-h-48 overflow-auto'>
+                    <div className=' rounded-md p-3 max-h-48 overflow-auto'>
                       <pre className='text-xs text-gray-400 font-mono'>{JSON.stringify(response.headers, null, 2)}</pre>
                     </div>
                   </CardContent>
@@ -362,7 +362,7 @@ export default function ApiTesterPage() {
                 <Card>
                   <CardContent className='pt-6'>
                     <h3 className='text-sm font-semibold text-gray-300 mb-3'>Response Body</h3>
-                    <div className='bg-gray-950 rounded-md p-3 max-h-96 overflow-auto'>
+                    <div className=' rounded-md p-3 max-h-96 overflow-auto'>
                       <pre className='text-xs text-gray-300 font-mono whitespace-pre-wrap'>{response.body}</pre>
                     </div>
                   </CardContent>

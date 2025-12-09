@@ -121,7 +121,7 @@ export default function JsonYamlConverterPage() {
   return (
     <div className='h-full flex flex-col'>
       {/* Header */}
-      <div className='border-b border-gray-800 bg-gray-900 p-6'>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-6'>
         <h1 className='text-2xl font-bold text-white mb-2'>JSON ↔ YAML Converter</h1>
         <p className='text-gray-400'>Convert between JSON and YAML formats instantly</p>
       </div>
@@ -137,7 +137,7 @@ export default function JsonYamlConverterPage() {
                   <select
                     value={yamlIndent}
                     onChange={(e) => setYamlIndent(parseInt(e.target.value))}
-                    className='w-full h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    className='w-full h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                   >
                     <option value='2'>2 spaces</option>
                     <option value='4'>4 spaces</option>
@@ -149,7 +149,7 @@ export default function JsonYamlConverterPage() {
                     <select
                       value={jsonIndent}
                       onChange={(e) => setJsonIndent(parseInt(e.target.value))}
-                      className='flex-1 h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      className='flex-1 h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                     >
                       <option value='2'>2 spaces</option>
                       <option value='4'>4 spaces</option>

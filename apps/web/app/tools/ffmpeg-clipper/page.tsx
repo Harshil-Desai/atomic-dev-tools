@@ -166,7 +166,7 @@ export default function FfmpegClipperPage() {
   return (
     <div className='h-full flex flex-col'>
       {/* Header */}
-      <div className='border-b border-gray-800 bg-gray-900 p-6'>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-6'>
         <h1 className='text-2xl font-bold text-white mb-2'>FFmpeg Clipper & Converter</h1>
         <p className='text-gray-400'>Generate FFmpeg commands for clipping and converting videos</p>
       </div>
@@ -227,7 +227,7 @@ export default function FfmpegClipperPage() {
                 <select
                   value={outputFormat}
                   onChange={(e) => setOutputFormat(e.target.value as OutputFormat)}
-                  className='w-full h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  className='w-full h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                 >
                   <option value='mp4'>MP4</option>
                   <option value='avi'>AVI</option>
@@ -248,7 +248,7 @@ export default function FfmpegClipperPage() {
                   <select
                     value={videoCodec}
                     onChange={(e) => setVideoCodec(e.target.value as VideoCodec)}
-                    className='w-full h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    className='w-full h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                   >
                     <option value='h264'>H.264</option>
                     <option value='h265'>H.265</option>
@@ -261,7 +261,7 @@ export default function FfmpegClipperPage() {
                   <select
                     value={audioCodec}
                     onChange={(e) => setAudioCodec(e.target.value as AudioCodec)}
-                    className='w-full h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    className='w-full h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                   >
                     <option value='aac'>AAC</option>
                     <option value='mp3'>MP3</option>
@@ -283,7 +283,7 @@ export default function FfmpegClipperPage() {
                   <select
                     value={qualityPreset}
                     onChange={(e) => setQualityPreset(e.target.value as QualityPreset)}
-                    className='w-full h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    className='w-full h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                   >
                     <option value='low'>Low</option>
                     <option value='medium'>Medium</option>
@@ -304,7 +304,7 @@ export default function FfmpegClipperPage() {
                   <select
                     value={scale}
                     onChange={(e) => setScale(e.target.value)}
-                    className='w-full h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    className='w-full h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                   >
                     <option value=''>Keep Original</option>
                     <option value='720p'>720p (1280x720)</option>

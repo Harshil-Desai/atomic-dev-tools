@@ -130,7 +130,7 @@ export default function FfmpegSubtitleWatermarkPage() {
   return (
     <div className='h-full flex flex-col'>
       {/* Header */}
-      <div className='border-b border-gray-800 bg-gray-900 p-6'>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-6'>
         <h1 className='text-2xl font-bold text-white mb-2'>FFmpeg Subtitle/Watermark Burner</h1>
         <p className='text-gray-400'>Generate FFmpeg commands to burn subtitles or watermarks into videos</p>
       </div>
@@ -222,7 +222,7 @@ export default function FfmpegSubtitleWatermarkPage() {
                     <select
                       value={subtitlePosition}
                       onChange={(e) => setSubtitlePosition(e.target.value)}
-                      className='w-full h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      className='w-full h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                     >
                       <option value='bottom'>Bottom</option>
                       <option value='top'>Top</option>
@@ -247,7 +247,7 @@ export default function FfmpegSubtitleWatermarkPage() {
                     <select
                       value={textPosition}
                       onChange={(e) => setTextPosition(e.target.value)}
-                      className='w-full h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      className='w-full h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                     >
                       <option value='top-left'>Top Left</option>
                       <option value='top-right'>Top Right</option>
@@ -312,7 +312,7 @@ export default function FfmpegSubtitleWatermarkPage() {
                     <select
                       value={imagePosition}
                       onChange={(e) => setImagePosition(e.target.value)}
-                      className='w-full h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      className='w-full h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                     >
                       <option value='top-left'>Top Left</option>
                       <option value='top-right'>Top Right</option>

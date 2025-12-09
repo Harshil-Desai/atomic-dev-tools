@@ -211,7 +211,7 @@ export default function TextEscapePage() {
   return (
     <div className='h-full flex flex-col'>
       {/* Header */}
-      <div className='border-b border-gray-800 bg-gray-900 p-6'>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-6'>
         <h1 className='text-2xl font-bold text-white mb-2'>Text Escape/Unescape</h1>
         <p className='text-gray-400'>Encode or decode text in various formats instantly</p>
       </div>
@@ -226,7 +226,7 @@ export default function TextEscapePage() {
                 <select
                   value={escapeType}
                   onChange={(e) => setEscapeType(e.target.value as EscapeType)}
-                  className='w-full h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  className='w-full h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                 >
                   <option value='url'>URL Encoding</option>
                   <option value='html'>HTML Entities</option>

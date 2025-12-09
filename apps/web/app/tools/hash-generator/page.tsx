@@ -127,7 +127,7 @@ export default function HashGeneratorPage() {
   return (
     <div className='h-full flex flex-col'>
       {/* Header */}
-      <div className='border-b border-gray-800 bg-gray-900 p-6'>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-6'>
         <h1 className='text-2xl font-bold text-white mb-2'>Hash Generator</h1>
         <p className='text-gray-400'>Generate cryptographic hashes for text input</p>
       </div>
@@ -157,7 +157,7 @@ export default function HashGeneratorPage() {
                   {(['md5', 'sha1', 'sha256', 'sha512'] as HashAlgorithm[]).map((algorithm) => (
                     <label
                       key={algorithm}
-                      className='flex items-center gap-2 px-3 py-2 rounded-md border border-gray-700 bg-gray-800 cursor-pointer hover:bg-gray-750'
+                      className='flex items-center gap-2 px-3 py-2 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] cursor-pointer hover:bg-gray-750'
                     >
                       <input
                         type='checkbox'

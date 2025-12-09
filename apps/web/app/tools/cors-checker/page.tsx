@@ -218,7 +218,7 @@ export default function CorsCheckerPage() {
   return (
     <div className='h-full flex flex-col'>
       {/* Header */}
-      <div className='border-b border-gray-800 bg-gray-900 p-6'>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-6'>
         <h1 className='text-2xl font-bold text-white mb-2'>CORS Preflight Checker</h1>
         <p className='text-gray-400'>Test CORS configuration and check if requests are allowed</p>
       </div>
@@ -242,7 +242,7 @@ export default function CorsCheckerPage() {
                 <select
                   value={method}
                   onChange={(e) => setMethod(e.target.value as HttpMethod)}
-                  className='w-full h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  className='w-full h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                 >
                   <option>GET</option>
                   <option>POST</option>

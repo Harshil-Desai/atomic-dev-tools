@@ -227,7 +227,7 @@ export default function CodeFormatterPage() {
   return (
     <div className='h-full flex flex-col'>
       {/* Header */}
-      <div className='border-b border-gray-800 bg-gray-900 p-6'>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-6'>
         <h1 className='text-2xl font-bold text-white mb-2'>Code Minifier/Beautifier</h1>
         <p className='text-gray-400'>Format or minify code in various languages</p>
       </div>
@@ -243,7 +243,7 @@ export default function CodeFormatterPage() {
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value as Language)}
-                    className='w-full h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    className='w-full h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                   >
                     <option value='json'>JSON</option>
                     <option value='javascript'>JavaScript</option>
@@ -256,7 +256,7 @@ export default function CodeFormatterPage() {
                   <select
                     value={indentSize}
                     onChange={(e) => setIndentSize(parseInt(e.target.value))}
-                    className='w-full h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    className='w-full h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                   >
                     <option value='0'>0 (none)</option>
                     <option value='2'>2 spaces</option>

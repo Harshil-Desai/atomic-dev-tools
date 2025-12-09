@@ -149,7 +149,7 @@ export default function FfmpegAudioExtractorPage() {
   return (
     <div className='h-full flex flex-col'>
       {/* Header */}
-      <div className='border-b border-gray-800 bg-gray-900 p-6'>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-6'>
         <h1 className='text-2xl font-bold text-white mb-2'>FFmpeg Audio Extractor</h1>
         <p className='text-gray-400'>Generate FFmpeg commands to extract audio from videos</p>
       </div>
@@ -203,7 +203,7 @@ export default function FfmpegAudioExtractorPage() {
                       const ext = e.target.value;
                       setOutputFile(outputFile.replace(/\.[^.]+$/, '') + '.' + ext);
                     }}
-                    className='w-full h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    className='w-full h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                   >
                     <option value='mp3'>MP3</option>
                     <option value='aac'>AAC</option>
@@ -219,7 +219,7 @@ export default function FfmpegAudioExtractorPage() {
                   <select
                     value={bitrate}
                     onChange={(e) => setBitrate(e.target.value as Bitrate)}
-                    className='w-full h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    className='w-full h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                     disabled={audioFormat === 'flac' || audioFormat === 'wav'}
                   >
                     <option value='128k'>128 kbps (low)</option>
@@ -242,7 +242,7 @@ export default function FfmpegAudioExtractorPage() {
                   <select
                     value={sampleRate}
                     onChange={(e) => setSampleRate(e.target.value as SampleRate)}
-                    className='w-full h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    className='w-full h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                   >
                     <option value='44100'>44.1 kHz (CD quality)</option>
                     <option value='48000'>48 kHz (professional)</option>
@@ -256,7 +256,7 @@ export default function FfmpegAudioExtractorPage() {
                 <select
                   value={channels}
                   onChange={(e) => setChannels(e.target.value as Channels)}
-                  className='w-full h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  className='w-full h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                 >
                   <option value='mono'>Mono</option>
                   <option value='stereo'>Stereo</option>

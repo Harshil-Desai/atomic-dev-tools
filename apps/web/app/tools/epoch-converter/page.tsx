@@ -176,7 +176,7 @@ export default function EpochConverterPage() {
   return (
     <div className='h-full flex flex-col'>
       {/* Header */}
-      <div className='border-b border-gray-800 bg-gray-900 p-6'>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-6'>
         <h1 className='text-2xl font-bold text-white mb-2'>Epoch Time Converter</h1>
         <p className='text-gray-400'>Convert between human-readable dates and Unix timestamps</p>
       </div>
@@ -236,7 +236,7 @@ export default function EpochConverterPage() {
                   <select
                     value={timezone}
                     onChange={(e) => setTimezone(e.target.value as 'UTC' | 'Local')}
-                    className='h-8 px-2 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    className='h-8 px-2 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500'
                   >
                     <option>Local</option>
                     <option>UTC</option>
@@ -276,7 +276,7 @@ export default function EpochConverterPage() {
                       setTimezone(e.target.value as 'UTC' | 'Local');
                       if (epochInput) epochToHuman();
                     }}
-                    className='h-8 px-2 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    className='h-8 px-2 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500'
                   >
                     <option>Local</option>
                     <option>UTC</option>

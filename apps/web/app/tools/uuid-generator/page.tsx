@@ -132,7 +132,7 @@ export default function UuidGeneratorPage() {
   return (
     <div className='h-full flex flex-col'>
       {/* Header */}
-      <div className='border-b border-gray-800 bg-gray-900 p-6'>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-6'>
         <h1 className='text-2xl font-bold text-white mb-2'>UUID Generator</h1>
         <p className='text-gray-400'>Generate UUIDs (v4 random or v7 timestamp-based)</p>
       </div>
@@ -148,7 +148,7 @@ export default function UuidGeneratorPage() {
                   <select
                     value={version}
                     onChange={(e) => setVersion(e.target.value as UuidVersion)}
-                    className='w-full h-10 px-3 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    className='w-full h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                   >
                     <option value='v4'>UUID v4 (Random)</option>
                     <option value='v7'>UUID v7 (Timestamp-based)</option>

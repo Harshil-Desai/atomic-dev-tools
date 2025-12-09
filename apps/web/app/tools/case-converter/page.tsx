@@ -93,7 +93,7 @@ export default function CaseConverterPage() {
   return (
     <div className='h-full flex flex-col'>
       {/* Header */}
-      <div className='border-b border-gray-800 bg-gray-900 p-6'>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-6'>
         <h1 className='text-2xl font-bold text-white mb-2'>String Case Converter</h1>
         <p className='text-gray-400'>Convert text between different case formats with one click</p>
       </div>

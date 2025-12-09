@@ -47,28 +47,44 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variants = {
       default: cn(
-        'surface-primary border border-primary/40 shadow-lg',
-        'hover:shadow-xl hover:shadow-primary/30',
-        'active:scale-[0.98] focus-visible:ring-primary/60'
+        // Primary button with white
+        'bg-white text-black border border-white/20',
+        'hover:bg-gray-200 hover:border-white/40 hover:shadow-md hover:shadow-white/10',
+        'active:scale-[0.98] focus-visible:ring-white/50'
       ),
       secondary: cn(
-        'bg-secondary/80 border border-border text-foreground backdrop-blur-sm',
-        'hover:bg-secondary hover:text-color-4 hover:border-primary/50',
-        'focus-visible:ring-primary/50'
+        // Secondary button with medium grey
+        'bg-[#404040] text-[#F2F2F2] border border-[#404040]/30',
+        'hover:border-[#404040]/50 hover:bg-[#4A4A4A]',
+        'active:scale-[0.98] focus-visible:ring-[#404040]/50'
       ),
       outline: cn(
-        'border border-secondary text-secondary bg-transparent',
-        'hover:border-primary hover:text-primary hover:bg-primary/10'
+        // Outline with grey border
+        'border border-[#333333] bg-transparent text-[#D9D9D9]',
+        'hover:border-white hover:text-white hover:bg-white/5',
+        'active:bg-white/10 focus-visible:ring-white/50',
+        'transition-all duration-200'
       ),
       ghost: cn(
-        'text-muted-foreground hover:text-foreground hover:bg-card/70'
+        // Ghost with muted colors
+        'text-[#999999] bg-transparent',
+        'hover:text-[#F2F2F2] hover:bg-white/10',
+        'active:bg-white/20 focus-visible:ring-white/50',
+        'rounded-md transition-colors duration-150'
       ),
       destructive: cn(
-        'bg-red-500/20 text-red-400 border border-red-500/30', // fallback if you ever need it
-        'hover:bg-red-500/30'
+        // Destructive with dark grey
+        'bg-[#2A2A2A] text-[#F2F2F2] border border-[#333333]',
+        'hover:bg-[#1C1C1C] hover:border-[#404040]',
+        'active:scale-[0.98] focus-visible:ring-[#404040]/50',
+        'transition-all duration-200 shadow-sm'
       ),
       link: cn(
-        'text-primary hover:text-color-4 underline-offset-4 hover:underline'
+        // Link with white color
+        'text-white bg-transparent p-0 underline-offset-4',
+        'hover:text-[#D9D9D9] hover:underline',
+        'focus-visible:ring-white/50 focus-visible:outline-none',
+        'transition-colors duration-150'
       ),
     };
 
@@ -95,19 +111,19 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const getSpinnerColor = () => {
       switch (variant) {
         case 'default':
-          return 'text-primary-foreground';
+          return 'text-black';
         case 'secondary':
-          return 'text-secondary-foreground';
+          return 'text-white';
         case 'destructive':
-          return 'text-accent-foreground';
+          return 'text-white';
         case 'outline':
-          return 'text-primary';
+          return 'text-white';
         case 'ghost':
-          return 'text-muted-foreground';
+          return 'text-white';
         case 'link':
-          return 'text-primary';
+          return 'text-white';
         default:
-          return 'text-foreground';
+          return 'text-white';
       }
     };
 
@@ -129,29 +145,35 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const shimmerEffect = variant === 'default' && !disabled && !isLoading && (
       <motion.div
-        className='absolute inset-0 -z-10 bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent'
+        className='absolute inset-0 -z-10 bg-gradient-to-r from-transparent via-gray-300/30 to-transparent'
+        style={{ transform: 'translateZ(0)' }}
         initial={{ x: '-100%' }}
         animate={{ x: '200%' }}
-        transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
+        transition={{
+          duration: 2.5,
+          repeat: Infinity,
+          repeatType: 'loop',
+          ease: 'linear',
+        }}
       />
     );
 
     const getRippleColor = () => {
       switch (variant) {
         case 'default':
-          return 'bg-primary-foreground/30';
+          return 'bg-black/30';
         case 'secondary':
-          return 'bg-secondary-foreground/30';
+          return 'bg-white/20';
         case 'destructive':
-          return 'bg-accent-foreground/30';
+          return 'bg-white/20';
         case 'outline':
-          return 'bg-primary/30';
+          return 'bg-white/20';
         case 'ghost':
-          return 'bg-foreground/20';
+          return 'bg-white/20';
         case 'link':
-          return 'bg-primary/30';
+          return 'bg-white/20';
         default:
-          return 'bg-white/30';
+          return 'bg-white/20';
       }
     };
 

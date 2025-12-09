@@ -23,7 +23,7 @@ export default function ${pascalCase}Page() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="border-b border-gray-800 bg-gray-900 p-6">
+      <div className="border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-6">
         <h1 className="text-2xl font-bold text-white mb-2">${pascalCase.replace(/([A-Z])/g, ' $1').trim()}</h1>
         <p className="text-gray-400">
           Tool description goes here
