@@ -89,17 +89,17 @@ export default function Base64EncoderPage() {
   return (
     <div className='h-full flex flex-col'>
       {/* Header */}
-      <div className='border-b border-border bg-card p-6'>
+      <div className='border-b border-border bg-card p-4 sm:p-5 md:p-6'>
         <div className="flex items-center gap-3 mb-2">
           <div>
-            <h1 className='text-2xl font-semibold text-foreground'>Base64 Encoder/Decoder</h1>
-            <p className='text-sm text-muted-foreground'>Encode or decode text to/from Base64 format instantly</p>
+            <h1 className='text-xl sm:text-2xl font-semibold text-foreground'>Base64 Encoder/Decoder</h1>
+            <p className='text-xs sm:text-sm text-muted-foreground'>Encode or decode text to/from Base64 format instantly</p>
           </div>
         </div>
       </div>
       {/* Content */}
-      <div className='flex-1 overflow-auto p-6'>
-        <div className='max-w-6xl mx-auto grid lg:grid-cols-2 gap-6'>
+      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
+        <div className='max-w-6xl mx-auto flex flex-col md:flex-row gap-6'>
           {/* Input Panel */}
           <div className='space-y-4'>
             <Card>

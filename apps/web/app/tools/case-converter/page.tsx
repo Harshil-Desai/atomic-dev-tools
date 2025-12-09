@@ -93,17 +93,17 @@ export default function CaseConverterPage() {
   return (
     <div className='h-full flex flex-col'>
       {/* Header */}
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-6'>
-        <h1 className='text-2xl font-bold text-white mb-2'>String Case Converter</h1>
-        <p className='text-gray-400'>Convert text between different case formats with one click</p>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
+        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>String Case Converter</h1>
+        <p className='text-xs sm:text-sm text-gray-400'>Convert text between different case formats with one click</p>
       </div>
       {/* Content */}
-      <div className='flex-1 overflow-auto p-6'>
+      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
         <div className='max-w-6xl mx-auto space-y-6'>
           {/* Input */}
           <Card>
             <CardContent className='pt-6 space-y-4'>
-              <label className='block text-sm font-medium text-gray-300'>Input Text</label>
+              <label className='block text-xs sm:text-sm font-medium text-gray-300'>Input Text</label>
               <Textarea
                 placeholder='Enter text to convert...'
                 value={input}
@@ -135,8 +135,8 @@ export default function CaseConverterPage() {
           {input.trim() && (
             <Card>
               <CardContent className='pt-6'>
-                <h3 className='text-sm font-semibold text-gray-300 mb-3'>Live Preview - All Formats</h3>
-                <div className='grid md:grid-cols-2 gap-4'>
+                <h3 className='text-xs sm:text-sm font-semibold text-gray-300 mb-3'>Live Preview - All Formats</h3>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
                   {caseButtons.map((btn) => {
                     const result = convertToCase(input, btn.type);
                     return (

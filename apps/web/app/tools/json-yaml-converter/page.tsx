@@ -121,17 +121,17 @@ export default function JsonYamlConverterPage() {
   return (
     <div className='h-full flex flex-col'>
       {/* Header */}
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-6'>
-        <h1 className='text-2xl font-bold text-white mb-2'>JSON ↔ YAML Converter</h1>
-        <p className='text-gray-400'>Convert between JSON and YAML formats instantly</p>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
+        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>JSON ↔ YAML Converter</h1>
+        <p className='text-xs sm:text-sm text-gray-400'>Convert between JSON and YAML formats instantly</p>
       </div>
       {/* Content */}
-      <div className='flex-1 overflow-auto p-6'>
+      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
         <div className='max-w-7xl mx-auto space-y-6'>
           {/* Settings */}
           <Card>
             <CardContent className='pt-6 space-y-4'>
-              <div className='grid md:grid-cols-2 gap-4'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
                 <div>
                   <label className='block text-sm font-medium text-gray-300 mb-2'>YAML Indent</label>
                   <select
@@ -170,7 +170,7 @@ export default function JsonYamlConverterPage() {
           </Card>
 
           {/* Converter */}
-          <div className='grid lg:grid-cols-2 gap-6'>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6'>
             {/* JSON Input */}
             <Card>
               <CardContent className='pt-6 space-y-4'>

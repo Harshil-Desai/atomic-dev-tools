@@ -9,6 +9,7 @@
     "type-check": "turbo run type-check"
   },
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.19",
     "turbo": "^2.0.0",
     "typescript": "^5.3.3"
   },
@@ -17,6 +18,9 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "lucide-react": "^0.263.1"
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.23.25",
+    "lucide-react": "^0.263.1",
+    "tailwind-merge": "^3.4.0"
   }
 }

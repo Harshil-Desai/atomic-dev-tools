@@ -166,17 +166,17 @@ export default function FfmpegClipperPage() {
   return (
     <div className='h-full flex flex-col'>
       {/* Header */}
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-6'>
-        <h1 className='text-2xl font-bold text-white mb-2'>FFmpeg Clipper & Converter</h1>
-        <p className='text-gray-400'>Generate FFmpeg commands for clipping and converting videos</p>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
+        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>FFmpeg Clipper & Converter</h1>
+        <p className='text-xs sm:text-sm text-gray-400'>Generate FFmpeg commands for clipping and converting videos</p>
       </div>
       {/* Content */}
-      <div className='flex-1 overflow-auto p-6'>
+      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
         <div className='max-w-6xl mx-auto space-y-6'>
           {/* Preset Templates */}
           <Card>
             <CardContent className='pt-6'>
-              <h3 className='text-sm font-semibold text-gray-300 mb-3'>Preset Templates</h3>
+              <h3 className='text-xs sm:text-sm font-semibold text-gray-300 mb-3'>Preset Templates</h3>
               <div className='flex flex-wrap gap-2'>
                 <Button onClick={() => applyPreset('quick-gif')} variant='outline' size='sm'>
                   Quick GIF

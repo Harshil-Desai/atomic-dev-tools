@@ -206,18 +206,18 @@ export default function FormatAwareDiffPage() {
   return (
     <div className='h-full flex flex-col'>
       {/* Header */}
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-6'>
-        <h1 className='text-2xl font-bold text-white mb-2'>Format-Aware Diff</h1>
-        <p className='text-gray-400'>Compare two code blocks with normalized whitespace and formatting</p>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
+        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Format-Aware Diff</h1>
+        <p className='text-xs sm:text-sm text-gray-400'>Compare two code blocks with normalized whitespace and formatting</p>
       </div>
       {/* Content */}
-      <div className='flex-1 overflow-auto p-6'>
+      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
         <div className='max-w-7xl mx-auto space-y-6'>
           {/* Input Section */}
-          <div className='grid lg:grid-cols-2 gap-6'>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6'>
             <Card>
               <CardContent className='pt-6 space-y-4'>
-                <label className='block text-sm font-medium text-gray-300'>Original Code</label>
+                <label className='block text-xs sm:text-sm font-medium text-gray-300'>Original Code</label>
                 <Textarea
                   placeholder='Enter original code here...'
                   value={original}

@@ -176,21 +176,21 @@ export default function EpochConverterPage() {
   return (
     <div className='h-full flex flex-col'>
       {/* Header */}
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-6'>
-        <h1 className='text-2xl font-bold text-white mb-2'>Epoch Time Converter</h1>
-        <p className='text-gray-400'>Convert between human-readable dates and Unix timestamps</p>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
+        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Epoch Time Converter</h1>
+        <p className='text-xs sm:text-sm text-gray-400'>Convert between human-readable dates and Unix timestamps</p>
       </div>
       {/* Content */}
-      <div className='flex-1 overflow-auto p-6'>
+      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
         <div className='max-w-6xl mx-auto space-y-6'>
           {/* Current Time */}
           <Card>
             <CardContent className='pt-6'>
-              <div className='flex items-center justify-between'>
+              <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
                 <div>
-                  <h3 className='text-sm font-semibold text-gray-300 mb-1'>Current Epoch Time</h3>
-                  <p className='text-2xl font-mono text-white'>{currentEpoch}</p>
-                  <p className='text-sm text-gray-500 mt-1'>{new Date(currentEpoch * 1000).toLocaleString()}</p>
+                  <h3 className='text-xs sm:text-sm font-semibold text-gray-300 mb-1'>Current Epoch Time</h3>
+                  <p className='text-lg sm:text-2xl font-mono text-white'>{currentEpoch}</p>
+                  <p className='text-xs sm:text-sm text-gray-500 mt-1'>{new Date(currentEpoch * 1000).toLocaleString()}</p>
                 </div>
                 <Button onClick={() => handleCopy(currentEpoch.toString(), 'current')} variant='outline' size='sm'>
                   {copied === 'current' ? <Check className='w-4 h-4' /> : <Copy className='w-4 h-4' />}
