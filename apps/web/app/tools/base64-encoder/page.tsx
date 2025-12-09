@@ -101,7 +101,7 @@ export default function Base64EncoderPage() {
       <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
         <div className='max-w-6xl mx-auto flex flex-col md:flex-row gap-6'>
           {/* Input Panel */}
-          <div className='space-y-4'>
+          <div className='space-y-4 md:w-1/2'>
             <Card>
               <CardContent className='pt-6 space-y-4'>
                 <div className='flex items-center justify-between'>
@@ -139,7 +139,7 @@ export default function Base64EncoderPage() {
             )}
           </div>
           {/* Output Panel */}
-          <div className='space-y-4'>
+          <div className='space-y-4 md:w-1/2'>
             <Card>
               <CardContent className='pt-6 space-y-4'>
                 <div className='flex items-center justify-between'>

@@ -208,7 +208,7 @@ export default function ApiTesterPage() {
         <div className='max-w-6xl mx-auto flex flex-col md:flex-row gap-4 sm:gap-5 md:gap-6'>
           {/* Request Panel */}
           <div className='space-y-4'>
-            <Card>
+            <Card className='md:min-w-96'>
               <CardContent className='pt-6 space-y-4'>
                 <div>
                   <label className='block text-xs sm:text-sm font-medium text-gray-300 mb-2'>Method & URL</label>
