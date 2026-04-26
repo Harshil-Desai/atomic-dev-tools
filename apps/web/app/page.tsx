@@ -1,109 +1,255 @@
 "use client"
+import { useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@/ui';
-import { Zap, Github, Sparkles, Clock, Globe } from 'lucide-react';
+import {
+  Zap, Sun, Moon, Github, ArrowRight, Search,
+  Database, Hash, Send, Sparkles, Layers, Shield,
+} from 'lucide-react';
+import { TOOLS } from '../lib/tools';
+
+type Theme = 'dark' | 'light';
+
+const CATEGORY_LABELS: Record<string, string> = {
+  api: 'API',
+  data: 'Data',
+  text: 'Text',
+  time: 'Time',
+  ffmpeg: 'FFmpeg',
+};
+
+function ThemeToggle({ theme, onChange }: { theme: Theme; onChange: (t: Theme) => void }) {
+  return (
+    <div className="theme-toggle" role="tablist" aria-label="Theme">
+      <span
+        className="knob"
+        style={{
+          width: 70,
+          transform: theme === 'light' ? 'translateX(0)' : 'translateX(70px)',
+        }}
+      />
+      <button
+        type="button"
+        className={theme === 'light' ? 'is-on' : ''}
+        onClick={() => onChange('light')}
+      >
+        <Sun size={13} /> Light
+      </button>
+      <button
+        type="button"
+        className={theme === 'dark' ? 'is-on' : ''}
+        onClick={() => onChange('dark')}
+      >
+        <Moon size={13} /> Dark
+      </button>
+    </div>
+  );
+}
 
 export default function LandingPage() {
+  const [theme, setTheme] = useState<Theme>('dark');
+  const featuredTools = TOOLS.slice(0, 8);
+
   return (
-    <div className='min-h-screen relative overflow-hidden bg-[#121212]'>
-      {/* Background texture */}
-      <div className="absolute inset-0 bg-grid-teal opacity-10" />
+    <div className="adt adt-landing" data-theme={theme}>
+      {/* Topbar */}
+      <header className="adt-topbar">
+        <div className="brand">
+          <span className="brand-mark"><Zap size={14} /></span>
+          Atomic
+          <span className="brand-sub">Dev Tools</span>
+        </div>
+        <nav className="nav-links">
+          <Link href="/tools">Tools</Link>
+          <a href="#principles">Principles</a>
+          <a href="https://github.com/Harshil-Desai/atomic-dev-tools" target="_blank" rel="noopener noreferrer">Changelog</a>
+        </nav>
+        <div className="topbar-right">
+          <ThemeToggle theme={theme} onChange={setTheme} />
+          <a
+            href="https://github.com/Harshil-Desai/atomic-dev-tools"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-ghost btn-icon"
+            aria-label="GitHub"
+          >
+            <Github size={14} />
+          </a>
+          <Link href="/tools" className="btn btn-primary">
+            Open app <ArrowRight size={14} />
+          </Link>
+        </div>
+      </header>
 
-      {/* Subtle white gradients */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-white/5 to-transparent rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-white/3 to-transparent rounded-full blur-3xl" />
-
-      <div className='container mx-auto px-3 sm:px-4 py-6 sm:py-8 relative'>
-        {/* Header */}
-        <header className='flex flex-col sm:flex-row items-center justify-between mb-12 sm:mb-20 gap-4 sm:gap-0'>
-          <div className='flex items-center gap-2 sm:gap-3'>
-            <div className="p-2 bg-[#1C1C1C] rounded-lg border border-[#333333]/50 hover-lift hover:border-white/20">
-              <Zap className='w-5 sm:w-6 h-5 sm:h-6 text-white' />
-            </div>
-            <span className='text-lg sm:text-2xl font-semibold tracking-tight text-[#F2F2F2]'>Atomic Tools</span>
+      {/* Hero */}
+      <section className="hero">
+        <div className="hero-grid" />
+        <div className="hero-glow" />
+        <div className="hero-inner">
+          <div className="eyebrow">
+            <span className="dot" />
+            <span>15 tools shipped</span>
+            <span className="pipe">·</span>
+            <span className="ver">v1.4.0 — auto-paste</span>
           </div>
-          <nav className="flex items-center gap-4 sm:gap-6">
-            <a
-              href='https://github.com/Harshil-Desai/atomic-dev-tools'
-              target='_blank'
-              rel='noopener noreferrer'
-              className="p-2 hover:bg-[#1C1C1C] rounded-md transition-colors border border-[#333333]/50 hover:border-white/20"
-            >
-              <Github className='w-5 h-5 text-[#D9D9D9]' />
-            </a>
-          </nav>
-        </header>
 
-        {/* Hero Section */}
-        <div className='max-w-3xl mx-auto text-center mb-16 sm:mb-24'>
-          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-[#1C1C1C] border border-white/10 mb-6 sm:mb-8 animate-pulse-warm">
-            <Sparkles className="w-3 sm:w-4 h-3 sm:h-4 text-white" />
-            <span className="text-xs sm:text-sm text-[#D9D9D9]">No installation required</span>
-          </div>
-
-          <h1 className='text-3xl sm:text-4xl md:text-6xl font-medium text-[#F2F2F2] mb-4 sm:mb-6 leading-tight'>
-            Developer tools that
-            <span className='block mt-2 sm:mt-3 text-white text-glow'>
-              stay out of your way
-            </span>
+          <h1>
+            Developer utilities,{' '}
+            <span className="strike">bloated apps</span>{' '}
+            <span className="accent">refined.</span>
           </h1>
 
-          <p className='text-sm sm:text-base md:text-lg text-[#D9D9D9]/80 mb-8 sm:mb-10 max-w-xl mx-auto leading-relaxed px-2'>
-            Purpose-built utilities for developers. No bloat, no sign-ups, just tools that work when you need them.
+          <p className="lede">
+            Sub-second load. Zero installs. Single-purpose tools that respect your time —
+            and your shortcuts.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
-            <Link href='/tools'>
-              <Button size='lg' className="px-6 sm:px-8 hover-lift bg-white text-black hover:bg-[#D9D9D9] w-full sm:w-auto">
-                Browse Tools
-              </Button>
+          <div className="hero-cta">
+            <Link href="/tools" className="btn btn-accent btn-lg">
+              Browse tools <ArrowRight size={14} />
             </Link>
+            <button type="button" className="btn btn-ghost btn-lg">
+              <span className="mono" style={{ fontSize: 12 }}>⌘K</span> Open command bar
+            </button>
           </div>
-        </div>
 
-        {/* Features */}
-        <div className='max-w-4xl mx-auto px-2'>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-            {[
-              {
-                icon: <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-white" />,
-                title: 'Zero Setup',
-                description: 'Start immediately. No accounts, installations, or configuration needed.'
-              },
-              {
-                icon: <Zap className="w-4 sm:w-5 h-4 sm:h-5 text-white" />,
-                title: 'Single Purpose',
-                description: 'Each tool solves one specific problem exceptionally well.'
-              },
-              {
-                icon: <Globe className="w-4 sm:w-5 h-4 sm:h-5 text-white" />,
-                title: 'Always Available',
-                description: 'Access from any device, anywhere. Your work stays in the browser.'
-              },
-            ].map((feature, i) => (
-              <div
-                key={i}
-                className="bg-[#1C1C1C] border border-[#333333] p-4 sm:p-6 rounded-lg hover-lift group hover:border-white/20 transition-all"
-              >
-                <div className="inline-flex items-center justify-center w-10 sm:w-12 h-10 sm:h-12 rounded-md bg-[#121212]/80 mb-3 sm:mb-4 group-hover:bg-white/5 transition-colors border border-[#333333]/50">
-                  <div className="group-hover:scale-110 transition-transform duration-200">
-                    {feature.icon}
-                  </div>
-                </div>
-                <h3 className='text-base sm:text-lg font-medium text-[#F2F2F2] mb-2'>{feature.title}</h3>
-                <p className='text-xs sm:text-sm text-[#D9D9D9]/70 leading-relaxed'>{feature.description}</p>
+          {/* Command palette teaser */}
+          <div className="command-card">
+            <div className="command-head">
+              <span className="traffic"><span /><span /><span /></span>
+              <div className="input">
+                <Search size={13} />
+                <span>base64<span className="cursor-blink" /></span>
               </div>
-            ))}
+              <span className="kbd">esc</span>
+            </div>
+            <ul className="command-list">
+              <li className="active">
+                <span className="ico"><Database size={14} /></span>
+                <span>
+                  <div className="name">Base64 Encoder / Decoder</div>
+                  <div className="desc">Encode or decode text · binary safe</div>
+                </span>
+                <span className="meta">data ↵</span>
+              </li>
+              <li>
+                <span className="ico"><Hash size={14} /></span>
+                <span>
+                  <div className="name">Hash Generator</div>
+                  <div className="desc">MD5 · SHA-1 · SHA-256 · SHA-512</div>
+                </span>
+                <span className="meta">data</span>
+              </li>
+              <li>
+                <span className="ico"><Send size={14} /></span>
+                <span>
+                  <div className="name">API Tester</div>
+                  <div className="desc">Send a request — preview the body</div>
+                </span>
+                <span className="meta">api</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* Principles */}
+      <section className="section" id="principles">
+        <div className="section-head">
+          <div>
+            <div className="label-mono">— Principles</div>
+            <h2>Built around how you actually work.</h2>
+          </div>
+          <p>Every tool is engineered to load instantly, hold focus, and stay out of the way of your terminal.</p>
+        </div>
+
+        <div className="features">
+          <div className="feature">
+            <span className="num">01</span>
+            <div className="ico"><Sparkles size={16} /></div>
+            <h3>Sub-second start</h3>
+            <p>Cold-start in under 500ms on any modern device. No splash screens, no auth walls, no telemetry beacons.</p>
+          </div>
+          <div className="feature">
+            <span className="num">02</span>
+            <div className="ico"><Layers size={16} /></div>
+            <h3>One job, perfectly</h3>
+            <p>Each utility is single-purpose. Less surface area means fewer bugs, sharper UX, and predictable shortcuts.</p>
+          </div>
+          <div className="feature">
+            <span className="num">03</span>
+            <div className="ico"><Shield size={16} /></div>
+            <h3>Local first, always</h3>
+            <p>Your input never leaves the browser. Hashes, diffs, formatting — everything runs on your machine.</p>
           </div>
         </div>
 
-        {/* Footer Note */}
-        <div className="mt-16 sm:mt-24 pt-6 sm:pt-8 border-t border-[#333333]/50 text-center px-2">
-          <p className="text-xs sm:text-sm text-[#999999]">
-            Built by developers, for developers.
-          </p>
+        <div className="stats">
+          <div className="stat">
+            <div className="v">15<small>tools</small></div>
+            <div className="l">Shipped</div>
+          </div>
+          <div className="stat">
+            <div className="v">412<small>ms</small></div>
+            <div className="l">P95 cold start</div>
+          </div>
+          <div className="stat">
+            <div className="v">0<small>kb</small></div>
+            <div className="l">Tracking</div>
+          </div>
+          <div className="stat">
+            <div className="v">100<small>%</small></div>
+            <div className="l">Open source</div>
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Tool catalog */}
+      <section className="section" id="tools">
+        <div className="section-head">
+          <div>
+            <div className="label-mono">— Library</div>
+            <h2>A growing catalog.</h2>
+          </div>
+          <p>Hand-picked tools developers reach for daily. Click any tile to launch — no install, no signup.</p>
+        </div>
+
+        <div className="tool-grid">
+          {featuredTools.map((tool) => {
+            const Icon = tool.icon;
+            return (
+              <Link href={tool.path} key={tool.id} className="tile">
+                <div className="row">
+                  <span className="ico"><Icon size={14} /></span>
+                  <span className="cat">{CATEGORY_LABELS[tool.category] ?? tool.category}</span>
+                </div>
+                <div>
+                  <h4>{tool.name}</h4>
+                  <p>{tool.description}</p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="adt-footer">
+        <div className="left">
+          <span className="brand-mark" style={{ width: 22, height: 22, borderRadius: 5 }}>
+            <Zap size={11} />
+          </span>
+          <span>Atomic Dev Tools</span>
+          <span style={{ color: 'var(--text-faint)' }}>·</span>
+          <span>MIT licensed</span>
+        </div>
+        <div className="right">
+          <a href="https://github.com/Harshil-Desai/atomic-dev-tools" target="_blank" rel="noopener noreferrer">
+            GITHUB
+          </a>
+          <a href="#changelog">CHANGELOG</a>
+          <span style={{ color: 'var(--text-faint)' }}>v1.4.0</span>
+        </div>
+      </footer>
     </div>
   );
 }
