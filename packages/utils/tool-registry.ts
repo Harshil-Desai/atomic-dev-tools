@@ -5,7 +5,7 @@ export interface Tool {
     name: string;
     description: string;
     icon: LucideIcon;
-    category: 'api' | 'text' | 'data' | 'ffmpeg' | 'time';
+    category: 'api' | 'text' | 'data' | 'ffmpeg' | 'time' | 'security';
     path: string;
 }
 
@@ -15,4 +15,5 @@ export const TOOL_CATEGORIES = {
     data: 'Data & Encoding',
     ffmpeg: 'FFmpeg Tools',
     time: 'Time & IDs',
+    security: 'Security',
 } as const;
