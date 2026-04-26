@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Card, CardContent, Input } from '@/ui';
 import { Clock, Copy, Check, AlertCircle } from 'lucide-react';
 
@@ -194,13 +194,20 @@ function getNextExecutions(parsed: ParsedCron, count: number): Date[] {
     const mon = cursor.getMonth() + 1;
     const dow = cursor.getDay();
 
+    // Per vixie-cron spec: when BOTH day-of-month and weekday are restricted
+    // (neither is '*'), the job runs if EITHER condition matches (OR/union).
+    // When only one is restricted, use AND so the wildcard field doesn't
+    // inadvertently widen the match.
+    const dayMatch =
+      parsed.day !== '*' && parsed.weekday !== '*'
+        ? matchesField(dayOfMonth, parsed.day, 1, 31) || matchesField(dow, parsed.weekday, 0, 6)
+        : matchesField(dayOfMonth, parsed.day, 1, 31) && matchesField(dow, parsed.weekday, 0, 6);
+
     if (
       matchesField(min, parsed.minute, 0, 59) &&
       matchesField(hr, parsed.hour, 0, 23) &&
       matchesField(mon, parsed.month, 1, 12) &&
-      (parsed.day === '*' || parsed.weekday === '*'
-        ? matchesField(dayOfMonth, parsed.day, 1, 31) || matchesField(dow, parsed.weekday, 0, 6)
-        : matchesField(dayOfMonth, parsed.day, 1, 31) && matchesField(dow, parsed.weekday, 0, 6))
+      dayMatch
     ) {
       results.push(new Date(cursor));
     }
@@ -317,9 +324,10 @@ export default function CronParserPage() {
     : [];
 
   // Initialize on first render
-  useState(() => {
+  useEffect(() => {
     analyze('*/5 * * * *');
-  });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className='h-full flex flex-col'>
