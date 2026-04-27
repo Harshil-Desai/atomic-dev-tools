@@ -3,147 +3,190 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Zap, ChevronDown, ChevronRight, Github, Menu, X } from 'lucide-react';
+import { Zap, ChevronDown, Sun, Moon, Menu, X } from 'lucide-react';
 import { TOOLS } from '@/lib/tools';
 import { TOOL_CATEGORIES } from '@/utils';
 
-export function Sidebar() {
-  const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+type Theme = 'dark' | 'light';
 
-  const toolsByCategory = TOOLS.reduce((acc, tool) => {
-    if (!acc[tool.category]) acc[tool.category] = [];
-    acc[tool.category].push(tool);
-    return acc;
-  }, {} as Record<string, typeof TOOLS>);
-
-  // Initialize collapsed state - all categories expanded by default
-  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
-
-  const toggleCategory = (category: string) => {
-    setCollapsedCategories((prev) => ({
-      ...prev,
-      [category]: !prev[category],
-    }));
-  };
-
-  const closeMobileMenu = () => {
-    setMobileMenuOpen(false);
-  };
-
+function ThemeToggle({ theme, onChange }: { theme: Theme; onChange: (t: Theme) => void }) {
   return (
-    <>
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className='fixed lg:hidden top-4 right-4 z-50 p-2 rounded-md bg-[#1C1C1C] border border-[#333333] hover:border-white/20 transition-colors'
-        aria-label='Toggle menu'
-      >
-        {mobileMenuOpen ? (
-          <X className='w-5 h-5 text-white' />
-        ) : (
-          <Menu className='w-5 h-5 text-white' />
-        )}
+    <div className="theme-toggle" role="tablist" aria-label="Theme">
+      <span
+        className="knob"
+        style={{
+          width: 70,
+          transform: theme === 'light' ? 'translateX(0)' : 'translateX(70px)',
+        }}
+      />
+      <button type="button" className={theme === 'light' ? 'is-on' : ''} onClick={() => onChange('light')}>
+        <Sun size={12} /> Light
       </button>
+      <button type="button" className={theme === 'dark' ? 'is-on' : ''} onClick={() => onChange('dark')}>
+        <Moon size={12} /> Dark
+      </button>
+    </div>
+  );
+}
 
-      {/* Mobile Overlay */}
-      {mobileMenuOpen && (
-        <div
-          className='fixed inset-0 bg-black/50 lg:hidden z-30'
-          onClick={closeMobileMenu}
-        />
-      )}
+interface SidebarProps {
+  theme: Theme;
+  onThemeChange: (t: Theme) => void;
+}
 
-      {/* Sidebar */}
-      <aside className={`fixed lg:static w-64 border-r border-[#333333] bg-[#1C1C1C] flex flex-col glass-teal transition-all duration-300 z-40 h-screen lg:h-auto ${
-        mobileMenuOpen ? 'left-0' : '-left-64 lg:left-0'
-      }`}>
-      {/* Logo */}
-      <div className='p-5 border-b border-[#333333]'>
-        <Link href='/' className='flex items-center gap-3 text-[#F2F2F2] hover:text-white transition-colors group'>
-          <div className="p-2 bg-[#121212]/50 rounded-md group-hover:bg-white/5 transition-colors">
-            <Zap className='w-5 h-5 text-white' />
-          </div>
-          <div className="flex flex-col">
-            <span className='font-semibold text-lg tracking-tight'>Atomic Tools</span>
-            <span className="text-xs text-[#999999]">Developer utilities</span>
-          </div>
-        </Link>
+export function Sidebar({ theme, onThemeChange }: SidebarProps) {
+  const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [query, setQuery] = useState('');
+
+  const toggleCat = (cat: string) =>
+    setCollapsed((prev: Record<string, boolean>) => ({ ...prev, [cat]: !prev[cat] }));
+
+  // Build category groups from tools, filtering by search query
+  const groups = Object.entries(
+    TOOLS.reduce<Record<string, typeof TOOLS>>((acc, tool) => {
+      if (!acc[tool.category]) acc[tool.category] = [];
+      acc[tool.category].push(tool);
+      return acc;
+    }, {})
+  )
+    .map(([cat, tools]) => ({
+      cat,
+      label: TOOL_CATEGORIES[cat as keyof typeof TOOL_CATEGORIES] ?? cat,
+      tools: query
+        ? tools.filter((t) => t.name.toLowerCase().includes(query.toLowerCase()))
+        : tools,
+    }))
+    .filter((g) => g.tools.length > 0);
+
+  // Find active tool for breadcrumb display
+  const activeTool = TOOLS.find((t) => t.path === pathname);
+
+  const closeMobile = () => setMobileOpen(false);
+
+  const SidebarContent = (
+    <aside className={`t-sidebar${mobileOpen ? ' open' : ''}`}>
+      {/* Header / brand */}
+      <div className="t-side-head">
+        <div className="brand">
+          <Link href="/" className="brand-mark" style={{ width: 28, height: 28 }} aria-label="Home">
+            <Zap size={14} />
+          </Link>
+          <Link href="/" style={{ textDecoration: 'none', color: 'inherit', fontWeight: 600, fontSize: 15, letterSpacing: '-0.02em' }}>
+            Atomic
+          </Link>
+          <span className="brand-sub">v1.4</span>
+        </div>
+        {/* mobile close */}
+        <button
+          onClick={closeMobile}
+          style={{
+            marginLeft: 'auto',
+            display: 'grid',
+            placeItems: 'center',
+            width: 26,
+            height: 26,
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-mute)',
+            cursor: 'pointer',
+          }}
+          className="lg:hidden"
+          aria-label="Close menu"
+        >
+          <X size={14} />
+        </button>
       </div>
 
-      {/* Navigation */}
-      <nav className='flex-1 overflow-y-auto p-4'>
-        <div className="mb-6">
-          <div className="text-xs uppercase tracking-wider text-[#999999] font-medium px-3 py-2">
-            Navigation
-          </div>
-        </div>
+      {/* Search */}
+      <div className="t-search">
+        <span className="t-search-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
+          </svg>
+        </span>
+        <input
+          placeholder="Search tools…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <span className="t-search-kbd">⌘K</span>
+      </div>
 
-        {Object.entries(toolsByCategory).map(([category, tools]) => {
-          const isCollapsed = collapsedCategories[category];
+      {/* Categories + tools */}
+      <nav className="t-cats">
+        {groups.map(({ cat, label, tools }) => {
+          const isCollapsed = collapsed[cat];
           return (
-            <div key={category} className='mb-3'>
+            <div key={cat}>
               <button
-                onClick={() => toggleCategory(category)}
-                className='w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-[#D9D9D9] hover:text-white transition-colors rounded-md hover:bg-white/5 group'
+                className="t-cat-head"
+                onClick={() => toggleCat(cat)}
               >
-                <div className="transition-transform duration-200 group-hover:scale-110">
-                  {isCollapsed ?
-                    <ChevronRight className='w-3.5 h-3.5 text-white' /> :
-                    <ChevronDown className='w-3.5 h-3.5 text-white' />
-                  }
-                </div>
-                <span className="text-left">
-                  {TOOL_CATEGORIES[category as keyof typeof TOOL_CATEGORIES]}
-                </span>
-                <span className="ml-auto text-xs text-[#999999] bg-[#121212]/50 px-1.5 py-0.5 rounded">
-                  {tools.length}
-                </span>
+                <ChevronDown
+                  size={11}
+                  style={{
+                    transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0)',
+                    transition: 'transform .15s',
+                    flexShrink: 0,
+                  }}
+                />
+                {label}
+                <span className="t-cat-count">{tools.length}</span>
               </button>
 
-              {!isCollapsed && (
-                <ul className='space-y-1 mt-1 ml-8 pl-1'>
-                  {tools.map((tool) => {
-                    const Icon = tool.icon;
-                    const isActive = pathname === tool.path;
-                    return (
-                      <li key={tool.id}>
-                        <Link
-                          href={tool.path}
-                          onClick={closeMobileMenu}
-                          className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group ${isActive
-                            ? 'bg-white text-black shadow-sm hover:bg-[#D9D9D9]'
-                            : 'text-[#999999] hover:text-[#F2F2F2] hover:bg-white/5'
-                            }`}
-                        >
-                          <div className={`p-1.5 rounded ${isActive
-                            ? 'bg-black/10 group-hover:bg-black/15'
-                            : 'bg-[#121212]/50 group-hover:bg-white/5'
-                            }`}>
-                            <Icon className='w-3.5 h-3.5 flex-shrink-0' />
-                          </div>
-                          <span className='text-sm font-medium'>{tool.name}</span>
-                          {isActive && (
-                            <div className="ml-auto w-1.5 h-1.5 rounded-full bg-black animate-pulse-warm" />
-                          )}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
+              {!isCollapsed && tools.map((tool) => {
+                const Icon = tool.icon;
+                const isActive = pathname === tool.path;
+                return (
+                  <Link
+                    key={tool.id}
+                    href={tool.path}
+                    className={`t-tool${isActive ? ' active' : ''}`}
+                    onClick={closeMobile}
+                  >
+                    <span className="t-tool-ico"><Icon size={14} /></span>
+                    {tool.name}
+                  </Link>
+                );
+              })}
             </div>
           );
         })}
       </nav>
 
       {/* Footer */}
-      <div className='p-4 border-t border-[#333333] mt-auto'>
-          <p className='text-xs text-[#999999] border-[#333333]/50'>
-            Made for developers who value their time
-          </p>
+      <div className="t-side-foot">
+        <span className="t-avatar">HD</span>
+        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.3, flex: 1, minWidth: 0 }}>
+          <span style={{ color: 'var(--text)', fontSize: 12.5, fontWeight: 500 }}>Local workspace</span>
+          <span style={{ fontSize: 11, color: 'var(--text-mute)' }}>No account · all browser</span>
+        </div>
+        <ThemeToggle theme={theme} onChange={onThemeChange} />
       </div>
-      </aside>
+    </aside>
+  );
+
+  return (
+    <>
+      {/* Mobile hamburger */}
+      <button
+        className="t-mobile-btn"
+        onClick={() => setMobileOpen(true)}
+        aria-label="Open menu"
+        style={{ position: 'fixed', top: 10, left: 10, zIndex: 50 }}
+      >
+        <Menu size={16} />
+      </button>
+
+      {/* Mobile overlay */}
+      <div
+        className={`t-mobile-overlay${mobileOpen ? ' open' : ''}`}
+        onClick={closeMobile}
+      />
+
+      {SidebarContent}
     </>
   );
 }

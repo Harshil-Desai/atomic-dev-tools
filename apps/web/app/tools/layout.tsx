@@ -1,21 +1,55 @@
+'use client';
+
+import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/sidebar';
+import { TOOLS } from '@/lib/tools';
+import { TOOL_CATEGORIES } from '@/utils';
+
+type Theme = 'dark' | 'light';
 
 export default function ToolsLayout({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = useState<Theme>('dark');
+  const pathname = usePathname();
+
+  const activeTool = TOOLS.find((t) => t.path === pathname);
+  const categoryLabel = activeTool
+    ? (TOOL_CATEGORIES[activeTool.category as keyof typeof TOOL_CATEGORIES] ?? activeTool.category)
+    : null;
+
   return (
-    <div className='min-h-screen bg-background text-foreground'>
-      <div className='flex h-screen overflow-hidden'>
-        <Sidebar />
-        <div className='flex-1 flex flex-col overflow-hidden'>
-          <main className='flex-1 overflow-auto p-4 sm:p-5 md:p-6 lg:p-8'>
-            <div className='mx-auto max-w-full lg:max-w-7xl'>
-              {children}
-            </div>
-          </main>
-          <footer className='border-t border-border px-4 sm:px-5 md:px-6 lg:px-8 py-3 text-xs text-muted-foreground'>
-            <div className='flex items-center justify-between'>
-              <span>Developer Tools v1.0</span>
-            </div>
-          </footer>
+    <div className="adt adt-tools" data-theme={theme}>
+      <Sidebar theme={theme} onThemeChange={setTheme} />
+
+      <div className="t-main">
+        {/* Breadcrumb topbar */}
+        <div className="t-topbar">
+          <div className="t-crumb">
+            <span>Tools</span>
+            {categoryLabel && (
+              <>
+                <span className="t-sep">/</span>
+                <span>{categoryLabel}</span>
+              </>
+            )}
+            {activeTool && (
+              <>
+                <span className="t-sep">/</span>
+                <span className="t-now">{activeTool.name}</span>
+              </>
+            )}
+          </div>
+          <div className="t-topbar-actions">
+            <span className="t-status-pill">
+              <span className="t-dot" />
+              Local · all browser
+            </span>
+          </div>
+        </div>
+
+        {/* Tool content */}
+        <div className="t-scroll">
+          {children}
         </div>
       </div>
     </div>
