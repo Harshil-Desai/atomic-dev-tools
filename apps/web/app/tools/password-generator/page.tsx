@@ -91,8 +91,10 @@ export default function PasswordGeneratorPage() {
   };
 
   const charset = buildCharset();
+  // For pronounceable mode: each position alternates between consonants (22) and
+  // vowels (5), so average entropy per character is the mean of the two log2 values.
   const bits = pronounceable
-    ? entropyBits(VOWELS.length + CONSONANTS.length, length)
+    ? ((Math.log2(CONSONANTS.length) + Math.log2(VOWELS.length)) / 2) * length
     : entropyBits(charset.length, length);
   const { label, color, pct } = entropyLabel(bits);
 

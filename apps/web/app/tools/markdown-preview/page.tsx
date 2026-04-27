@@ -63,6 +63,27 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#39;');
 }
 
+/** Apply inline-level transforms: links, images, bold, italic, strikethrough, inline code. */
+function applyInline(text: string, inlineCodes: string[]): string {
+  // Inline code placeholders are already in place; just handle the rest
+  let s = text;
+  // Images (must come before links)
+  s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%">');
+  // Links
+  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  // Bold
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+  // Italic
+  s = s.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+  s = s.replace(/_([^_\n]+)_/g, '<em>$1</em>');
+  // Strikethrough
+  s = s.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+  // Restore inline codes that were substituted before this call
+  inlineCodes.forEach((code, i) => { s = s.replace(`\x00INLINE${i}\x00`, code); });
+  return s;
+}
+
 function markdownToHtml(md: string): string {
   // Protect code blocks first
   const codeBlocks: string[] = [];
@@ -83,38 +104,44 @@ function markdownToHtml(md: string): string {
   // Horizontal rule (must come before heading detection)
   html = html.replace(/^(?:---|\*\*\*|___)\s*$/gm, '<hr>');
 
-  // ATX headings
-  html = html.replace(/^###### (.+)$/gm, '<h6>$1</h6>');
-  html = html.replace(/^##### (.+)$/gm, '<h5>$1</h5>');
-  html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
-  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  // ATX headings (apply inline to heading content)
+  html = html.replace(/^###### (.+)$/gm, (_m, c) => `<h6>${applyInline(c, inlineCodes)}</h6>`);
+  html = html.replace(/^##### (.+)$/gm, (_m, c) => `<h5>${applyInline(c, inlineCodes)}</h5>`);
+  html = html.replace(/^#### (.+)$/gm, (_m, c) => `<h4>${applyInline(c, inlineCodes)}</h4>`);
+  html = html.replace(/^### (.+)$/gm, (_m, c) => `<h3>${applyInline(c, inlineCodes)}</h3>`);
+  html = html.replace(/^## (.+)$/gm, (_m, c) => `<h2>${applyInline(c, inlineCodes)}</h2>`);
+  html = html.replace(/^# (.+)$/gm, (_m, c) => `<h1>${applyInline(c, inlineCodes)}</h1>`);
 
-  // Blockquotes — collect consecutive > lines
+  // Blockquotes — collect consecutive > lines, apply inline to each line
   html = html.replace(/^((?:> ?[^\n]*\n?)+)/gm, (match) => {
-    const inner = match.replace(/^> ?/gm, '').trim();
+    const inner = match
+      .replace(/^> ?/gm, '')
+      .trim()
+      .split('\n')
+      .map(line => applyInline(line, inlineCodes))
+      .join('\n');
     return `<blockquote>${inner}</blockquote>\n`;
   });
 
-  // Process unordered lists
+  // Process unordered lists — apply inline to each item's content
   html = html.replace(/((?:^[ \t]*[-*+] .+\n?)+)/gm, (block) => {
     const items = block.trim().split('\n').map(line => {
       const content = line.replace(/^[ \t]*[-*+] /, '');
-      return `<li>${content}</li>`;
+      return `<li>${applyInline(content, inlineCodes)}</li>`;
     });
     return `<ul>${items.join('')}</ul>\n`;
   });
 
-  // Process ordered lists
+  // Process ordered lists — apply inline to each item's content
   html = html.replace(/((?:^[ \t]*\d+\. .+\n?)+)/gm, (block) => {
     const items = block.trim().split('\n').map(line => {
       const content = line.replace(/^[ \t]*\d+\. /, '');
-      return `<li>${content}</li>`;
+      return `<li>${applyInline(content, inlineCodes)}</li>`;
     });
     return `<ol>${items.join('')}</ol>\n`;
   });
 
+  // Apply remaining inline transforms to non-block content
   // Images (must come before links)
   html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%">');
 

@@ -87,9 +87,9 @@ export default function LandingPage() {
         <div className="hero-inner">
           <div className="eyebrow">
             <span className="dot" />
-            <span>15 tools shipped</span>
+            <span>30 tools shipped</span>
             <span className="pipe">·</span>
-            <span className="ver">v1.4.0 — auto-paste</span>
+            <span className="ver">v2.0.0 — fully local</span>
           </div>
 
           <h1>
@@ -185,7 +185,7 @@ export default function LandingPage() {
 
         <div className="stats">
           <div className="stat">
-            <div className="v">15<small>tools</small></div>
+            <div className="v">30<small>tools</small></div>
             <div className="l">Shipped</div>
           </div>
           <div className="stat">
@@ -247,7 +247,7 @@ export default function LandingPage() {
             GITHUB
           </a>
           <a href="#changelog">CHANGELOG</a>
-          <span style={{ color: 'var(--text-faint)' }}>v1.4.0</span>
+          <span style={{ color: 'var(--text-faint)' }}>v2.0.0</span>
         </div>
       </footer>
     </div>
