@@ -1,0 +1,288 @@
+'use client';
+
+import { useState } from 'react';
+import { Button, Card, CardContent, Input } from '@/ui';
+import { Snowflake, Copy, Check, AlertCircle } from 'lucide-react';
+
+// ─── Snowflake platforms ───────────────────────────────────────────────────────
+
+interface Platform {
+  label: string;
+  epoch: bigint;
+  timestampBits: number;
+  layout: LayoutField[];
+}
+
+interface LayoutField {
+  label: string;
+  bits: number;
+  color: string;
+}
+
+const PLATFORMS: Record<string, Platform> = {
+  twitter: {
+    label: 'Twitter / X',
+    epoch: BigInt('1288834974657'),
+    timestampBits: 41,
+    layout: [
+      { label: 'Unused', bits: 1, color: 'bg-gray-500/20 text-gray-400 border-gray-500/30' },
+      { label: 'Timestamp (41 bits)', bits: 41, color: 'bg-blue-500/20 text-blue-300 border-blue-500/40' },
+      { label: 'Datacenter ID (5 bits)', bits: 5, color: 'bg-green-500/20 text-green-300 border-green-500/40' },
+      { label: 'Worker ID (5 bits)', bits: 5, color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40' },
+      { label: 'Sequence (12 bits)', bits: 12, color: 'bg-purple-500/20 text-purple-300 border-purple-500/40' },
+    ],
+  },
+  discord: {
+    label: 'Discord',
+    epoch: BigInt('1420070400000'),
+    timestampBits: 42,
+    layout: [
+      { label: 'Timestamp (42 bits)', bits: 42, color: 'bg-blue-500/20 text-blue-300 border-blue-500/40' },
+      { label: 'Worker ID (5 bits)', bits: 5, color: 'bg-green-500/20 text-green-300 border-green-500/40' },
+      { label: 'Process ID (5 bits)', bits: 5, color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40' },
+      { label: 'Increment (12 bits)', bits: 12, color: 'bg-purple-500/20 text-purple-300 border-purple-500/40' },
+    ],
+  },
+  instagram: {
+    label: 'Instagram',
+    epoch: BigInt('1314220021721'),
+    timestampBits: 41,
+    layout: [
+      { label: 'Timestamp (41 bits)', bits: 41, color: 'bg-blue-500/20 text-blue-300 border-blue-500/40' },
+      { label: 'Shard ID (13 bits)', bits: 13, color: 'bg-green-500/20 text-green-300 border-green-500/40' },
+      { label: 'Sequence (10 bits)', bits: 10, color: 'bg-purple-500/20 text-purple-300 border-purple-500/40' },
+    ],
+  },
+  mastodon: {
+    label: 'Mastodon',
+    epoch: BigInt(0),
+    timestampBits: 48,
+    layout: [
+      { label: 'Timestamp (48 bits)', bits: 48, color: 'bg-blue-500/20 text-blue-300 border-blue-500/40' },
+      { label: 'Sequence (16 bits)', bits: 16, color: 'bg-purple-500/20 text-purple-300 border-purple-500/40' },
+    ],
+  },
+};
+
+// ─── decoder ──────────────────────────────────────────────────────────────────
+
+interface DecodedSnowflake {
+  rawId: bigint;
+  timestamp: Date;
+  timestampMs: bigint;
+  fields: { label: string; value: bigint; bits: number; color: string }[];
+  binary: string;
+}
+
+function decode(idStr: string, platform: Platform): DecodedSnowflake | null {
+  const cleaned = idStr.trim().replace(/['"]/g, '');
+  try {
+    const id = BigInt(cleaned);
+    if (id < BigInt(0)) return null;
+
+    const binary = id.toString(2).padStart(64, '0');
+    let offset = 0;
+    const fields = platform.layout.map((f) => {
+      const bits = binary.slice(offset, offset + f.bits);
+      const value = BigInt('0b' + bits);
+      offset += f.bits;
+      return { label: f.label, value, bits: f.bits, color: f.color };
+    });
+
+    // First field with "Timestamp" in label
+    const tsField = fields.find((f) => f.label.toLowerCase().includes('timestamp'));
+    const tsMs = tsField ? tsField.value + platform.epoch : BigInt(0);
+    const timestamp = new Date(Number(tsMs));
+
+    return { rawId: id, timestamp, timestampMs: tsMs, fields, binary };
+  } catch {
+    return null;
+  }
+}
+
+// ─── examples ─────────────────────────────────────────────────────────────────
+
+const EXAMPLES: Record<string, string> = {
+  twitter: '1541815603606036480',
+  discord: '175928847299117063',
+  instagram: '7390101695968927744',
+  mastodon: '108131495937255386',
+};
+
+// ─── component ────────────────────────────────────────────────────────────────
+
+export default function SnowflakeDecoderPage() {
+  const [input, setInput] = useState('');
+  const [platformKey, setPlatformKey] = useState('twitter');
+  const [customEpoch, setCustomEpoch] = useState('');
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const platform = PLATFORMS[platformKey];
+  const effectivePlatform: Platform = platformKey === 'custom'
+    ? { ...PLATFORMS.twitter, label: 'Custom', epoch: BigInt(parseInt(customEpoch, 10) || 0) }
+    : platform;
+
+  const decoded = input.trim() ? decode(input, effectivePlatform) : null;
+  const parseError = input.trim() && !decoded ? 'Invalid Snowflake ID' : null;
+
+  const handleCopy = async (text: string, key: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  return (
+    <div className='h-full flex flex-col'>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
+        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Snowflake ID Decoder</h1>
+        <p className='text-xs sm:text-sm text-gray-400'>Extract timestamp, worker ID, and sequence from distributed Snowflake IDs</p>
+      </div>
+
+      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
+        <div className='max-w-3xl mx-auto space-y-4'>
+
+          {/* Platform & input */}
+          <Card>
+            <CardContent className='pt-6 space-y-4'>
+              <div>
+                <label className='block text-sm font-medium text-gray-300 mb-2'>Platform</label>
+                <div className='flex flex-wrap gap-2'>
+                  {Object.entries(PLATFORMS).map(([k, p]) => (
+                    <Button key={k} size='sm' variant={platformKey === k ? 'default' : 'outline'}
+                      onClick={() => { setPlatformKey(k); setInput(EXAMPLES[k] || ''); }}>
+                      {p.label}
+                    </Button>
+                  ))}
+                  <Button size='sm' variant={platformKey === 'custom' ? 'default' : 'outline'}
+                    onClick={() => setPlatformKey('custom')}>
+                    Custom
+                  </Button>
+                </div>
+              </div>
+
+              {platformKey === 'custom' && (
+                <div>
+                  <label className='block text-sm font-medium text-gray-300 mb-1'>Custom Epoch (ms since Unix epoch)</label>
+                  <Input value={customEpoch} onChange={(e) => setCustomEpoch(e.target.value)}
+                    placeholder='e.g. 1288834974657' className='font-mono' />
+                </div>
+              )}
+
+              <div>
+                <label className='block text-sm font-medium text-gray-300 mb-1'>Snowflake ID</label>
+                <div className='flex gap-2'>
+                  <Input value={input} onChange={(e) => setInput(e.target.value)}
+                    placeholder='Paste a Snowflake ID…' className='font-mono flex-1 text-lg' />
+                  {decoded && (
+                    <Button variant='outline' size='sm' onClick={() => handleCopy(input, 'id')}>
+                      {copied === 'id' ? <Check className='w-4 h-4' /> : <Copy className='w-4 h-4' />}
+                    </Button>
+                  )}
+                </div>
+                <p className='text-xs text-gray-500 mt-1'>
+                  Example: <button className='text-blue-400 hover:underline font-mono' onClick={() => setInput(EXAMPLES[platformKey] || EXAMPLES.twitter)}>
+                    {EXAMPLES[platformKey] || EXAMPLES.twitter}
+                  </button>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {parseError && (
+            <Card className='border-red-500/40'>
+              <CardContent className='pt-6'>
+                <div className='flex items-center gap-2 text-red-400'>
+                  <AlertCircle className='w-4 h-4 shrink-0' />
+                  <span className='text-sm'>{parseError}</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {decoded && (
+            <>
+              {/* Timestamp highlight */}
+              <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+                {[
+                  { label: 'Timestamp (UTC)', value: decoded.timestamp.toUTCString() },
+                  { label: 'ISO 8601', value: decoded.timestamp.toISOString() },
+                  { label: 'Unix ms', value: decoded.timestampMs.toString() },
+                ].map(({ label, value }) => (
+                  <div key={label} className='bg-[#1C1C1C] border border-[hsla(0,0%,20%,1)] rounded-lg p-3'>
+                    <p className='text-xs text-gray-500 mb-1'>{label}</p>
+                    <p className='font-mono text-xs font-semibold text-white break-all'>{value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Field breakdown */}
+              <Card>
+                <CardContent className='pt-6 space-y-4'>
+                  <p className='text-xs text-gray-500 uppercase tracking-wide'>Field Breakdown</p>
+                  {decoded.fields.map((f) => (
+                    <div key={f.label} className='flex items-center gap-3'>
+                      <div className={`rounded px-2 py-1 text-xs font-medium border w-48 shrink-0 ${f.color}`}>{f.label}</div>
+                      <code className='flex-1 bg-[#121212] rounded px-3 py-1.5 font-mono text-sm text-gray-200'>{f.value.toString()}</code>
+                      <Button variant='outline' size='sm' onClick={() => handleCopy(f.value.toString(), f.label)}>
+                        {copied === f.label ? <Check className='w-3 h-3' /> : <Copy className='w-3 h-3' />}
+                      </Button>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* Binary view */}
+              <Card>
+                <CardContent className='pt-6 space-y-3'>
+                  <p className='text-xs text-gray-500 uppercase tracking-wide'>64-bit Binary Layout</p>
+                  <div className='flex flex-wrap gap-0.5'>
+                    {(() => {
+                      const bin = decoded.binary;
+                      let offset = 0;
+                      return effectivePlatform.layout.map((f, fi) => {
+                        const segment = bin.slice(offset, offset + f.bits);
+                        offset += f.bits;
+                        return segment.split('').map((bit, bi) => (
+                          <div key={`${fi}-${bi}`}
+                            title={f.label}
+                            className={`w-4 h-6 flex items-center justify-center text-[10px] font-mono font-bold rounded-sm
+                              ${bit === '1'
+                                ? f.color.replace('bg-', 'bg-').replace('/20', '/40')
+                                : 'bg-[#1a1a1a] text-gray-700'}`}>
+                            {bit}
+                          </div>
+                        ));
+                      });
+                    })()}
+                  </div>
+                  <div className='flex flex-wrap gap-2 pt-1'>
+                    {effectivePlatform.layout.map((f) => (
+                      <span key={f.label} className={`text-xs px-2 py-0.5 rounded border ${f.color}`}>{f.label}</span>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {/* Info */}
+          <Card>
+            <CardContent className='pt-6 space-y-2'>
+              <p className='text-xs text-gray-500 uppercase tracking-wide'>About Snowflake IDs</p>
+              <p className='text-xs text-gray-400'>Snowflake IDs are 64-bit integers that encode a millisecond timestamp, machine/worker identifier, and a per-machine sequence counter. This makes them sortable by creation time while remaining unique across distributed systems without coordination.</p>
+              <div className='grid grid-cols-2 gap-2 pt-2'>
+                {Object.entries(PLATFORMS).map(([k, p]) => (
+                  <div key={k} className='text-xs'>
+                    <span className='text-gray-400'>{p.label}: </span>
+                    <span className='text-gray-500 font-mono'>epoch +{p.epoch.toString().slice(-6)}…</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+        </div>
+      </div>
+    </div>
+  );
+}

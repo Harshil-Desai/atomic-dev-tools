@@ -12,7 +12,10 @@
   "dependencies": {
     "@/ui": "workspace:*",
     "@/utils": "workspace:*",
+    "bcryptjs": "^3.0.3",
     "crypto-js": "^4.2.0",
+    "gpt-tokenizer": "^3.4.0",
+    "hash-wasm": "^4.12.0",
     "js-yaml": "^4.1.0",
     "lucide-react": "^0.263.1",
     "next": "14.2.0",
@@ -20,6 +23,7 @@
     "react-dom": "^18.3.0"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
     "@types/crypto-js": "^4.2.2",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.0.0",

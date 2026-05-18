@@ -83,22 +83,83 @@ This will automatically create a template file ready for development at `apps/we
 
 ## Available Tools
 
-### Implemented
+### API & Network
 
-  * **API Tester** - A utility for testing HTTP endpoints, serving as a lightweight alternative to larger clients.
-      * Supports all HTTP methods.
-      * Allows custom headers and request body.
-      * Includes response time tracking and pretty-printed JSON output.
-
-### Planned Tools
-
-| Category | Planned Tools |
+| Tool | Description |
 | :--- | :--- |
-| **Text & Code** | Format-Aware Diff, Text Escape/Unescape (URL, HTML, JS), Code Minifier/Beautifier, String Case Converter |
-| **Data & Encoding** | Base64 Encoder/Decoder, JSON ↔ YAML Converter, Hash/Checksum Generator (MD5, SHA) |
-| **Time & IDs** | Epoch Time Converter, UUID Generator (v4, v7) |
-| **API & Network** | CORS/Preflight Checker, WebSocket Tester, DNS Lookup |
-| **FFmpeg Tools** | Video Clipper & Converter, Subtitle/Watermark Burner, Audio Extractor & Resampler, Video Resize & Scale |
+| **API Tester** | Test HTTP endpoints with custom headers, body, and all HTTP methods |
+| **JWT Inspector** | Decode and inspect JWT tokens — header, payload, expiry |
+| **URL Parser & Builder** | Break down and reconstruct URLs with query parameters |
+| **cURL ↔ Fetch Converter** | Convert cURL commands to fetch/Axios and back |
+| **CORS Preflight Checker** | Test CORS configuration and check if requests are allowed |
+
+### Data & Encoding
+
+| Tool | Description |
+| :--- | :--- |
+| **Base64 Encoder/Decoder** | Encode or decode text to/from Base64 |
+| **JSON Formatter & Validator** | Pretty-print, minify, and validate JSON with error highlighting |
+| **JSON ↔ YAML Converter** | Convert between JSON and YAML formats |
+| **CSV ↔ JSON Converter** | Convert CSV to JSON array and back with custom delimiters |
+| **Number Base Converter** | Convert integers between decimal, binary, octal, and hex |
+| **Hash Generator** | Generate cryptographic hashes (MD5, SHA-1, SHA-256, etc.) |
+
+### Text & Code
+
+| Tool | Description |
+| :--- | :--- |
+| **Format-Aware Diff** | Compare code with normalized whitespace |
+| **Text Escape/Unescape** | Encode or decode text in URL, HTML, JS, and other formats |
+| **Code Minifier/Beautifier** | Format or minify code in various languages |
+| **String Case Converter** | Convert text between camelCase, snake_case, PascalCase, and more |
+| **Regex Tester** | Test regular expressions with live match highlighting |
+| **Markdown Previewer** | Write Markdown and see the rendered output side by side |
+| **Lorem Ipsum Generator** | Generate placeholder text by words, sentences, or paragraphs |
+
+### Time & IDs
+
+| Tool | Description |
+| :--- | :--- |
+| **Epoch Time Converter** | Convert between human-readable dates and Unix timestamps |
+| **UUID Generator** | Generate UUIDs (v4 random or v7 timestamp-based) |
+| **Cron Expression Parser** | Translate cron expressions to plain English with next run times |
+| **Timezone Converter** | Convert datetimes between any two IANA timezones |
+
+### Security
+
+| Tool | Description |
+| :--- | :--- |
+| **Password Generator** | Generate strong passwords with configurable rules and entropy score |
+| **HMAC Generator** | Generate HMAC-SHA256/512 signatures for webhook verification |
+| **JWT Generator & Signer** | Build and sign JWT tokens with HS256/HS512 for auth testing |
+
+### Backend & Architecture
+
+| Tool | Description |
+| :--- | :--- |
+| **JSON → Type Struct** | Convert JSON payloads to TypeScript interfaces, Go structs, or Rust structs |
+| **Snowflake ID Decoder** | Extract timestamp, worker ID, and sequence from distributed Snowflake IDs |
+| **SQL Formatter & Linter** | Pretty-print and normalize SQL queries with basic lint warnings |
+| **Port Checker / Ping** | Test TCP connectivity to a host:port from the server |
+
+### Systems & Infrastructure
+
+| Tool | Description |
+| :--- | :--- |
+| **Systemd Timer Generator** | Convert cron expressions into systemd .timer and .service unit files |
+| **Bitwise Calculator** | Visual calculator for bit masking, shifting, and endianness swapping |
+| **CIDR / Subnet Calculator** | Calculate IP ranges, netmasks, and broadcast addresses from CIDR notation |
+| **Chmod / Permission Calculator** | Visual Unix permission builder converting between octal and symbolic representations |
+
+### FFmpeg
+
+| Tool | Description |
+| :--- | :--- |
+| **FFmpeg Clipper & Converter** | Generate FFmpeg commands for clipping and converting videos |
+| **FFmpeg Subtitle/Watermark Burner** | Generate FFmpeg commands to burn subtitles or watermarks into videos |
+| **FFmpeg Audio Extractor** | Generate FFmpeg commands to extract audio tracks from video files |
+| **FFmpeg Video Resize & Scale** | Generate FFmpeg commands to resize and scale videos to any resolution |
+| **FFmpeg Thumbnail Extractor** | Generate FFmpeg commands to extract frames as images from videos |
 
 -----
 
