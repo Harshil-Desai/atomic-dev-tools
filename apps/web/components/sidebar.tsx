@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Zap, ChevronDown, Sun, Moon, Menu, X } from 'lucide-react';
+import { Zap, ChevronDown, Sun, Moon, X } from 'lucide-react';
 import { TOOLS } from '@/lib/tools';
 import { TOOL_CATEGORIES } from '@/utils';
 
@@ -29,71 +29,59 @@ function ThemeToggle({ theme, onChange }: { theme: Theme; onChange: (t: Theme) =
   );
 }
 
-interface SidebarProps {
+export interface SidebarProps {
   theme: Theme;
   onThemeChange: (t: Theme) => void;
+  /** Controlled mobile open state, owned by the layout */
+  mobileOpen: boolean;
+  onMobileClose: () => void;
 }
 
-export function Sidebar({ theme, onThemeChange }: SidebarProps) {
+export function Sidebar({ theme, onThemeChange, mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [query, setQuery] = useState('');
 
   const toggleCat = (cat: string) =>
     setCollapsed((prev: Record<string, boolean>) => ({ ...prev, [cat]: !prev[cat] }));
 
-  // Build category groups from tools, filtering by search query
   const groups = Object.entries(
     TOOLS.reduce<Record<string, typeof TOOLS>>((acc, tool) => {
       if (!acc[tool.category]) acc[tool.category] = [];
       acc[tool.category].push(tool);
       return acc;
-    }, {})
-  )
-    .map(([cat, tools]) => ({
-      cat,
-      label: TOOL_CATEGORIES[cat as keyof typeof TOOL_CATEGORIES] ?? cat,
-      tools: query
-        ? tools.filter((t) => t.name.toLowerCase().includes(query.toLowerCase()))
-        : tools,
-    }))
-    .filter((g) => g.tools.length > 0);
+    }, {}),
+  ).map(([cat, tools]) => ({
+    cat,
+    label: TOOL_CATEGORIES[cat as keyof typeof TOOL_CATEGORIES] ?? cat,
+    tools: query ? tools.filter((t) => t.name.toLowerCase().includes(query.toLowerCase())) : tools,
+  })).filter((g) => g.tools.length > 0);
 
-  // Find active tool for breadcrumb display
-  const activeTool = TOOLS.find((t) => t.path === pathname);
-
-  const closeMobile = () => setMobileOpen(false);
-
-  const SidebarContent = (
-    <aside className={`t-sidebar${mobileOpen ? ' open' : ''}`}>
-      {/* Header / brand */}
+  // Single <aside> — no Fragment, so the grid always has exactly 2 items
+  return (
+    <aside
+      className="t-sidebar"
+      data-open={mobileOpen ? 'true' : undefined}
+      style={{
+        // On mobile, slide in when open; on desktop always visible (CSS handles this)
+      }}
+    >
+      {/* Brand header */}
       <div className="t-side-head">
-        <div className="brand">
-          <Link href="/" className="brand-mark" style={{ width: 28, height: 28 }} aria-label="Home">
+        <div className="brand" style={{ flex: 1 }}>
+          <Link href="/" className="brand-mark" style={{ width: 28, height: 28, textDecoration: 'none' }} aria-label="Home">
             <Zap size={14} />
           </Link>
           <Link href="/" style={{ textDecoration: 'none', color: 'inherit', fontWeight: 600, fontSize: 15, letterSpacing: '-0.02em' }}>
             Atomic
           </Link>
-          <span className="brand-sub">v1.4</span>
+          <span className="brand-sub">v2.0</span>
         </div>
-        {/* mobile close */}
+        {/* Close button — visible only on mobile via CSS */}
         <button
-          onClick={closeMobile}
-          style={{
-            marginLeft: 'auto',
-            display: 'grid',
-            placeItems: 'center',
-            width: 26,
-            height: 26,
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-mute)',
-            cursor: 'pointer',
-          }}
-          className="lg:hidden"
-          aria-label="Close menu"
+          onClick={onMobileClose}
+          className="t-sidebar-close"
+          aria-label="Close sidebar"
         >
           <X size={14} />
         </button>
@@ -114,16 +102,13 @@ export function Sidebar({ theme, onThemeChange }: SidebarProps) {
         <span className="t-search-kbd">⌘K</span>
       </div>
 
-      {/* Categories + tools */}
+      {/* Nav */}
       <nav className="t-cats">
         {groups.map(({ cat, label, tools }) => {
           const isCollapsed = collapsed[cat];
           return (
             <div key={cat}>
-              <button
-                className="t-cat-head"
-                onClick={() => toggleCat(cat)}
-              >
+              <button className="t-cat-head" onClick={() => toggleCat(cat)}>
                 <ChevronDown
                   size={11}
                   style={{
@@ -144,7 +129,7 @@ export function Sidebar({ theme, onThemeChange }: SidebarProps) {
                     key={tool.id}
                     href={tool.path}
                     className={`t-tool${isActive ? ' active' : ''}`}
-                    onClick={closeMobile}
+                    onClick={onMobileClose}
                   >
                     <span className="t-tool-ico"><Icon size={14} /></span>
                     {tool.name}
@@ -159,34 +144,12 @@ export function Sidebar({ theme, onThemeChange }: SidebarProps) {
       {/* Footer */}
       <div className="t-side-foot">
         <span className="t-avatar">HD</span>
-        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.3, flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', lineHeight: 1.3 }}>
           <span style={{ color: 'var(--text)', fontSize: 12.5, fontWeight: 500 }}>Local workspace</span>
           <span style={{ fontSize: 11, color: 'var(--text-mute)' }}>No account · all browser</span>
         </div>
         <ThemeToggle theme={theme} onChange={onThemeChange} />
       </div>
     </aside>
-  );
-
-  return (
-    <>
-      {/* Mobile hamburger */}
-      <button
-        className="t-mobile-btn"
-        onClick={() => setMobileOpen(true)}
-        aria-label="Open menu"
-        style={{ position: 'fixed', top: 10, left: 10, zIndex: 50 }}
-      >
-        <Menu size={16} />
-      </button>
-
-      {/* Mobile overlay */}
-      <div
-        className={`t-mobile-overlay${mobileOpen ? ' open' : ''}`}
-        onClick={closeMobile}
-      />
-
-      {SidebarContent}
-    </>
   );
 }
