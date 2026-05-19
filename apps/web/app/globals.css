@@ -374,6 +374,23 @@
    ============================================= */
 
 [data-theme="dark"] {
+  /* Tailwind semantic tokens — dark */
+  --background: 0 0% 7%;
+  --foreground: 0 0% 95%;
+  --card: 0 0% 11%;
+  --card-foreground: 0 0% 95%;
+  --primary: 0 0% 98%;
+  --primary-foreground: 0 0% 9%;
+  --secondary: 0 0% 25%;
+  --secondary-foreground: 0 0% 95%;
+  --muted: 0 0% 14%;
+  --muted-foreground: 0 0% 60%;
+  --accent: 0 0% 85%;
+  --accent-foreground: 0 0% 9%;
+  --border: 0 0% 20%;
+  --input: 0 0% 16%;
+  --ring: 0 0% 98%;
+
   --bg:           oklch(0.155 0.008 260);
   --bg-elev:      oklch(0.185 0.009 260);
   --bg-elev-2:    oklch(0.215 0.010 260);
@@ -402,6 +419,23 @@
 }
 
 [data-theme="light"] {
+  /* Tailwind semantic tokens — light */
+  --background: 0 0% 98%;
+  --foreground: 0 0% 9%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 9%;
+  --primary: 0 0% 9%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 0 0% 90%;
+  --secondary-foreground: 0 0% 9%;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 45%;
+  --accent: 0 0% 96%;
+  --accent-foreground: 0 0% 9%;
+  --border: 0 0% 89%;
+  --input: 0 0% 89%;
+  --ring: 0 0% 9%;
+
   --bg:           oklch(0.985 0.004 95);
   --bg-elev:      oklch(1 0 0);
   --bg-elev-2:    oklch(0.98 0.004 95);
