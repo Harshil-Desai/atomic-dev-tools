@@ -1,255 +1,338 @@
 "use client"
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import {
-  Zap, Sun, Moon, Github, ArrowRight, Search,
-  Database, Hash, Send, Sparkles, Layers, Shield,
-} from 'lucide-react';
-import { TOOLS } from '../lib/tools';
+import { TOOLS } from '@/lib/tools';
+import type { Tool } from '@/utils';
 
 type Theme = 'dark' | 'light';
 
-const CATEGORY_LABELS: Record<string, string> = {
-  api: 'API',
-  data: 'Data',
-  text: 'Text',
-  time: 'Time',
-  ffmpeg: 'FFmpeg',
+const CATEGORY_META: Record<string, { code: string; name: string; dataCat: string }> = {
+  api:      { code: 'A', name: 'API & Network',    dataCat: 'api' },
+  data:     { code: 'B', name: 'Data & Encoding',  dataCat: 'data' },
+  text:     { code: 'C', name: 'Text & Code',      dataCat: 'text' },
+  time:     { code: 'D', name: 'Time & IDs',       dataCat: 'time' },
+  security: { code: 'E', name: 'Security',         dataCat: 'security' },
+  backend:  { code: 'F', name: 'Backend & Arch.',  dataCat: 'backend' },
+  infra:    { code: 'G', name: 'Systems & Infra',  dataCat: 'systems' },
+  ffmpeg:   { code: 'H', name: 'FFmpeg',           dataCat: 'ffmpeg' },
+  ai:       { code: 'I', name: 'AI & LLM',         dataCat: 'ai' },
 };
 
-function ThemeToggle({ theme, onChange }: { theme: Theme; onChange: (t: Theme) => void }) {
+const CATEGORY_ORDER = ['api', 'data', 'text', 'time', 'security', 'backend', 'infra', 'ffmpeg', 'ai'];
+
+function Wordmark() {
   return (
-    <div className="theme-toggle" role="tablist" aria-label="Theme">
-      <span
-        className="knob"
-        style={{
-          width: 70,
-          transform: theme === 'light' ? 'translateX(0)' : 'translateX(70px)',
-        }}
-      />
-      <button
-        type="button"
-        className={theme === 'light' ? 'is-on' : ''}
-        onClick={() => onChange('light')}
-      >
-        <Sun size={13} /> Light
-      </button>
-      <button
-        type="button"
-        className={theme === 'dark' ? 'is-on' : ''}
-        onClick={() => onChange('dark')}
-      >
-        <Moon size={13} /> Dark
-      </button>
+    <div className="wordmark">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <circle cx="11" cy="11" r="2"   fill="currentColor" />
+        <circle cx="11" cy="11" r="7"   stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" />
+        <circle cx="11" cy="11" r="10"  stroke="currentColor" strokeWidth="1" opacity="0.5" />
+        <line x1="0" y1="11" x2="22" y2="11" stroke="currentColor" strokeWidth="0.5" opacity="0.4" />
+        <line x1="11" y1="0" x2="11" y2="22" stroke="currentColor" strokeWidth="0.5" opacity="0.4" />
+      </svg>
+      <div className="wordmark-text">
+        <span>atomic</span>
+        <span className="wordmark-slash">/</span>
+        <span className="wordmark-faint">dev-tools</span>
+      </div>
+    </div>
+  );
+}
+
+function LiveDemo() {
+  const [mode, setMode] = useState<'encode' | 'decode'>('encode');
+  const [src, setSrc] = useState('Designed in the browser.\nShipped at the speed of thought.');
+  const out = useMemo(() => {
+    try {
+      if (mode === 'encode') return btoa(unescape(encodeURIComponent(src)));
+      return decodeURIComponent(escape(atob(src.replace(/\s+/g, ''))));
+    } catch { return '— decode error —'; }
+  }, [mode, src]);
+
+  return (
+    <div className="bp-frame demo-frame" data-cat="data">
+      <span className="bp-frame-tl" /><span className="bp-frame-br" />
+      <div className="bp-titleblock">
+        <span className="dot" />
+        <span>LIVE / BASE64 ENCODER</span>
+        <span className="sep" />
+        <span>category · data</span>
+      </div>
+      <div className="demo-tabs">
+        <button className="bp-chip" data-on={mode === 'encode'} onClick={() => setMode('encode')}>encode →</button>
+        <button className="bp-chip" data-on={mode === 'decode'} onClick={() => setMode('decode')}>← decode</button>
+        <span className="grow" />
+        <span className="bp-coord">{src.length} chars in</span>
+        <span className="bp-coord">/</span>
+        <span className="bp-coord">{out.length} chars out</span>
+      </div>
+      <div className="demo-body">
+        <div className="demo-pane">
+          <div className="bp-label demo-pane-label">INPUT · A</div>
+          <textarea className="bp-textarea demo-ta" value={src} onChange={e => setSrc(e.target.value)} spellCheck={false} />
+        </div>
+        <div className="demo-arrow">
+          <svg width="100%" height="100%" viewBox="0 0 40 200" preserveAspectRatio="none">
+            <line x1="20" y1="0" x2="20" y2="200" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 4" opacity="0.5"/>
+            <circle cx="20" cy="100" r="10" fill="var(--paper)" stroke="currentColor" strokeWidth="1" />
+            <path d="M 16 96 L 24 100 L 16 104" stroke="currentColor" strokeWidth="1" fill="none" />
+          </svg>
+        </div>
+        <div className="demo-pane">
+          <div className="bp-label demo-pane-label">OUTPUT · B</div>
+          <textarea className="bp-textarea demo-ta" value={out} readOnly spellCheck={false} />
+        </div>
+      </div>
+      <div className="demo-foot">
+        <span className="bp-status" data-state="ok">live</span>
+        <span className="bp-coord">no network · 0 ms RTT</span>
+        <span className="grow" />
+        <button className="bp-btn" data-variant="ghost" onClick={() => navigator.clipboard?.writeText(out)}>Copy</button>
+        <Link href={`/tools/base64-encoder`} className="bp-btn">Open in workspace ↗</Link>
+      </div>
     </div>
   );
 }
 
 export default function LandingPage() {
   const [theme, setTheme] = useState<Theme>('dark');
-  const featuredTools = TOOLS.slice(0, 8);
+
+  const catalogByCategory = useMemo(() => {
+    return CATEGORY_ORDER
+      .map(cat => {
+        const meta = CATEGORY_META[cat];
+        if (!meta) return null;
+        const tools = TOOLS.filter(t => t.category === cat);
+        if (tools.length === 0) return null;
+        return { ...meta, cat, tools };
+      })
+      .filter(Boolean) as Array<{
+        code: string; name: string; dataCat: string; cat: string;
+        tools: Tool[];
+      }>;
+  }, []);
+
+  const totalTools = TOOLS.length;
+
+  const specRows: [string, string][] = [
+    ['Framework',         'Next.js 14 — App Router'],
+    ['Language',          'TypeScript · strict'],
+    ['Styling',           'Tailwind CSS · zero runtime CSS-in-JS'],
+    ['Bundle (per tool)', '< 60 kB gzipped — lazy-loaded'],
+    ['Cold load',         '< 200 ms on cable broadband'],
+    ['Network requests',  '0 (excl. fonts) per tool execution'],
+    ['Telemetry',         'none'],
+    ['Cookies',           'none (preferences via localStorage)'],
+    ['Compute',           '100% client-side (1 server route for TCP ping)'],
+    ['License',           'MIT'],
+  ];
 
   return (
-    <div className="adt adt-landing" data-theme={theme}>
-      {/* Topbar */}
-      <header className="adt-topbar">
-        <div className="brand">
-          <span className="brand-mark"><Zap size={14} /></span>
-          Atomic
-          <span className="brand-sub">Dev Tools</span>
-        </div>
-        <nav className="nav-links">
-          <Link href="/tools">Tools</Link>
-          <a href="#principles">Principles</a>
-          <a href="https://github.com/Harshil-Desai/atomic-dev-tools" target="_blank" rel="noopener noreferrer">Changelog</a>
-        </nav>
-        <div className="topbar-right">
-          <ThemeToggle theme={theme} onChange={setTheme} />
-          <a
-            href="https://github.com/Harshil-Desai/atomic-dev-tools"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-ghost btn-icon"
-            aria-label="GitHub"
-          >
-            <Github size={14} />
-          </a>
-          <Link href="/tools" className="btn btn-primary">
-            Open app <ArrowRight size={14} />
-          </Link>
-        </div>
-      </header>
-
-      {/* Hero */}
-      <section className="hero">
-        <div className="hero-grid" />
-        <div className="hero-glow" />
-        <div className="hero-inner">
-          <div className="eyebrow">
-            <span className="dot" />
-            <span>30 tools shipped</span>
-            <span className="pipe">·</span>
-            <span className="ver">v2.0.0 — fully local</span>
+    <div className="bp-page" data-theme={theme}>
+      <div className="landing">
+        {/* Nav */}
+        <div className="land-nav">
+          <div className="row" style={{ gap: 16 }}>
+            <Wordmark />
+            <span className="bp-coord">v2.0.0 — pre-release</span>
           </div>
-
-          <h1>
-            Developer utilities,{' '}
-            <span className="strike">bloated apps</span>{' '}
-            <span className="accent">refined.</span>
-          </h1>
-
-          <p className="lede">
-            Sub-second load. Zero installs. Single-purpose tools that respect your time —
-            and your shortcuts.
-          </p>
-
-          <div className="hero-cta">
-            <Link href="/tools" className="btn btn-accent btn-lg">
-              Browse tools <ArrowRight size={14} />
-            </Link>
-            <button type="button" className="btn btn-ghost btn-lg">
-              <span className="mono" style={{ fontSize: 12 }}>⌘K</span> Open command bar
+          <div className="row" style={{ gap: 18 }}>
+            <a className="land-link" href="#tools">Tools</a>
+            <a className="land-link" href="#principles">Principles</a>
+            <a className="land-link" href="#spec">Spec</a>
+            <a
+              className="land-link"
+              href="https://github.com/Harshil-Desai/atomic-dev-tools"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Source
+            </a>
+            <button
+              className="bp-btn"
+              data-variant="ghost"
+              onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
+            >
+              {theme === 'dark' ? '◑ light' : '◐ dark'}
             </button>
+            <Link href="/tools" className="bp-btn" data-variant="solid">
+              Open workspace <span style={{ opacity: 0.6 }}>↵</span>
+            </Link>
           </div>
+        </div>
 
-          {/* Command palette teaser */}
-          <div className="command-card">
-            <div className="command-head">
-              <span className="traffic"><span /><span /><span /></span>
-              <div className="input">
-                <Search size={13} />
-                <span>base64<span className="cursor-blink" /></span>
+        {/* Hero */}
+        <section className="hero bp-paper">
+          <div className="bp-ruler-x" />
+          <div className="bp-ruler-y" />
+          <div className="hero-grid">
+            <div className="hero-left">
+              <div className="bp-label">SHEET 01 / 04 — INDEX</div>
+              <h1 className="bp-h1">
+                Developer utilities,<br />
+                <span style={{ color: 'var(--accent)' }}>drafted</span> with intent.
+              </h1>
+              <p className="hero-lede">
+                {totalTools} single-purpose tools. No splash screens, no installs,
+                no cookie walls. Type in the left pane → read the right pane.
+                Keyboard-first. Browser-native.{' '}
+                <span style={{ color: 'var(--ink)' }}>Atomic.</span>
+              </p>
+              <div className="hero-cta row">
+                <Link href="/tools" className="bp-btn" data-variant="solid">
+                  Open workspace
+                </Link>
+                <a href="#tools" className="bp-btn">Browse {totalTools} tools</a>
+                <div className="row" style={{ marginLeft: 'auto', gap: 8 }}>
+                  <span className="bp-coord">SHORTCUT</span>
+                  <span className="bp-kbd">⌘</span>
+                  <span className="bp-kbd">K</span>
+                </div>
               </div>
-              <span className="kbd">esc</span>
+              <div className="hero-meta">
+                <div className="meta-cell">
+                  <div className="bp-label">LOAD</div>
+                  <div className="meta-v">&lt; 200 ms</div>
+                </div>
+                <div className="meta-cell">
+                  <div className="bp-label">DEPS</div>
+                  <div className="meta-v">0 (client-side)</div>
+                </div>
+                <div className="meta-cell">
+                  <div className="bp-label">TRACKING</div>
+                  <div className="meta-v">none</div>
+                </div>
+                <div className="meta-cell">
+                  <div className="bp-label">LICENSE</div>
+                  <div className="meta-v">MIT</div>
+                </div>
+              </div>
             </div>
-            <ul className="command-list">
-              <li className="active">
-                <span className="ico"><Database size={14} /></span>
-                <span>
-                  <div className="name">Base64 Encoder / Decoder</div>
-                  <div className="desc">Encode or decode text · binary safe</div>
-                </span>
-                <span className="meta">data ↵</span>
-              </li>
-              <li>
-                <span className="ico"><Hash size={14} /></span>
-                <span>
-                  <div className="name">Hash Generator</div>
-                  <div className="desc">MD5 · SHA-1 · SHA-256 · SHA-512</div>
-                </span>
-                <span className="meta">data</span>
-              </li>
-              <li>
-                <span className="ico"><Send size={14} /></span>
-                <span>
-                  <div className="name">API Tester</div>
-                  <div className="desc">Send a request — preview the body</div>
-                </span>
-                <span className="meta">api</span>
-              </li>
-            </ul>
+            <div className="hero-right">
+              <LiveDemo />
+            </div>
           </div>
-        </div>
-      </section>
+          <div className="hero-baseline">
+            <span>A — atomicdevtools.com</span>
+            <span className="grow" />
+            <span>DRAWING NO. 0001</span>
+            <span>·</span>
+            <span>REV. 03</span>
+            <span>·</span>
+            <span>SCALE 1:1</span>
+          </div>
+        </section>
 
-      {/* Principles */}
-      <section className="section" id="principles">
-        <div className="section-head">
-          <div>
-            <div className="label-mono">— Principles</div>
-            <h2>Built around how you actually work.</h2>
+        {/* Principles */}
+        <section id="principles" className="principles bp-paper dense">
+          <div className="section-head">
+            <span className="bp-label">§ 02 — PRINCIPLES</span>
+            <h2 className="bp-h2">Four constraints. No exceptions.</h2>
           </div>
-          <p>Every tool is engineered to load instantly, hold focus, and stay out of the way of your terminal.</p>
-        </div>
-
-        <div className="features">
-          <div className="feature">
-            <span className="num">01</span>
-            <div className="ico"><Sparkles size={16} /></div>
-            <h3>Sub-second start</h3>
-            <p>Cold-start in under 500ms on any modern device. No splash screens, no auth walls, no telemetry beacons.</p>
-          </div>
-          <div className="feature">
-            <span className="num">02</span>
-            <div className="ico"><Layers size={16} /></div>
-            <h3>One job, perfectly</h3>
-            <p>Each utility is single-purpose. Less surface area means fewer bugs, sharper UX, and predictable shortcuts.</p>
-          </div>
-          <div className="feature">
-            <span className="num">03</span>
-            <div className="ico"><Shield size={16} /></div>
-            <h3>Local first, always</h3>
-            <p>Your input never leaves the browser. Hashes, diffs, formatting — everything runs on your machine.</p>
-          </div>
-        </div>
-
-        <div className="stats">
-          <div className="stat">
-            <div className="v">30<small>tools</small></div>
-            <div className="l">Shipped</div>
-          </div>
-          <div className="stat">
-            <div className="v">412<small>ms</small></div>
-            <div className="l">P95 cold start</div>
-          </div>
-          <div className="stat">
-            <div className="v">0<small>kb</small></div>
-            <div className="l">Tracking</div>
-          </div>
-          <div className="stat">
-            <div className="v">100<small>%</small></div>
-            <div className="l">Open source</div>
-          </div>
-        </div>
-      </section>
-
-      {/* Tool catalog */}
-      <section className="section" id="tools">
-        <div className="section-head">
-          <div>
-            <div className="label-mono">— Library</div>
-            <h2>A growing catalog.</h2>
-          </div>
-          <p>Hand-picked tools developers reach for daily. Click any tile to launch — no install, no signup.</p>
-        </div>
-
-        <div className="tool-grid">
-          {featuredTools.map((tool) => {
-            const Icon = tool.icon;
-            return (
-              <Link href={tool.path} key={tool.id} className="tile">
-                <div className="row">
-                  <span className="ico"><Icon size={14} /></span>
-                  <span className="cat">{CATEGORY_LABELS[tool.category] ?? tool.category}</span>
+          <div className="principles-grid">
+            {[
+              { n: '01', t: 'Instant',  d: 'Each tool is a single client-side route. First paint under 200 ms. No skeletons, no shimmer.' },
+              { n: '02', t: 'Atomic',   d: 'One screen, one task, one canonical input. No tabs, no wizards, no upsells in the middle.' },
+              { n: '03', t: 'Local',    d: 'Compute runs in your browser. Your data never leaves the tab. Works offline once loaded.' },
+              { n: '04', t: 'Keyboard', d: '⌘K opens anything. Every primary action has a shortcut. Mouse is welcome but not required.' },
+            ].map(p => (
+              <div key={p.n} className="bp-frame principle">
+                <span className="bp-frame-tl" /><span className="bp-frame-br" />
+                <div className="principle-n">{p.n}</div>
+                <div className="principle-t">{p.t}</div>
+                <hr className="bp-rule" />
+                <div className="principle-d">{p.d}</div>
+                <div className="principle-foot">
+                  <span className="bp-coord">[ verified · always-on ]</span>
                 </div>
-                <div>
-                  <h4>{tool.name}</h4>
-                  <p>{tool.description}</p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
+              </div>
+            ))}
+          </div>
+        </section>
 
-      {/* Footer */}
-      <footer className="adt-footer">
-        <div className="left">
-          <span className="brand-mark" style={{ width: 22, height: 22, borderRadius: 5 }}>
-            <Zap size={11} />
-          </span>
-          <span>Atomic Dev Tools</span>
-          <span style={{ color: 'var(--text-faint)' }}>·</span>
-          <span>MIT licensed</span>
-        </div>
-        <div className="right">
-          <a href="https://github.com/Harshil-Desai/atomic-dev-tools" target="_blank" rel="noopener noreferrer">
-            GITHUB
-          </a>
-          <a href="#changelog">CHANGELOG</a>
-          <span style={{ color: 'var(--text-faint)' }}>v2.0.0</span>
-        </div>
-      </footer>
+        {/* Catalog */}
+        <section id="tools" className="catalog">
+          <div className="section-head">
+            <span className="bp-label">§ 03 — CATALOG</span>
+            <h2 className="bp-h2">{totalTools} tools, {catalogByCategory.length} categories.</h2>
+          </div>
+          <div className="catalog-list">
+            {catalogByCategory.map(cat => (
+              <div key={cat.cat} className="cat-row" data-cat={cat.dataCat}>
+                <div className="cat-head">
+                  <span className="dot" />
+                  <span className="cat-id">{cat.code}</span>
+                  <span className="cat-name">{cat.name}</span>
+                  <span className="grow" />
+                  <span className="bp-coord">{cat.tools.length} tools</span>
+                </div>
+                <div className="cat-tools">
+                  {cat.tools.map(t => (
+                    <Link key={t.id} href={t.path} className="cat-tool">
+                      <span className="cat-tool-name">{t.name}</span>
+                      <span className="cat-tool-d">{t.description}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Spec */}
+        <section id="spec" className="spec">
+          <div className="section-head">
+            <span className="bp-label">§ 04 — SPEC SHEET</span>
+            <h2 className="bp-h2">Constraints, in writing.</h2>
+          </div>
+          <div className="bp-frame spec-frame">
+            <span className="bp-frame-tl" /><span className="bp-frame-br" />
+            <div className="bp-titleblock">
+              <span className="dot" />
+              <span>TECHNICAL SPECIFICATION · DOC-ADT-0001</span>
+              <span className="sep" />
+              <span>page 1 of 1</span>
+            </div>
+            <table className="spec-table">
+              <tbody>
+                {specRows.map((r, i) => (
+                  <tr key={i}>
+                    <td className="spec-k">{String(i + 1).padStart(2, '0')}</td>
+                    <td className="spec-l">{r[0]}</td>
+                    <td className="spec-v">{r[1]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="land-foot">
+          <div className="row" style={{ gap: 14, alignItems: 'flex-start' }}>
+            <Wordmark />
+          </div>
+          <div className="foot-cols">
+            {[
+              { head: 'PRODUCT',   links: [{ l: 'Workspace', h: '/tools' }, { l: 'Changelog', h: '#' }, { l: 'Roadmap', h: '#' }] },
+              { head: 'RESOURCES', links: [{ l: 'Source', h: 'https://github.com/Harshil-Desai/atomic-dev-tools' }, { l: 'Documentation', h: '#' }, { l: 'License', h: '#' }] },
+              { head: 'CONTACT',   links: [{ l: 'GitHub', h: 'https://github.com/Harshil-Desai/atomic-dev-tools' }, { l: 'Issues', h: 'https://github.com/Harshil-Desai/atomic-dev-tools/issues' }] },
+            ].map(col => (
+              <div key={col.head} className="foot-col">
+                <div className="bp-label">{col.head}</div>
+                {col.links.map(({ l, h }) => (
+                  <a key={l} className="land-link" href={h} target={h.startsWith('http') ? '_blank' : undefined} rel={h.startsWith('http') ? 'noopener noreferrer' : undefined}>{l}</a>
+                ))}
+              </div>
+            ))}
+          </div>
+          <div className="foot-base">
+            <span>© 2026 · made for developers, by developers</span>
+            <span className="grow" />
+            <span className="bp-coord">END SHEET 04 / 04</span>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
