@@ -1,10 +1,8 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { FileText, Copy, Check, Eye, Code } from 'lucide-react';
-import { Button } from '@/ui';
-import { Card, CardContent } from '@/ui';
-import { Textarea } from '@/ui';
+import { FileText, Eye, Code } from 'lucide-react';
+import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
 
 const DEFAULT_MARKDOWN = `# Welcome to Markdown Previewer
 
@@ -55,37 +53,23 @@ Visit [GitHub](https://github.com) for open-source projects.
 `;
 
 function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-/** Apply inline-level transforms: links, images, bold, italic, strikethrough, inline code. */
 function applyInline(text: string, inlineCodes: string[]): string {
-  // Inline code placeholders are already in place; just handle the rest
   let s = text;
-  // Images (must come before links)
   s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%">');
-  // Links
   s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-  // Bold
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
-  // Italic
   s = s.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
   s = s.replace(/_([^_\n]+)_/g, '<em>$1</em>');
-  // Strikethrough
   s = s.replace(/~~([^~]+)~~/g, '<del>$1</del>');
-  // Restore inline codes that were substituted before this call
   inlineCodes.forEach((code, i) => { s = s.replace(`\x00INLINE${i}\x00`, code); });
   return s;
 }
 
 function markdownToHtml(md: string): string {
-  // Protect code blocks first
   const codeBlocks: string[] = [];
   let html = md.replace(/```([^\n]*)\n([\s\S]*?)```/g, (_match, lang, code) => {
     const langClass = lang.trim() ? ` class="language-${lang.trim()}"` : '';
@@ -93,94 +77,47 @@ function markdownToHtml(md: string): string {
     codeBlocks.push(`<pre><code${langClass}>${escaped}</code></pre>`);
     return `\x00CODE${codeBlocks.length - 1}\x00`;
   });
-
-  // Protect inline code
   const inlineCodes: string[] = [];
   html = html.replace(/`([^`]+)`/g, (_match, code) => {
     inlineCodes.push(`<code>${escapeHtml(code)}</code>`);
     return `\x00INLINE${inlineCodes.length - 1}\x00`;
   });
-
-  // Horizontal rule (must come before heading detection)
   html = html.replace(/^(?:---|\*\*\*|___)\s*$/gm, '<hr>');
-
-  // ATX headings (apply inline to heading content)
   html = html.replace(/^###### (.+)$/gm, (_m, c) => `<h6>${applyInline(c, inlineCodes)}</h6>`);
   html = html.replace(/^##### (.+)$/gm, (_m, c) => `<h5>${applyInline(c, inlineCodes)}</h5>`);
   html = html.replace(/^#### (.+)$/gm, (_m, c) => `<h4>${applyInline(c, inlineCodes)}</h4>`);
   html = html.replace(/^### (.+)$/gm, (_m, c) => `<h3>${applyInline(c, inlineCodes)}</h3>`);
   html = html.replace(/^## (.+)$/gm, (_m, c) => `<h2>${applyInline(c, inlineCodes)}</h2>`);
   html = html.replace(/^# (.+)$/gm, (_m, c) => `<h1>${applyInline(c, inlineCodes)}</h1>`);
-
-  // Blockquotes — collect consecutive > lines, apply inline to each line
   html = html.replace(/^((?:> ?[^\n]*\n?)+)/gm, (match) => {
-    const inner = match
-      .replace(/^> ?/gm, '')
-      .trim()
-      .split('\n')
-      .map(line => applyInline(line, inlineCodes))
-      .join('\n');
+    const inner = match.replace(/^> ?/gm, '').trim().split('\n').map(line => applyInline(line, inlineCodes)).join('\n');
     return `<blockquote>${inner}</blockquote>\n`;
   });
-
-  // Process unordered lists — apply inline to each item's content
   html = html.replace(/((?:^[ \t]*[-*+] .+\n?)+)/gm, (block) => {
-    const items = block.trim().split('\n').map(line => {
-      const content = line.replace(/^[ \t]*[-*+] /, '');
-      return `<li>${applyInline(content, inlineCodes)}</li>`;
-    });
+    const items = block.trim().split('\n').map(line => `<li>${applyInline(line.replace(/^[ \t]*[-*+] /, ''), inlineCodes)}</li>`);
     return `<ul>${items.join('')}</ul>\n`;
   });
-
-  // Process ordered lists — apply inline to each item's content
   html = html.replace(/((?:^[ \t]*\d+\. .+\n?)+)/gm, (block) => {
-    const items = block.trim().split('\n').map(line => {
-      const content = line.replace(/^[ \t]*\d+\. /, '');
-      return `<li>${applyInline(content, inlineCodes)}</li>`;
-    });
+    const items = block.trim().split('\n').map(line => `<li>${applyInline(line.replace(/^[ \t]*\d+\. /, ''), inlineCodes)}</li>`);
     return `<ol>${items.join('')}</ol>\n`;
   });
-
-  // Apply remaining inline transforms to non-block content
-  // Images (must come before links)
   html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%">');
-
-  // Links
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-
-  // Bold (** or __)
   html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>');
-
-  // Italic (* or _) — careful not to catch **)
   html = html.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
   html = html.replace(/_([^_\n]+)_/g, '<em>$1</em>');
-
-  // Strikethrough
   html = html.replace(/~~([^~]+)~~/g, '<del>$1</del>');
-
-  // Paragraphs: split on blank lines, wrap non-block-elements
   const blockTags = /^<(?:h[1-6]|ul|ol|li|blockquote|pre|hr|p|div|img)/i;
-  const paragraphs = html.split(/\n{2,}/);
-  html = paragraphs.map(para => {
+  html = html.split(/\n{2,}/).map(para => {
     const trimmed = para.trim();
     if (!trimmed) return '';
     if (blockTags.test(trimmed)) return trimmed;
     if (trimmed.startsWith('\x00CODE')) return trimmed;
-    // Convert single newlines within paragraph to <br>
     return `<p>${trimmed.replace(/\n/g, '<br>')}</p>`;
   }).join('\n');
-
-  // Restore inline codes
-  inlineCodes.forEach((code, i) => {
-    html = html.replace(`\x00INLINE${i}\x00`, code);
-  });
-
-  // Restore code blocks
-  codeBlocks.forEach((block, i) => {
-    html = html.replace(`\x00CODE${i}\x00`, block);
-  });
-
+  inlineCodes.forEach((code, i) => { html = html.replace(`\x00INLINE${i}\x00`, code); });
+  codeBlocks.forEach((block, i) => { html = html.replace(`\x00CODE${i}\x00`, block); });
   return html;
 }
 
@@ -198,7 +135,7 @@ const PREVIEW_STYLES = `
   .md-preview del { color: #888; text-decoration: line-through; }
   .md-preview a { color: #60a5fa; text-decoration: underline; }
   .md-preview a:hover { color: #93c5fd; }
-  .md-preview code { background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 4px; padding: 0.1em 0.4em; font-family: 'Fira Code', 'Cascadia Code', Consolas, monospace; font-size: 0.875em; color: #f97316; }
+  .md-preview code { background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 4px; padding: 0.1em 0.4em; font-family: 'Fira Code', Consolas, monospace; font-size: 0.875em; color: #f97316; }
   .md-preview pre { background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: 8px; padding: 1rem 1.2rem; overflow-x: auto; margin: 1em 0; }
   .md-preview pre code { background: none; border: none; padding: 0; color: #e2e8f0; font-size: 0.85em; }
   .md-preview blockquote { border-left: 4px solid #4ade80; background: #1a2a1a; margin: 1em 0; padding: 0.5em 1em; border-radius: 0 6px 6px 0; color: #a3e635; }
@@ -208,120 +145,69 @@ const PREVIEW_STYLES = `
   .md-preview ol li { list-style-type: decimal; }
   .md-preview hr { border: none; border-top: 1px solid #333; margin: 1.5em 0; }
   .md-preview img { max-width: 100%; border-radius: 6px; margin: 0.5em 0; }
-  .md-preview table { border-collapse: collapse; width: 100%; margin: 1em 0; }
-  .md-preview th, .md-preview td { border: 1px solid #333; padding: 0.5em 0.8em; }
-  .md-preview th { background: #1e1e1e; font-weight: 600; }
 `;
 
 export default function MarkdownPreviewPage() {
   const [markdown, setMarkdown] = useState(DEFAULT_MARKDOWN);
-  const [copiedHtml, setCopiedHtml] = useState(false);
-  const [copiedMd, setCopiedMd] = useState(false);
   const [view, setView] = useState<'split' | 'editor' | 'preview'>('split');
 
   const renderedHtml = useMemo(() => markdownToHtml(markdown), [markdown]);
-
   const charCount = markdown.length;
   const wordCount = markdown.trim() ? markdown.trim().split(/\s+/).length : 0;
-
-  const copyHtml = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(renderedHtml);
-      setCopiedHtml(true);
-      setTimeout(() => setCopiedHtml(false), 2000);
-    } catch { /* ignore */ }
-  }, [renderedHtml]);
-
-  const copyMarkdown = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(markdown);
-      setCopiedMd(true);
-      setTimeout(() => setCopiedMd(false), 2000);
-    } catch { /* ignore */ }
-  }, [markdown]);
 
   const showEditor = view === 'split' || view === 'editor';
   const showPreview = view === 'split' || view === 'preview';
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="border-b border-border bg-card p-4 sm:p-5 md:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <FileText className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-            <div>
-              <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Markdown Previewer</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Write Markdown, see the rendered HTML preview instantly</p>
-            </div>
+    <BpToolStage cat='text'>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
+        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
+          <div>
+            <h1 className='text-xl sm:text-2xl font-bold text-white mb-1'>Markdown Previewer</h1>
+            <p className='text-xs sm:text-sm text-gray-400'>Write Markdown, see the rendered HTML preview instantly</p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex rounded-md border border-[hsla(0,0%,20%,1)] overflow-hidden">
+          <div className='flex items-center gap-2 flex-wrap'>
+            <div className='flex rounded border border-[hsla(0,0%,20%,1)] overflow-hidden'>
               {(['split', 'editor', 'preview'] as const).map(v => (
-                <button
-                  key={v}
-                  onClick={() => setView(v)}
-                  className={`px-3 py-1.5 text-xs font-medium capitalize transition-colors ${view === v ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'}`}
-                >
-                  {v === 'editor' ? <><Code className="w-3 h-3 inline mr-1" />Editor</> : v === 'preview' ? <><Eye className="w-3 h-3 inline mr-1" />Preview</> : 'Split'}
+                <button key={v} onClick={() => setView(v)} type='button'
+                  className={`px-3 py-1.5 text-xs font-medium capitalize transition-colors ${view === v ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'}`}>
+                  {v === 'editor' ? <><Code className='w-3 h-3 inline mr-1' />Editor</> : v === 'preview' ? <><Eye className='w-3 h-3 inline mr-1' />Preview</> : 'Split'}
                 </button>
               ))}
             </div>
-            <Button onClick={copyMarkdown} variant="outline" size="sm">
-              {copiedMd ? <><Check className="w-4 h-4 mr-1" />Copied</> : <><Copy className="w-4 h-4 mr-1" />Copy MD</>}
-            </Button>
-            <Button onClick={copyHtml} variant="outline" size="sm">
-              {copiedHtml ? <><Check className="w-4 h-4 mr-1" />Copied</> : <><Copy className="w-4 h-4 mr-1" />Copy HTML</>}
-            </Button>
+            <BpCopyBtn text={markdown} label='COPY MD' />
+            <BpCopyBtn text={renderedHtml} label='COPY HTML' />
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden p-4 sm:p-5 md:p-6">
+      <div className='flex-1 overflow-hidden p-4 sm:p-5 md:p-6'>
         <div className={`h-full flex gap-4 ${view === 'split' ? 'flex-col md:flex-row' : 'flex-col'}`}>
-
-          {/* Editor */}
           {showEditor && (
             <div className={`flex flex-col ${view === 'split' ? 'flex-1 min-h-0' : 'flex-1'}`}>
-              <Card className="flex-1 flex flex-col min-h-0">
-                <CardContent className="pt-4 flex flex-col flex-1 min-h-0 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Markdown</label>
-                    <span className="text-xs text-gray-600">{charCount} chars · {wordCount} words</span>
-                  </div>
-                  <textarea
-                    value={markdown}
-                    onChange={e => setMarkdown(e.target.value)}
-                    className="flex-1 w-full bg-[#0d0d0d] border border-[hsla(0,0%,20%,1)] rounded-md p-3 font-mono text-sm text-gray-200 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 min-h-[300px]"
-                    spellCheck={false}
-                    placeholder="Write your markdown here..."
-                  />
-                </CardContent>
-              </Card>
+              <BpPanel title='Markdown' meta={`${charCount} chars · ${wordCount} words`} className='flex-1 flex flex-col min-h-0'>
+                <textarea
+                  value={markdown}
+                  onChange={e => setMarkdown(e.target.value)}
+                  className='bp-textarea font-mono text-sm flex-1 min-h-[300px]'
+                  spellCheck={false}
+                  placeholder='Write your markdown here...'
+                />
+              </BpPanel>
             </div>
           )}
-
-          {/* Preview */}
           {showPreview && (
             <div className={`flex flex-col ${view === 'split' ? 'flex-1 min-h-0' : 'flex-1'}`}>
-              <Card className="flex-1 flex flex-col min-h-0">
-                <CardContent className="pt-4 flex flex-col flex-1 min-h-0 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Preview</label>
-                    <span className="text-xs text-gray-600">HTML output</span>
-                  </div>
-                  <div className="flex-1 overflow-auto rounded-md min-h-[300px]">
-                    <style dangerouslySetInnerHTML={{ __html: PREVIEW_STYLES }} />
-                    <div
-                      className="md-preview"
-                      dangerouslySetInnerHTML={{ __html: renderedHtml || '<p style="color:#555;font-style:italic">Nothing to preview yet...</p>' }}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+              <BpPanel title='Preview' meta='HTML output' className='flex-1 flex flex-col min-h-0'>
+                <div className='flex-1 overflow-auto rounded min-h-[300px]'>
+                  <style dangerouslySetInnerHTML={{ __html: PREVIEW_STYLES }} />
+                  <div className='md-preview' dangerouslySetInnerHTML={{ __html: renderedHtml || '<p style="color:#555;font-style:italic">Nothing to preview yet...</p>' }} />
+                </div>
+              </BpPanel>
             </div>
           )}
         </div>
       </div>
-    </div>
+    </BpToolStage>
   );
 }

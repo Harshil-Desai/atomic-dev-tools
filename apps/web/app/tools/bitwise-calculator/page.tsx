@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Card, CardContent, Input } from '@/ui';
-import { Cpu, Copy, Check } from 'lucide-react';
+import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -25,7 +24,7 @@ function parseInput(val: string, base: InputBase): number | null {
 function mask(n: number, width: BitWidth): number {
   if (width === 8) return n & 0xff;
   if (width === 16) return n & 0xffff;
-  return n >>> 0; // 32-bit unsigned
+  return n >>> 0;
 }
 
 function swapBytes(n: number, width: BitWidth): number {
@@ -33,7 +32,6 @@ function swapBytes(n: number, width: BitWidth): number {
   if (width === 16) {
     return ((n & 0xff) << 8) | ((n >> 8) & 0xff);
   }
-  // 32-bit
   const b0 = (n >>> 24) & 0xff;
   const b1 = (n >>> 16) & 0xff;
   const b2 = (n >>> 8) & 0xff;
@@ -63,7 +61,6 @@ function toHex(n: number, width: BitWidth): string {
 }
 
 function groupBits(bin: string): string {
-  // Group into nibbles (4 bits)
   return bin.replace(/(.{4})/g, '$1 ').trim();
 }
 
@@ -79,13 +76,7 @@ function BitRow({ value, width, label }: { value: number; width: BitWidth; label
       </div>
       <div className='flex gap-0.5 flex-wrap'>
         {bin.split('').map((bit, i) => (
-          <div
-            key={i}
-            className={`w-6 h-6 flex items-center justify-center rounded text-xs font-mono font-bold
-              ${bit === '1'
-                ? 'bg-blue-500/30 text-blue-300 border border-blue-500/50'
-                : 'bg-[#1a1a1a] text-gray-600 border border-[hsla(0,0%,15%,1)]'}`}
-          >
+          <div key={i} className={`w-6 h-6 flex items-center justify-center rounded text-xs font-mono font-bold ${bit === '1' ? 'bg-blue-500/30 text-blue-300 border border-blue-500/50' : 'bg-[#1a1a1a] text-gray-600 border border-[hsla(0,0%,15%,1)]'}`}>
             {bit}
           </div>
         ))}
@@ -112,7 +103,6 @@ export default function BitwiseCalculatorPage() {
   const [baseB, setBaseB] = useState<InputBase>('dec');
   const [op, setOp] = useState<Operation>('AND');
   const [width, setWidth] = useState<BitWidth>(8);
-  const [copied, setCopied] = useState<string | null>(null);
 
   const a = parseInput(inputA, baseA);
   const b = parseInput(inputB, baseB);
@@ -123,12 +113,6 @@ export default function BitwiseCalculatorPage() {
   const canCompute = aValid && bValid;
 
   const result = canCompute ? compute(a!, isUnary ? 0 : b!, op, width) : null;
-
-  const handleCopy = async (text: string, key: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 2000);
-  };
 
   const ops: { label: string; value: Operation; sym: string }[] = [
     { label: 'AND', value: 'AND', sym: '&' },
@@ -147,7 +131,7 @@ export default function BitwiseCalculatorPage() {
   ];
 
   return (
-    <div className='h-full flex flex-col'>
+    <BpToolStage cat='infra'>
       <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
         <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Bitwise Calculator</h1>
         <p className='text-xs sm:text-sm text-gray-400'>Visual calculator for bit masking, shifting, and endianness swapping</p>
@@ -156,77 +140,70 @@ export default function BitwiseCalculatorPage() {
       <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
         <div className='max-w-3xl mx-auto space-y-4'>
 
-          {/* Bit width */}
-          <Card>
-            <CardContent className='pt-6 space-y-4'>
+          <BpPanel title='Bit Width & Operation'>
+            <div className='space-y-4'>
               <div>
-                <label className='block text-sm font-medium text-gray-300 mb-2'>Bit Width</label>
+                <label className='block text-xs text-gray-500 mb-2'>Bit Width</label>
                 <div className='flex gap-2'>
                   {([8, 16, 32] as BitWidth[]).map((w) => (
-                    <Button key={w} size='sm' variant={width === w ? 'default' : 'outline'} onClick={() => setWidth(w)}>
+                    <button key={w} type='button' onClick={() => setWidth(w)}
+                      className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${width === w ? 'bg-blue-600 text-white' : 'bp-btn'}`}>
                       {w}-bit
-                    </Button>
+                    </button>
                   ))}
                 </div>
               </div>
 
-              {/* Operation */}
               <div>
-                <label className='block text-sm font-medium text-gray-300 mb-2'>Operation</label>
+                <label className='block text-xs text-gray-500 mb-2'>Operation</label>
                 <div className='flex flex-wrap gap-2'>
                   {ops.map((o) => (
-                    <Button key={o.value} size='sm' variant={op === o.value ? 'default' : 'outline'} onClick={() => setOp(o.value)}>
-                      <span className='font-mono mr-1 text-blue-300'>{o.sym}</span> {o.label}
-                    </Button>
+                    <button key={o.value} type='button' onClick={() => setOp(o.value)}
+                      className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${op === o.value ? 'bg-blue-600 text-white' : 'bp-btn'}`}>
+                      <span className='font-mono mr-1 text-blue-300'>{o.sym}</span>{o.label}
+                    </button>
                   ))}
                 </div>
               </div>
 
-              {/* Inputs */}
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                 <div className='space-y-2'>
-                  <label className='block text-sm font-medium text-gray-300'>Operand A</label>
-                  <div className='flex gap-2'>
+                  <label className='block text-xs text-gray-500'>Operand A</label>
+                  <div className='flex gap-1'>
                     {bases.map((bv) => (
-                      <Button key={bv.value} size='sm' variant={baseA === bv.value ? 'default' : 'outline'} onClick={() => setBaseA(bv.value)}>
+                      <button key={bv.value} type='button' onClick={() => setBaseA(bv.value)}
+                        className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${baseA === bv.value ? 'bg-blue-600 text-white' : 'bp-btn'}`}>
                         {bv.label}
-                      </Button>
+                      </button>
                     ))}
                   </div>
-                  <Input
-                    value={inputA}
-                    onChange={(e) => setInputA(e.target.value)}
+                  <input value={inputA} onChange={(e) => setInputA(e.target.value)}
                     placeholder={baseA === 'hex' ? '0x2A' : baseA === 'bin' ? '00101010' : '42'}
-                    className={`font-mono ${!aValid && inputA ? 'border-red-500/50' : ''}`}
-                  />
+                    className={`bp-input w-full font-mono ${!aValid && inputA ? 'border-red-500/50' : ''}`} />
                 </div>
                 {!isUnary && (
                   <div className='space-y-2'>
-                    <label className='block text-sm font-medium text-gray-300'>Operand B</label>
-                    <div className='flex gap-2'>
+                    <label className='block text-xs text-gray-500'>Operand B</label>
+                    <div className='flex gap-1'>
                       {bases.map((bv) => (
-                        <Button key={bv.value} size='sm' variant={baseB === bv.value ? 'default' : 'outline'} onClick={() => setBaseB(bv.value)}>
+                        <button key={bv.value} type='button' onClick={() => setBaseB(bv.value)}
+                          className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${baseB === bv.value ? 'bg-blue-600 text-white' : 'bp-btn'}`}>
                           {bv.label}
-                        </Button>
+                        </button>
                       ))}
                     </div>
-                    <Input
-                      value={inputB}
-                      onChange={(e) => setInputB(e.target.value)}
+                    <input value={inputB} onChange={(e) => setInputB(e.target.value)}
                       placeholder={baseB === 'hex' ? '0x0F' : baseB === 'bin' ? '00001111' : '15'}
-                      className={`font-mono ${!bValid && inputB ? 'border-red-500/50' : ''}`}
-                    />
+                      className={`bp-input w-full font-mono ${!bValid && inputB ? 'border-red-500/50' : ''}`} />
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </BpPanel>
 
-          {/* Visual bit display */}
           {canCompute && result !== null && (
-            <Card>
-              <CardContent className='pt-6 space-y-5'>
-                <p className='text-xs text-gray-500 uppercase tracking-wide'>Bit Visualization</p>
+            <BpPanel title='Bit Visualization'>
+              <div className='space-y-5'>
                 <BitRow value={mask(a!, width)} width={width} label='A' />
                 {!isUnary && <BitRow value={mask(b!, width)} width={width} label='B' />}
                 <div className='border-t border-[hsla(0,0%,20%,1)] pt-4'>
@@ -236,15 +213,13 @@ export default function BitwiseCalculatorPage() {
                   </div>
                   <BitRow value={result} width={width} label='Result' />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </BpPanel>
           )}
 
-          {/* Result table */}
           {canCompute && result !== null && (
-            <Card>
-              <CardContent className='pt-6 space-y-3'>
-                <p className='text-xs text-gray-500 uppercase tracking-wide'>Result Representations</p>
+            <BpPanel title='Result Representations'>
+              <div className='space-y-2'>
                 {[
                   { label: 'Decimal', value: result.toString(10) },
                   { label: 'Hexadecimal', value: toHex(result, width) },
@@ -253,42 +228,36 @@ export default function BitwiseCalculatorPage() {
                 ].map(({ label, value }) => (
                   <div key={label} className='flex items-center gap-2'>
                     <span className='text-xs text-gray-500 w-24 shrink-0'>{label}</span>
-                    <code className='flex-1 bg-[#121212] rounded px-3 py-1.5 font-mono text-sm text-gray-200'>{value}</code>
-                    <Button variant='outline' size='sm' onClick={() => handleCopy(value, label)}>
-                      {copied === label ? <Check className='w-3 h-3' /> : <Copy className='w-3 h-3' />}
-                    </Button>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Quick reference */}
-          <Card>
-            <CardContent className='pt-6 space-y-2'>
-              <p className='text-xs text-gray-500 uppercase tracking-wide'>Common Patterns</p>
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs'>
-                {[
-                  ['Check bit n', 'val & (1 << n)'],
-                  ['Set bit n', 'val | (1 << n)'],
-                  ['Clear bit n', 'val & ~(1 << n)'],
-                  ['Toggle bit n', 'val ^ (1 << n)'],
-                  ['Check if power of 2', 'val & (val - 1) == 0'],
-                  ['Lower nibble', 'val & 0x0F'],
-                  ['Upper nibble (8-bit)', '(val >> 4) & 0x0F'],
-                  ['Align to 4 bytes', '(val + 3) & ~3'],
-                ].map(([desc, pattern]) => (
-                  <div key={desc} className='flex gap-2'>
-                    <span className='text-gray-500 w-36 shrink-0'>{desc}</span>
-                    <code className='text-blue-400 font-mono'>{pattern}</code>
+                    <code className='flex-1 bp-code-view px-3 py-1.5 font-mono text-sm text-gray-200'>{value}</code>
+                    <BpCopyBtn text={value} label='COPY' />
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </BpPanel>
+          )}
+
+          <BpPanel title='Common Patterns'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs'>
+              {[
+                ['Check bit n', 'val & (1 << n)'],
+                ['Set bit n', 'val | (1 << n)'],
+                ['Clear bit n', 'val & ~(1 << n)'],
+                ['Toggle bit n', 'val ^ (1 << n)'],
+                ['Check if power of 2', 'val & (val - 1) == 0'],
+                ['Lower nibble', 'val & 0x0F'],
+                ['Upper nibble (8-bit)', '(val >> 4) & 0x0F'],
+                ['Align to 4 bytes', '(val + 3) & ~3'],
+              ].map(([desc, pattern]) => (
+                <div key={desc} className='flex gap-2'>
+                  <span className='text-gray-500 w-36 shrink-0'>{desc}</span>
+                  <code className='text-blue-400 font-mono'>{pattern}</code>
+                </div>
+              ))}
+            </div>
+          </BpPanel>
 
         </div>
       </div>
-    </div>
+    </BpToolStage>
   );
 }

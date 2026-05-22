@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Card, CardContent, Input } from '@/ui';
-import { Wifi, Send, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { BpToolStage, BpPanel } from '@/components/blueprint';
+import { Send, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -48,23 +48,12 @@ export default function PortCheckerPage() {
   const runCheck = async (h: string, p: number) => {
     setLoading(true);
     setError(null);
-
     try {
       const params = new URLSearchParams({ host: h, port: String(p), timeout: timeout || '5000' });
       const res = await fetch(`/api/port-check?${params}`);
       const data = await res.json() as CheckResult & { error?: string };
-
-      if (!res.ok) {
-        setError(data.error || 'Request failed');
-        return;
-      }
-
-      setResults((prev) => [{
-        ...data,
-        host: h,
-        port: p,
-        checkedAt: new Date(),
-      }, ...prev].slice(0, 10));
+      if (!res.ok) { setError(data.error || 'Request failed'); return; }
+      setResults((prev) => [{ ...data, host: h, port: p, checkedAt: new Date() }, ...prev].slice(0, 10));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Network error');
     } finally {
@@ -94,7 +83,7 @@ export default function PortCheckerPage() {
   }[s]);
 
   return (
-    <div className='h-full flex flex-col'>
+    <BpToolStage cat='backend'>
       <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
         <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Port Checker / Ping</h1>
         <p className='text-xs sm:text-sm text-gray-400'>Test TCP connectivity to a host:port from the server — bypasses browser CORS restrictions</p>
@@ -103,77 +92,59 @@ export default function PortCheckerPage() {
       <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
         <div className='max-w-2xl mx-auto space-y-4'>
 
-          {/* Input */}
-          <Card>
-            <CardContent className='pt-6 space-y-4'>
+          <BpPanel title='Check Port'>
+            <div className='space-y-4'>
               <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
                 <div className='sm:col-span-2'>
-                  <label className='block text-sm font-medium text-gray-300 mb-1'>Host</label>
-                  <Input value={host} onChange={(e) => setHost(e.target.value)}
-                    placeholder='github.com or 192.168.1.1'
-                    onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                  />
+                  <label className='block text-xs text-gray-500 mb-1'>Host</label>
+                  <input value={host} onChange={(e) => setHost(e.target.value)} placeholder='github.com or 192.168.1.1'
+                    className='bp-input w-full' onKeyDown={(e) => e.key === 'Enter' && handleSubmit()} />
                 </div>
                 <div>
-                  <label className='block text-sm font-medium text-gray-300 mb-1'>Port</label>
-                  <Input value={port} onChange={(e) => setPort(e.target.value)}
-                    placeholder='443'
-                    className='font-mono'
-                    onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                  />
+                  <label className='block text-xs text-gray-500 mb-1'>Port</label>
+                  <input value={port} onChange={(e) => setPort(e.target.value)} placeholder='443'
+                    className='bp-input w-full font-mono' onKeyDown={(e) => e.key === 'Enter' && handleSubmit()} />
                 </div>
               </div>
               <div>
-                <label className='block text-sm font-medium text-gray-300 mb-1'>Timeout (ms)</label>
+                <label className='block text-xs text-gray-500 mb-2'>Timeout</label>
                 <div className='flex gap-2'>
                   {['2000', '5000', '10000'].map((t) => (
-                    <Button key={t} size='sm' variant={timeout === t ? 'default' : 'outline'} onClick={() => setTimeout_(t)}>
+                    <button key={t} type='button' onClick={() => setTimeout_(t)}
+                      className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${timeout === t ? 'bg-blue-600 text-white' : 'bp-btn'}`}>
                       {parseInt(t) / 1000}s
-                    </Button>
+                    </button>
                   ))}
                 </div>
               </div>
-              <Button onClick={handleSubmit} disabled={loading} className='w-full' size='lg'>
-                <Send className='w-4 h-4 mr-2' />
-                {loading ? 'Checking…' : 'Check Port'}
-              </Button>
-            </CardContent>
-          </Card>
+              <button type='button' className='bp-btn bp-btn-solid w-full' onClick={handleSubmit} disabled={loading}>
+                <Send className='w-4 h-4 mr-2 inline' />{loading ? 'Checking…' : 'CHECK PORT'}
+              </button>
+            </div>
+          </BpPanel>
 
-          {/* Quick checks */}
-          <Card>
-            <CardContent className='pt-6 space-y-3'>
-              <p className='text-xs text-gray-500 uppercase tracking-wide'>Quick Checks</p>
-              <div className='grid grid-cols-2 gap-2'>
-                {QUICK_CHECKS.map((q) => (
-                  <button key={q.label}
-                    onClick={() => { setHost(q.host); setPort(String(q.port)); runCheck(q.host, q.port); }}
-                    disabled={loading}
-                    className='text-left rounded-md px-3 py-2 bg-[#121212] hover:bg-[#222] border border-[hsla(0,0%,20%,1)] transition-colors disabled:opacity-50'>
-                    <p className='font-mono text-xs text-blue-400'>{q.label}</p>
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <BpPanel title='Quick Checks'>
+            <div className='grid grid-cols-2 gap-2'>
+              {QUICK_CHECKS.map((q) => (
+                <button key={q.label} type='button' onClick={() => { setHost(q.host); setPort(String(q.port)); runCheck(q.host, q.port); }}
+                  disabled={loading}
+                  className='text-left rounded px-3 py-2 bg-[#121212] hover:bg-[#222] border border-[hsla(0,0%,20%,1)] transition-colors disabled:opacity-50'>
+                  <p className='font-mono text-xs text-blue-400'>{q.label}</p>
+                </button>
+              ))}
+            </div>
+          </BpPanel>
 
-          {/* Error */}
           {error && (
-            <Card className='border-red-500/40'>
-              <CardContent className='pt-6'>
-                <div className='flex items-center gap-2 text-red-400'>
-                  <AlertCircle className='w-4 h-4 shrink-0' />
-                  <span className='text-sm'>{error}</span>
-                </div>
-              </CardContent>
-            </Card>
+            <div className='flex items-center gap-2 p-3 rounded border border-red-500/40 bg-red-950/20'>
+              <AlertCircle className='w-4 h-4 text-red-400 shrink-0' />
+              <span className='text-sm text-red-300'>{error}</span>
+            </div>
           )}
 
-          {/* Results */}
           {results.length > 0 && (
-            <Card>
-              <CardContent className='pt-6 space-y-3'>
-                <p className='text-xs text-gray-500 uppercase tracking-wide'>Results</p>
+            <BpPanel title='Results'>
+              <div className='space-y-3'>
                 {results.map((r, idx) => (
                   <div key={idx} className={`rounded-lg border p-4 ${statusColor(r.status)}`}>
                     <div className='flex items-center gap-3 mb-2'>
@@ -181,12 +152,8 @@ export default function PortCheckerPage() {
                       <div className='flex-1 min-w-0'>
                         <div className='flex items-center gap-2 flex-wrap'>
                           <span className='font-mono font-semibold text-sm'>{r.host}:{r.port}</span>
-                          {WELL_KNOWN[r.port] && (
-                            <span className='text-xs opacity-70'>({WELL_KNOWN[r.port]})</span>
-                          )}
-                          <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded border ${statusColor(r.status)}`}>
-                            {r.status}
-                          </span>
+                          {WELL_KNOWN[r.port] && <span className='text-xs opacity-70'>({WELL_KNOWN[r.port]})</span>}
+                          <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded border ${statusColor(r.status)}`}>{r.status}</span>
                         </div>
                         {r.resolvedIP && r.resolvedIP !== r.host && (
                           <p className='text-xs opacity-60 font-mono mt-0.5'>Resolved: {r.resolvedIP}</p>
@@ -198,29 +165,24 @@ export default function PortCheckerPage() {
                     <p className='text-xs opacity-50 mt-1'>{r.checkedAt.toLocaleTimeString()}</p>
                   </div>
                 ))}
-              </CardContent>
-            </Card>
+              </div>
+            </BpPanel>
           )}
 
-          {/* Well-known ports reference */}
-          <Card>
-            <CardContent className='pt-6 space-y-2'>
-              <p className='text-xs text-gray-500 uppercase tracking-wide'>Common Ports</p>
-              <div className='grid grid-cols-2 sm:grid-cols-3 gap-1.5'>
-                {Object.entries(WELL_KNOWN).map(([p, name]) => (
-                  <button key={p}
-                    onClick={() => setPort(p)}
-                    className='flex gap-2 items-center text-left rounded px-2 py-1 bg-[#121212] hover:bg-[#222] transition-colors'>
-                    <code className='font-mono text-xs text-blue-400 w-10 shrink-0'>{p}</code>
-                    <span className='text-xs text-gray-400 truncate'>{name}</span>
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <BpPanel title='Common Ports'>
+            <div className='grid grid-cols-2 sm:grid-cols-3 gap-1.5'>
+              {Object.entries(WELL_KNOWN).map(([p, name]) => (
+                <button key={p} type='button' onClick={() => setPort(p)}
+                  className='flex gap-2 items-center text-left rounded px-2 py-1 bg-[#121212] hover:bg-[#222] transition-colors'>
+                  <code className='font-mono text-xs text-blue-400 w-10 shrink-0'>{p}</code>
+                  <span className='text-xs text-gray-400 truncate'>{name}</span>
+                </button>
+              ))}
+            </div>
+          </BpPanel>
 
         </div>
       </div>
-    </div>
+    </BpToolStage>
   );
 }

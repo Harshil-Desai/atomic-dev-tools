@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Card, CardContent, Textarea } from '@/ui';
-import { Braces, Copy, Check, AlertCircle } from 'lucide-react';
+import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import { Braces, AlertCircle } from 'lucide-react';
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -14,11 +14,7 @@ type TypeNode =
   | { kind: 'array'; element: TypeNode }
   | { kind: 'object'; name: string; fields: Field[] };
 
-interface Field {
-  key: string;
-  node: TypeNode;
-  nullable: boolean;
-}
+interface Field { key: string; node: TypeNode; nullable: boolean; }
 
 // ─── inference ────────────────────────────────────────────────────────────────
 
@@ -27,8 +23,7 @@ type JSONValue = string | number | boolean | null | JSONValue[] | { [k: string]:
 const generatedNames = new Set<string>();
 
 function toPascalCase(s: string): string {
-  return s.replace(/[-_\s]+(.)/g, (_, c: string) => c.toUpperCase())
-          .replace(/^(.)/, (c: string) => c.toUpperCase());
+  return s.replace(/[-_\s]+(.)/g, (_, c: string) => c.toUpperCase()).replace(/^(.)/, (c: string) => c.toUpperCase());
 }
 
 function uniqueName(base: string): string {
@@ -45,16 +40,12 @@ function inferNode(val: JSONValue, name: string): TypeNode {
   if (typeof val === 'string') return { kind: 'primitive', type: 'string' };
   if (typeof val === 'number') return { kind: 'primitive', type: 'number' };
   if (typeof val === 'boolean') return { kind: 'primitive', type: 'boolean' };
-
   if (Array.isArray(val)) {
     if (val.length === 0) return { kind: 'array', element: { kind: 'primitive', type: 'any' } };
-    // Merge all element types
     const elementName = name.replace(/s$/i, '') || 'Item';
     const merged = mergeNodes(val.map((v) => inferNode(v as JSONValue, elementName)));
     return { kind: 'array', element: merged };
   }
-
-  // Object
   const structName = uniqueName(name);
   const fields: Field[] = Object.entries(val as Record<string, JSONValue>).map(([k, v]) => {
     const nullable = v === null;
@@ -71,43 +62,27 @@ function mergeNodes(nodes: TypeNode[]): TypeNode {
     const types = new Set(nodes.map((n) => n.kind === 'primitive' ? n.type : 'any'));
     if (types.size === 1) return nodes[0];
   }
-  // Fallback: any
   return { kind: 'primitive', type: 'any' };
 }
 
-// ─── collect all named objects (depth-first) ─────────────────────────────────
-
 function collectObjects(node: TypeNode, out: TypeNode[]): void {
-  if (node.kind === 'object') {
-    node.fields.forEach((f) => collectObjects(f.node, out));
-    out.push(node);
-  } else if (node.kind === 'array') {
-    collectObjects(node.element, out);
-  } else if (node.kind === 'optional') {
-    collectObjects(node.inner, out);
-  }
+  if (node.kind === 'object') { node.fields.forEach((f) => collectObjects(f.node, out)); out.push(node); }
+  else if (node.kind === 'array') collectObjects(node.element, out);
+  else if (node.kind === 'optional') collectObjects(node.inner, out);
 }
-
-// ─── TypeScript generator ─────────────────────────────────────────────────────
 
 function tsType(node: TypeNode, nullable: boolean): string {
   let base: string;
-  if (node.kind === 'primitive') {
-    base = node.type === 'null' ? 'null' : node.type;
-  } else if (node.kind === 'array') {
-    base = `${tsType(node.element, false)}[]`;
-  } else if (node.kind === 'object') {
-    base = node.name;
-  } else {
-    base = `${tsType(node.inner, false)} | null`;
-  }
+  if (node.kind === 'primitive') base = node.type === 'null' ? 'null' : node.type;
+  else if (node.kind === 'array') base = `${tsType(node.element, false)}[]`;
+  else if (node.kind === 'object') base = node.name;
+  else base = `${tsType(node.inner, false)} | null`;
   return nullable && node.kind !== 'primitive' ? `${base} | null` : base;
 }
 
 function generateTS(root: TypeNode): string {
   const objects: TypeNode[] = [];
   collectObjects(root, objects);
-
   return objects.map((obj) => {
     if (obj.kind !== 'object') return '';
     const lines = obj.fields.map((f) => {
@@ -119,14 +94,11 @@ function generateTS(root: TypeNode): string {
   }).join('\n\n');
 }
 
-// ─── Go generator ─────────────────────────────────────────────────────────────
-
 function goType(node: TypeNode, nullable: boolean): string {
   if (node.kind === 'primitive') {
     if (node.type === 'string') return nullable ? '*string' : 'string';
     if (node.type === 'number') return nullable ? '*float64' : 'float64';
     if (node.type === 'boolean') return nullable ? '*bool' : 'bool';
-    if (node.type === 'null') return 'interface{}';
     return 'interface{}';
   }
   if (node.kind === 'array') return `[]${goType(node.element, false)}`;
@@ -134,18 +106,13 @@ function goType(node: TypeNode, nullable: boolean): string {
   return 'interface{}';
 }
 
-function goFieldName(key: string): string {
-  return toPascalCase(key);
-}
-
 function generateGo(root: TypeNode): string {
   const objects: TypeNode[] = [];
   collectObjects(root, objects);
-
   return objects.map((obj) => {
     if (obj.kind !== 'object') return '';
     const lines = obj.fields.map((f) => {
-      const fieldName = goFieldName(f.key);
+      const fieldName = toPascalCase(f.key);
       const typ = goType(f.node, f.nullable);
       const tag = `\`json:"${f.key}${f.nullable ? ',omitempty' : ''}"\``;
       return `\t${fieldName} ${typ} ${tag}`;
@@ -154,14 +121,15 @@ function generateGo(root: TypeNode): string {
   }).join('\n\n');
 }
 
-// ─── Rust generator ───────────────────────────────────────────────────────────
+function toSnakeCase(s: string): string {
+  return s.replace(/([A-Z])/g, '_$1').replace(/[-\s]+/g, '_').toLowerCase().replace(/^_/, '');
+}
 
 function rustType(node: TypeNode, nullable: boolean): string {
   if (node.kind === 'primitive') {
     if (node.type === 'string') return nullable ? 'Option<String>' : 'String';
     if (node.type === 'number') return nullable ? 'Option<f64>' : 'f64';
     if (node.type === 'boolean') return nullable ? 'Option<bool>' : 'bool';
-    if (node.type === 'null') return 'serde_json::Value';
     return 'serde_json::Value';
   }
   if (node.kind === 'array') return nullable ? `Option<Vec<${rustType(node.element, false)}>>` : `Vec<${rustType(node.element, false)}>`;
@@ -169,14 +137,9 @@ function rustType(node: TypeNode, nullable: boolean): string {
   return 'serde_json::Value';
 }
 
-function toSnakeCase(s: string): string {
-  return s.replace(/([A-Z])/g, '_$1').replace(/[-\s]+/g, '_').toLowerCase().replace(/^_/, '');
-}
-
 function generateRust(root: TypeNode): string {
   const objects: TypeNode[] = [];
   collectObjects(root, objects);
-
   return objects.map((obj) => {
     if (obj.kind !== 'object') return '';
     const lines = obj.fields.map((f) => {
@@ -192,35 +155,8 @@ function generateRust(root: TypeNode): string {
 // ─── component ────────────────────────────────────────────────────────────────
 
 const EXAMPLES = [
-  {
-    label: 'User object',
-    json: `{
-  "id": 1,
-  "name": "Alice",
-  "email": "alice@example.com",
-  "age": 30,
-  "active": true,
-  "avatar": null,
-  "address": {
-    "street": "123 Main St",
-    "city": "Springfield",
-    "zip": "12345"
-  },
-  "tags": ["admin", "user"]
-}`,
-  },
-  {
-    label: 'API response',
-    json: `{
-  "status": "ok",
-  "page": 1,
-  "total": 100,
-  "data": [
-    { "id": 1, "title": "Post one", "published": true },
-    { "id": 2, "title": "Post two", "published": false }
-  ]
-}`,
-  },
+  { label: 'User object', json: `{\n  "id": 1,\n  "name": "Alice",\n  "email": "alice@example.com",\n  "age": 30,\n  "active": true,\n  "avatar": null,\n  "address": {\n    "street": "123 Main St",\n    "city": "Springfield",\n    "zip": "12345"\n  },\n  "tags": ["admin", "user"]\n}` },
+  { label: 'API response', json: `{\n  "status": "ok",\n  "page": 1,\n  "total": 100,\n  "data": [\n    { "id": 1, "title": "Post one", "published": true },\n    { "id": 2, "title": "Post two", "published": false }\n  ]\n}` },
 ];
 
 export default function JsonToTypePage() {
@@ -229,7 +165,6 @@ export default function JsonToTypePage() {
   const [rootName, setRootName] = useState('Root');
   const [output, setOutput] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
   const convert = (json: string, l: Lang, name: string) => {
     generatedNames.clear();
@@ -250,20 +185,14 @@ export default function JsonToTypePage() {
 
   const handleConvert = () => convert(input, lang, rootName);
 
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(output);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const langs: { label: string; value: Lang; ext: string }[] = [
-    { label: 'TypeScript', value: 'typescript', ext: '.ts' },
-    { label: 'Go', value: 'go', ext: '.go' },
-    { label: 'Rust', value: 'rust', ext: '.rs' },
+  const langs: { label: string; value: Lang }[] = [
+    { label: 'TypeScript', value: 'typescript' },
+    { label: 'Go', value: 'go' },
+    { label: 'Rust', value: 'rust' },
   ];
 
   return (
-    <div className='h-full flex flex-col'>
+    <BpToolStage cat='backend'>
       <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
         <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>JSON → Type Struct</h1>
         <p className='text-xs sm:text-sm text-gray-400'>Convert JSON payloads to TypeScript interfaces, Go structs, or Rust structs</p>
@@ -272,93 +201,67 @@ export default function JsonToTypePage() {
       <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
         <div className='max-w-5xl mx-auto space-y-4'>
 
-          {/* Config row */}
-          <Card>
-            <CardContent className='pt-6 space-y-4'>
-              <div className='flex flex-wrap gap-4 items-end'>
-                <div className='flex-1 min-w-40'>
-                  <label className='block text-sm font-medium text-gray-300 mb-2'>Target Language</label>
-                  <div className='flex gap-2'>
-                    {langs.map((l) => (
-                      <Button key={l.value} size='sm' variant={lang === l.value ? 'default' : 'outline'}
-                        onClick={() => { setLang(l.value); if (output) convert(input, l.value, rootName); }}>
-                        {l.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className='block text-sm font-medium text-gray-300 mb-2'>Root Type Name</label>
-                  <input
-                    value={rootName}
-                    onChange={(e) => setRootName(e.target.value)}
-                    className='h-9 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 w-32'
-                    placeholder='Root'
-                  />
-                </div>
-              </div>
-
-              {/* Quick examples */}
-              <div>
-                <p className='text-xs text-gray-500 mb-2'>Quick examples</p>
+          <BpPanel title='Settings'>
+            <div className='flex flex-wrap gap-4 items-end mb-4'>
+              <div className='flex-1 min-w-40'>
+                <label className='block text-xs text-gray-500 mb-2'>Target Language</label>
                 <div className='flex gap-2'>
-                  {EXAMPLES.map((ex) => (
-                    <button key={ex.label} onClick={() => setInput(ex.json)}
-                      className='text-xs px-3 py-1.5 rounded border border-[hsla(0,0%,20%,1)] bg-[#121212] hover:bg-[#222] text-gray-300 transition-colors'>
-                      {ex.label}
+                  {langs.map((l) => (
+                    <button key={l.value} type='button' onClick={() => { setLang(l.value); if (output) convert(input, l.value, rootName); }}
+                      className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${lang === l.value ? 'bg-blue-600 text-white' : 'bp-btn'}`}>
+                      {l.label}
                     </button>
                   ))}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <label className='block text-xs text-gray-500 mb-2'>Root Type Name</label>
+                <input value={rootName} onChange={(e) => setRootName(e.target.value)} placeholder='Root'
+                  className='bp-input font-mono w-32' />
+              </div>
+            </div>
+            <div>
+              <p className='text-xs text-gray-500 mb-2'>Quick examples</p>
+              <div className='flex gap-2'>
+                {EXAMPLES.map((ex) => (
+                  <button key={ex.label} type='button' onClick={() => setInput(ex.json)}
+                    className='text-xs px-3 py-1.5 rounded border border-[hsla(0,0%,20%,1)] bg-[#121212] hover:bg-[#222] text-gray-300 transition-colors'>
+                    {ex.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </BpPanel>
 
-          {/* I/O */}
-          <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
-            <Card>
-              <CardContent className='pt-6 space-y-3'>
-                <label className='block text-sm font-medium text-gray-300'>JSON Input</label>
-                <Textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder='Paste JSON here…'
-                  rows={18}
-                  className='font-mono text-xs'
-                />
-                <Button onClick={handleConvert} disabled={!input.trim()} className='w-full'>
-                  <Braces className='w-4 h-4 mr-2' />
-                  Generate Types
-                </Button>
-              </CardContent>
-            </Card>
+          <div className='bp-layout-2col'>
+            <BpPanel title='JSON Input'>
+              <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder='Paste JSON here…'
+                rows={18} className='bp-textarea font-mono text-xs mb-3' />
+              <button type='button' className='bp-btn bp-btn-solid w-full' onClick={handleConvert} disabled={!input.trim()}>
+                <Braces className='w-4 h-4 mr-2 inline' />GENERATE TYPES
+              </button>
+            </BpPanel>
 
-            <Card>
-              <CardContent className='pt-6 space-y-3'>
-                <div className='flex items-center justify-between'>
-                  <label className='block text-sm font-medium text-gray-300'>
-                    {langs.find((l) => l.value === lang)?.label} Output
-                  </label>
-                  {output && (
-                    <Button variant='outline' size='sm' onClick={handleCopy}>
-                      {copied ? <><Check className='w-3 h-3 mr-1' />Copied</> : <><Copy className='w-3 h-3 mr-1' />Copy</>}
-                    </Button>
-                  )}
+            <BpPanel title={`${langs.find((l) => l.value === lang)?.label} Output`}>
+              {output && (
+                <div className='bp-panel-actions mb-3'>
+                  <BpCopyBtn text={output} label='COPY' />
                 </div>
-                {error && (
-                  <div className='flex items-start gap-2 text-red-400 text-sm'>
-                    <AlertCircle className='w-4 h-4 shrink-0 mt-0.5' />
-                    <span>{error}</span>
-                  </div>
-                )}
-                <pre className='min-h-64 bg-[#121212] rounded-md p-4 font-mono text-xs text-gray-300 overflow-auto whitespace-pre'>
-                  {output || <span className='text-gray-600'>Output will appear here…</span>}
-                </pre>
-              </CardContent>
-            </Card>
+              )}
+              {error && (
+                <div className='flex items-start gap-2 text-red-400 text-sm mb-3'>
+                  <AlertCircle className='w-4 h-4 shrink-0 mt-0.5' />
+                  <span>{error}</span>
+                </div>
+              )}
+              <pre className='bp-code-pre min-h-64 p-4 font-mono text-xs text-gray-300 overflow-auto whitespace-pre'>
+                {output || <span className='text-gray-600'>Output will appear here…</span>}
+              </pre>
+            </BpPanel>
           </div>
 
         </div>
       </div>
-    </div>
+    </BpToolStage>
   );
 }

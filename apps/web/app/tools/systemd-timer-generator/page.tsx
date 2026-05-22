@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button, Card, CardContent, Input } from '@/ui';
-import { Timer, Copy, Check, AlertCircle } from 'lucide-react';
+import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import { AlertCircle } from 'lucide-react';
 
 // ─── cron → systemd OnCalendar conversion ────────────────────────────────────
 
@@ -31,7 +31,6 @@ const WEEKDAY_MAP: Record<number, string> = {
 };
 
 function convertField(field: string): string {
-  // Pass through most fields unchanged — systemd uses same syntax for *, */n, ranges, lists
   return field;
 }
 
@@ -142,13 +141,6 @@ export default function SystemdTimerGeneratorPage() {
   const [persistent, setPersistent] = useState(true);
   const [onCalendar, setOnCalendar] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState<string | null>(null);
-
-  const handleCopy = async (text: string, key: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 2000);
-  };
 
   const convert = (expr: string) => {
     const { onCalendar: oc, error: e } = cronToOnCalendar(expr);
@@ -171,7 +163,7 @@ export default function SystemdTimerGeneratorPage() {
     : null;
 
   return (
-    <div className='h-full flex flex-col'>
+    <BpToolStage cat='infra'>
       <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
         <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Systemd Timer Generator</h1>
         <p className='text-xs sm:text-sm text-gray-400'>Convert cron expressions into systemd .timer and .service unit files</p>
@@ -180,139 +172,83 @@ export default function SystemdTimerGeneratorPage() {
       <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
         <div className='max-w-4xl mx-auto space-y-4'>
 
-          {/* Config */}
-          <Card>
-            <CardContent className='pt-6 space-y-4'>
+          <BpPanel title='Configuration'>
+            <div className='space-y-4'>
               <div>
-                <label className='block text-sm font-medium text-gray-300 mb-1'>Cron Expression</label>
-                <Input
-                  value={cronExpr}
-                  onChange={(e) => handleExprChange(e.target.value)}
-                  placeholder='*/5 * * * *'
-                  className='font-mono'
-                />
+                <label className='block text-xs text-gray-500 mb-1'>Cron Expression</label>
+                <input value={cronExpr} onChange={(e) => handleExprChange(e.target.value)} placeholder='*/5 * * * *' className='bp-input w-full font-mono' />
                 <p className='text-xs text-gray-500 mt-1'>5-field cron (min hr day month weekday) or shortcuts like @daily</p>
               </div>
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                 <div>
-                  <label className='block text-sm font-medium text-gray-300 mb-1'>Unit Name</label>
-                  <Input
-                    value={unitName}
-                    onChange={(e) => setUnitName(e.target.value.replace(/\s+/g, '-'))}
-                    placeholder='my-job'
-                  />
-                  <p className='text-xs text-gray-500 mt-1'>Used as filename: {unitName || 'my-job'}.timer / .service</p>
+                  <label className='block text-xs text-gray-500 mb-1'>Unit Name</label>
+                  <input value={unitName} onChange={(e) => setUnitName(e.target.value.replace(/\s+/g, '-'))} placeholder='my-job' className='bp-input w-full' />
+                  <p className='text-xs text-gray-500 mt-1'>Filename: {unitName || 'my-job'}.timer / .service</p>
                 </div>
                 <div>
-                  <label className='block text-sm font-medium text-gray-300 mb-1'>ExecStart</label>
-                  <Input
-                    value={execStart}
-                    onChange={(e) => setExecStart(e.target.value)}
-                    placeholder='/usr/bin/my-job'
-                    className='font-mono'
-                  />
+                  <label className='block text-xs text-gray-500 mb-1'>ExecStart</label>
+                  <input value={execStart} onChange={(e) => setExecStart(e.target.value)} placeholder='/usr/bin/my-job' className='bp-input w-full font-mono' />
                 </div>
               </div>
               <div>
-                <label className='block text-sm font-medium text-gray-300 mb-1'>Description <span className='text-gray-500 font-normal'>(optional)</span></label>
-                <Input
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder='Describe what this job does'
-                />
+                <label className='block text-xs text-gray-500 mb-1'>Description <span className='text-gray-600'>(optional)</span></label>
+                <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder='Describe what this job does' className='bp-input w-full' />
               </div>
               <label className='flex items-center gap-2 cursor-pointer'>
-                <input
-                  type='checkbox'
-                  checked={persistent}
-                  onChange={(e) => setPersistent(e.target.checked)}
-                  className='w-4 h-4 rounded'
-                />
+                <input type='checkbox' checked={persistent} onChange={(e) => setPersistent(e.target.checked)} className='w-4 h-4 rounded' />
                 <span className='text-sm text-gray-300'>Persistent=true <span className='text-gray-500'>(catch up missed runs after downtime)</span></span>
               </label>
-            </CardContent>
-          </Card>
+            </div>
+          </BpPanel>
 
-          {/* Quick examples */}
-          <Card>
-            <CardContent className='pt-6 space-y-3'>
-              <p className='text-xs text-gray-500 uppercase tracking-wide'>Quick Examples</p>
-              <div className='grid grid-cols-2 sm:grid-cols-4 gap-2'>
-                {EXAMPLES.map((ex) => (
-                  <button
-                    key={ex.expr}
-                    onClick={() => handleExprChange(ex.expr)}
-                    className='text-left rounded-md px-3 py-2 bg-[#121212] hover:bg-[#222] border border-[hsla(0,0%,20%,1)] transition-colors'
-                  >
-                    <p className='text-xs text-gray-400 mb-0.5'>{ex.label}</p>
-                    <p className='font-mono text-xs text-blue-400'>{ex.expr}</p>
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <BpPanel title='Quick Examples'>
+            <div className='grid grid-cols-2 sm:grid-cols-4 gap-2'>
+              {EXAMPLES.map((ex) => (
+                <button key={ex.expr} type='button' onClick={() => handleExprChange(ex.expr)}
+                  className='text-left rounded px-3 py-2 bg-[#121212] hover:bg-[#222] border border-[hsla(0,0%,20%,1)] transition-colors'>
+                  <p className='text-xs text-gray-400 mb-0.5'>{ex.label}</p>
+                  <p className='font-mono text-xs text-blue-400'>{ex.expr}</p>
+                </button>
+              ))}
+            </div>
+          </BpPanel>
 
-          {/* Error */}
           {error && (
-            <Card className='border-red-500/40'>
-              <CardContent className='pt-6'>
-                <div className='flex items-center gap-2 text-red-400'>
-                  <AlertCircle className='w-4 h-4 shrink-0' />
-                  <span className='text-sm'>{error}</span>
-                </div>
-              </CardContent>
-            </Card>
+            <div className='flex items-center gap-2 p-3 rounded border border-red-500/40 bg-red-950/20'>
+              <AlertCircle className='w-4 h-4 text-red-400 shrink-0' />
+              <span className='text-sm text-red-300'>{error}</span>
+            </div>
           )}
 
           {!error && onCalendar && (
             <>
-              {/* OnCalendar preview */}
-              <Card>
-                <CardContent className='pt-6'>
-                  <p className='text-xs text-gray-500 uppercase tracking-wide mb-2'>Converted OnCalendar</p>
-                  <div className='flex items-center gap-2'>
-                    <code className='flex-1 bg-[#121212] rounded px-3 py-2 font-mono text-sm text-green-400'>{onCalendar}</code>
-                    <Button variant='outline' size='sm' onClick={() => handleCopy(onCalendar, 'oncalendar')}>
-                      {copied === 'oncalendar' ? <Check className='w-4 h-4' /> : <Copy className='w-4 h-4' />}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <BpPanel title='Converted OnCalendar'>
+                <div className='flex items-center gap-2'>
+                  <code className='flex-1 bp-code-view px-3 py-2 font-mono text-sm text-green-400'>{onCalendar}</code>
+                  <BpCopyBtn text={onCalendar} label='COPY' />
+                </div>
+              </BpPanel>
 
-              {/* Timer unit */}
               {timerUnit && (
-                <Card>
-                  <CardContent className='pt-6 space-y-3'>
-                    <div className='flex items-center justify-between'>
-                      <p className='text-sm font-semibold text-gray-300'>{unitName || 'my-job'}.timer</p>
-                      <Button variant='outline' size='sm' onClick={() => handleCopy(timerUnit, 'timer')}>
-                        {copied === 'timer' ? <><Check className='w-4 h-4 mr-1' />Copied</> : <><Copy className='w-4 h-4 mr-1' />Copy</>}
-                      </Button>
-                    </div>
-                    <pre className='bg-[#121212] rounded-md p-4 font-mono text-xs text-gray-300 overflow-x-auto whitespace-pre'>{timerUnit}</pre>
-                  </CardContent>
-                </Card>
+                <BpPanel title={`${unitName || 'my-job'}.timer`}>
+                  <div className='bp-panel-actions mb-3'>
+                    <BpCopyBtn text={timerUnit} label='COPY' />
+                  </div>
+                  <pre className='bp-code-pre px-4 py-3 text-xs text-gray-300 overflow-x-auto whitespace-pre'>{timerUnit}</pre>
+                </BpPanel>
               )}
 
-              {/* Service unit */}
               {serviceUnit && (
-                <Card>
-                  <CardContent className='pt-6 space-y-3'>
-                    <div className='flex items-center justify-between'>
-                      <p className='text-sm font-semibold text-gray-300'>{unitName || 'my-job'}.service</p>
-                      <Button variant='outline' size='sm' onClick={() => handleCopy(serviceUnit, 'service')}>
-                        {copied === 'service' ? <><Check className='w-4 h-4 mr-1' />Copied</> : <><Copy className='w-4 h-4 mr-1' />Copy</>}
-                      </Button>
-                    </div>
-                    <pre className='bg-[#121212] rounded-md p-4 font-mono text-xs text-gray-300 overflow-x-auto whitespace-pre'>{serviceUnit}</pre>
-                  </CardContent>
-                </Card>
+                <BpPanel title={`${unitName || 'my-job'}.service`}>
+                  <div className='bp-panel-actions mb-3'>
+                    <BpCopyBtn text={serviceUnit} label='COPY' />
+                  </div>
+                  <pre className='bp-code-pre px-4 py-3 text-xs text-gray-300 overflow-x-auto whitespace-pre'>{serviceUnit}</pre>
+                </BpPanel>
               )}
 
-              {/* Install instructions */}
-              <Card>
-                <CardContent className='pt-6 space-y-2'>
-                  <p className='text-xs text-gray-500 uppercase tracking-wide'>Install Instructions</p>
+              <BpPanel title='Install Instructions'>
+                <div className='space-y-2'>
                   {[
                     `sudo cp ${unitName || 'my-job'}.timer ${unitName || 'my-job'}.service /etc/systemd/system/`,
                     'sudo systemctl daemon-reload',
@@ -320,19 +256,17 @@ export default function SystemdTimerGeneratorPage() {
                     `systemctl status ${unitName || 'my-job'}.timer`,
                   ].map((cmd, i) => (
                     <div key={i} className='flex items-center gap-2'>
-                      <code className='flex-1 bg-[#121212] rounded px-3 py-2 font-mono text-xs text-gray-300'>{cmd}</code>
-                      <Button variant='outline' size='sm' className='shrink-0' onClick={() => handleCopy(cmd, `cmd-${i}`)}>
-                        {copied === `cmd-${i}` ? <Check className='w-3 h-3' /> : <Copy className='w-3 h-3' />}
-                      </Button>
+                      <code className='flex-1 bp-code-view px-3 py-2 font-mono text-xs text-gray-300'>{cmd}</code>
+                      <BpCopyBtn text={cmd} label='COPY' />
                     </div>
                   ))}
-                </CardContent>
-              </Card>
+                </div>
+              </BpPanel>
             </>
           )}
 
         </div>
       </div>
-    </div>
+    </BpToolStage>
   );
 }

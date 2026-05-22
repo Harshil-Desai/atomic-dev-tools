@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Card, CardContent, Input, Textarea } from '@/ui';
-import { Send, AlertCircle, Globe } from 'lucide-react';
+import { Send, AlertCircle } from 'lucide-react';
+import { BpPanel, BpToolStage, BpCopyBtn } from '@/components/blueprint';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -58,51 +58,33 @@ export default function ApiTesterPage() {
     let requestResponse: ResponseData | null = null;
 
     try {
-      // Parse headers
       let headers: Record<string, string> = {};
       if (config.headers.trim()) {
         try {
           headers = JSON.parse(config.headers);
-        } catch (e) {
+        } catch {
           throw new Error('Invalid JSON in headers field');
         }
       }
 
-      // Parse body for non-GET requests
       let body: string | undefined;
       if (config.method !== 'GET' && config.body.trim()) {
         body = config.body;
       }
 
-      // Create AbortController for timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => {
-        controller.abort();
-      }, config.timeout * 1000);
+      const timeoutId = setTimeout(() => { controller.abort(); }, config.timeout * 1000);
 
       const startTime = performance.now();
-      const res = await fetch(config.url, {
-        method: config.method,
-        headers,
-        body,
-        signal: controller.signal,
-      });
-
+      const res = await fetch(config.url, { method: config.method, headers, body, signal: controller.signal });
       clearTimeout(timeoutId);
 
-      const endTime = performance.now();
-      const responseTime = Math.round(endTime - startTime);
-
-      // Get response headers
+      const responseTime = Math.round(performance.now() - startTime);
       const responseHeaders: Record<string, string> = {};
-      res.headers.forEach((value, key) => {
-        responseHeaders[key] = value;
-      });
+      res.headers.forEach((value, key) => { responseHeaders[key] = value; });
 
-      // Get response body
       const contentType = res.headers.get('content-type');
       let responseBody: string;
-
       if (contentType?.includes('application/json')) {
         const json = await res.json();
         responseBody = JSON.stringify(json, null, 2);
@@ -110,278 +92,160 @@ export default function ApiTesterPage() {
         responseBody = await res.text();
       }
 
-      requestResponse = {
-        status: res.status,
-        statusText: res.statusText,
-        headers: responseHeaders,
-        body: responseBody,
-        time: responseTime,
-        timestamp: requestStartTime,
-        config: { ...config },
-      };
-
+      requestResponse = { status: res.status, statusText: res.statusText, headers: responseHeaders, body: responseBody, time: responseTime, timestamp: requestStartTime, config: { ...config } };
       setResponse(requestResponse);
     } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : 'An error occurred';
-      if (errorMessage === 'AbortError' || errorMessage.includes('aborted')) {
-        requestError =
-          `Request timed out after ${config.timeout} seconds.\n\n` +
-          '• The server took too long to respond\n' +
-          '• Network connection is slow\n' +
-          '• Try increasing the timeout value';
-        setError(requestError);
-      } else if (errorMessage.includes('Failed to fetch')) {
-        requestError =
-          'Network request failed. This could be due to:\n\n' +
-          "• CORS restrictions (the API doesn't allow browser requests)\n" +
-          '• Invalid URL\n' +
-          '• Network connectivity issues\n\n' +
-          'Tip: Use a CORS proxy or test with APIs that support CORS.';
-        setError(requestError);
-      } else {
-        requestError = errorMessage;
-        setError(requestError);
-      }
+      const msg = e instanceof Error ? e.message : 'An error occurred';
+      requestError = msg.includes('aborted') ? `Request timed out after ${config.timeout}s.` : msg.includes('Failed to fetch') ? 'Network request failed (CORS or invalid URL).' : msg;
+      setError(requestError);
     } finally {
       setLoading(false);
-
-      // Add to history
-      const newHistoryEntry: HistoryEntry = {
-        id: Date.now(),
-        response: requestResponse,
-        error: requestError,
-        timestamp: requestStartTime,
-        config: { ...config },
-      };
-
-      setHistory((prev) => {
-        const updated = [newHistoryEntry, ...prev];
-        // Keep only last 5
-        return updated.slice(0, 5);
-      });
+      setHistory((prev) => [{ id: Date.now(), response: requestResponse, error: requestError, timestamp: requestStartTime, config: { ...config } }, ...prev].slice(0, 5));
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-      sendRequest();
-    }
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') sendRequest();
   };
 
   const viewHistoryEntry = (index: number) => {
     setActiveHistoryIndex(index);
     const entry = history[index];
-    if (entry.response) {
-      setResponse(entry.response);
-      setError(null);
-    } else if (entry.error) {
-      setError(entry.error);
-      setResponse(null);
-    }
+    if (entry.response) { setResponse(entry.response); setError(null); }
+    else if (entry.error) { setError(entry.error); setResponse(null); }
   };
 
-  const clearHistory = () => {
-    setHistory([]);
-    setActiveHistoryIndex(null);
-    setResponse(null);
-    setError(null);
-  };
-
-  const getRequestLabel = (entry: HistoryEntry) => {
-    const { method, url } = entry.config;
-    return `${method} ${url.substring(0, 30)}${url.length > 30 ? '...' : ''}`;
-  };
+  const statusClass = (s: number) =>
+    s >= 200 && s < 300 ? 'bp-status-ok' : s >= 400 ? 'bp-status-fail' : 'bp-status-warn';
 
   return (
-    <div className='h-full flex flex-col'>
-      {/* Header */}
-      <div className='border-b border-border bg-card p-4 sm:p-5 md:p-6'>
-        <div className="flex items-center gap-3 mb-2">
-          <div>
-            <h1 className='text-xl sm:text-2xl font-semibold text-foreground'>API Tester</h1>
-            <p className='text-xs sm:text-sm text-muted-foreground'>Test HTTP endpoints instantly. Press ⌘+Enter to send request.</p>
-          </div>
-        </div>
+    <BpToolStage cat='api'>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
+        <h1 className='text-xl sm:text-2xl font-bold text-white mb-1'>API Tester</h1>
+        <p className='text-xs sm:text-sm text-gray-400'>Test HTTP endpoints — press Ctrl+Enter to send</p>
       </div>
-      {/* Content */}
+
       <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-6xl mx-auto flex flex-col md:flex-row gap-4 sm:gap-5 md:gap-6'>
-          {/* Request Panel */}
-          <div className='space-y-4'>
-            <Card className='md:min-w-96'>
-              <CardContent className='pt-6 space-y-4'>
+        <div className='max-w-6xl mx-auto flex flex-col lg:flex-row gap-4'>
+          {/* Request */}
+          <div className='space-y-3 lg:w-96 shrink-0'>
+            <BpPanel title='REQUEST'>
+              <div className='space-y-3'>
                 <div>
-                  <label className='block text-xs sm:text-sm font-medium text-gray-300 mb-2'>Method & URL</label>
+                  <label className='block text-xs text-gray-500 mb-1 uppercase font-mono tracking-wider'>Method & URL</label>
                   <div className='flex gap-2'>
                     <select
                       value={config.method}
                       onChange={(e) => setConfig({ ...config, method: e.target.value as HttpMethod })}
-                      className='h-10 px-3 rounded-md border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      className='bp-input w-24 shrink-0'
+                      style={{ resize: 'none' }}
                     >
-                      <option>GET</option>
-                      <option>POST</option>
-                      <option>PUT</option>
-                      <option>PATCH</option>
-                      <option>DELETE</option>
+                      <option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option>
                     </select>
-                    <Input
+                    <input
+                      className='bp-input flex-1'
                       placeholder='https://api.example.com/endpoint'
                       value={config.url}
                       onChange={(e) => setConfig({ ...config, url: e.target.value })}
                       onKeyDown={handleKeyDown}
-                      className='flex-1'
                     />
                   </div>
                 </div>
                 <div>
-                  <label className='block text-sm font-medium text-gray-300 mb-2'>Headers (JSON)</label>
-                  <Textarea
-                    placeholder='{
-  "Authorization": "Bearer token"
-}'
+                  <label className='block text-xs text-gray-500 mb-1 uppercase font-mono tracking-wider'>Headers (JSON)</label>
+                  <textarea
+                    className='bp-textarea'
+                    rows={5}
                     value={config.headers}
                     onChange={(e) => setConfig({ ...config, headers: e.target.value })}
-                    rows={6}
-                    className='font-mono text-xs'
+                    placeholder='{ "Authorization": "Bearer ..." }'
                   />
                 </div>
                 <div>
-                  <label className='block text-sm font-medium text-gray-300 mb-2'>Timeout (seconds)</label>
-                  <Input
-                    type='number'
-                    min='1'
-                    max='300'
-                    value={config.timeout}
-                    onChange={(e) => setConfig({ ...config, timeout: parseInt(e.target.value) || 30 })}
-                    placeholder='30'
-                    className='max-w-32'
-                  />
-                  <p className='text-xs text-gray-500 mt-1'>Default: 30 seconds</p>
+                  <label className='block text-xs text-gray-500 mb-1 uppercase font-mono tracking-wider'>Timeout (s)</label>
+                  <input type='number' className='bp-input w-24' min={1} max={300} value={config.timeout}
+                    onChange={(e) => setConfig({ ...config, timeout: parseInt(e.target.value) || 30 })} />
                 </div>
                 {config.method !== 'GET' && (
                   <div>
-                    <label className='block text-sm font-medium text-gray-300 mb-2'>Request Body</label>
-                    <Textarea
-                      placeholder='{
-  "key": "value"
-}'
-                      value={config.body}
+                    <label className='block text-xs text-gray-500 mb-1 uppercase font-mono tracking-wider'>Body</label>
+                    <textarea className='bp-textarea' rows={6} value={config.body}
                       onChange={(e) => setConfig({ ...config, body: e.target.value })}
-                      rows={8}
-                      className='font-mono text-xs'
-                    />
+                      placeholder='{ "key": "value" }' />
                   </div>
                 )}
-                <Button onClick={sendRequest} disabled={loading || !config.url.trim()} className='w-full' size='lg'>
-                  <Send className='w-4 h-4 mr-2' />
-                  {loading ? 'Sending...' : 'Send Request'}
-                </Button>
-              </CardContent>
-            </Card>
+                <button
+                  className='bp-btn bp-btn-solid w-full justify-center'
+                  onClick={sendRequest}
+                  disabled={loading || !config.url.trim()}
+                >
+                  <Send className='w-3 h-3' />
+                  {loading ? 'SENDING…' : 'SEND REQUEST'}
+                </button>
+              </div>
+            </BpPanel>
           </div>
-          {/* Response Panel */}
-          <div className='space-y-4'>
+
+          {/* Response */}
+          <div className='space-y-3 flex-1 min-w-0'>
             {history.length > 0 && (
-              <Card>
-                <CardContent className='pt-6'>
-                  <div className='flex items-center justify-between mb-3'>
-                    <h3 className='text-sm font-semibold text-gray-300'>Recent Requests ({history.length})</h3>
-                    <Button onClick={clearHistory} variant='ghost' size='sm'>
-                      Clear
-                    </Button>
-                  </div>
-                  <div className='flex flex-wrap gap-2'>
-                    {history.map((entry, index) => {
-                      const isActive = activeHistoryIndex === index;
-                      const hasError = entry.error !== null;
-                      return (
-                        <button
-                          key={entry.id}
-                          onClick={() => viewHistoryEntry(index)}
-                          className={`px-3 py-1 rounded-md text-xs font-mono transition relative group ${isActive
-                            ? 'bg-blue-600 text-white'
-                            : hasError
-                              ? 'bg-red-950/30 text-red-300 border border-red-900'
-                              : 'bg-gray-800 text-gray-300 border border-gray-700 hover:border-gray-600'
-                            }`}
-                        >
-                          {getRequestLabel(entry)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
+              <BpPanel title='HISTORY'>
+                <div className='flex flex-wrap gap-2'>
+                  {history.map((entry, index) => (
+                    <button key={entry.id} onClick={() => viewHistoryEntry(index)}
+                      className={`bp-chip ${activeHistoryIndex === index ? '' : ''}`}
+                      data-active={activeHistoryIndex === index ? 'true' : 'false'}>
+                      {entry.config.method} {entry.config.url.substring(0, 25)}
+                    </button>
+                  ))}
+                  <button className='bp-btn' onClick={() => { setHistory([]); setActiveHistoryIndex(null); setResponse(null); setError(null); }}>CLEAR</button>
+                </div>
+              </BpPanel>
             )}
+
             {error && (
-              <Card className='border-red-900 bg-red-950/30'>
-                <CardContent className='pt-6'>
-                  <div className='flex items-start gap-3'>
-                    <AlertCircle className='w-5 h-5 text-red-400 flex-shrink-0 mt-0.5' />
-                    <div>
-                      <h3 className='font-semibold text-red-400 mb-2'>Request Failed</h3>
-                      <pre className='text-sm text-red-300 whitespace-pre-wrap font-mono'>{error}</pre>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <BpPanel title='ERROR'>
+                <div className='flex items-start gap-2 text-red-400'>
+                  <AlertCircle className='w-4 h-4 shrink-0 mt-0.5' />
+                  <pre className='text-xs font-mono whitespace-pre-wrap'>{error}</pre>
+                </div>
+              </BpPanel>
             )}
+
             {response && (
               <>
-                {/* Status */}
-                <Card>
-                  <CardContent className='pt-6'>
-                    <div className='flex items-center justify-between'>
-                      <div className='flex items-center gap-3'>
-                        <span
-                          className={`px-3 py-1 rounded-full text-sm font-semibold ${response.status >= 200 && response.status < 300
-                            ? 'bg-green-900/50 text-green-400'
-                            : response.status >= 400
-                              ? 'bg-red-900/50 text-red-400'
-                              : 'bg-yellow-900/50 text-yellow-400'
-                            }`}
-                        >
-                          {response.status}
-                        </span>
-                        <span className='text-gray-400'>{response.statusText}</span>
-                      </div>
-                      <span className='text-sm text-gray-500'>{response.time}ms</span>
-                    </div>
-                  </CardContent>
-                </Card>
-                {/* Headers */}
-                <Card>
-                  <CardContent className='pt-6'>
-                    <h3 className='text-sm font-semibold text-gray-300 mb-3'>Response Headers</h3>
-                    <div className=' rounded-md p-3 max-h-48 overflow-auto'>
-                      <pre className='text-xs text-gray-400 font-mono'>{JSON.stringify(response.headers, null, 2)}</pre>
-                    </div>
-                  </CardContent>
-                </Card>
-                {/* Body */}
-                <Card>
-                  <CardContent className='pt-6'>
-                    <h3 className='text-sm font-semibold text-gray-300 mb-3'>Response Body</h3>
-                    <div className=' rounded-md p-3 max-h-96 overflow-auto'>
-                      <pre className='text-xs text-gray-300 font-mono whitespace-pre-wrap'>{response.body}</pre>
-                    </div>
-                  </CardContent>
-                </Card>
+                <BpPanel title='STATUS' meta={`${response.time}ms`}>
+                  <div className='flex items-center gap-3'>
+                    <span className={`bp-status ${statusClass(response.status)}`}>{response.status} {response.statusText}</span>
+                  </div>
+                </BpPanel>
+                <BpPanel title='RESPONSE HEADERS'>
+                  <div className='max-h-40 overflow-auto'>
+                    <pre className='text-xs font-mono text-gray-400'>{JSON.stringify(response.headers, null, 2)}</pre>
+                  </div>
+                </BpPanel>
+                <BpPanel title='RESPONSE BODY'>
+                  <div className='flex justify-end mb-2'>
+                    <BpCopyBtn text={response.body} />
+                  </div>
+                  <div className='max-h-96 overflow-auto'>
+                    <pre className='text-xs font-mono text-gray-300 whitespace-pre-wrap'>{response.body}</pre>
+                  </div>
+                </BpPanel>
               </>
             )}
+
             {!response && !error && !loading && (
-              <Card className='border-dashed'>
-                <CardContent className='pt-6'>
-                  <div className='text-center text-gray-500 py-12'>
-                    <Send className='w-12 h-12 mx-auto mb-4 opacity-50' />
-                    <p>Send a request to see the response</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <BpPanel title='RESPONSE'>
+                <div className='text-center py-12 text-gray-600'>
+                  <Send className='w-10 h-10 mx-auto mb-3 opacity-30' />
+                  <p className='text-sm font-mono'>Send a request to see the response</p>
+                </div>
+              </BpPanel>
             )}
           </div>
         </div>
       </div>
-    </div>
+    </BpToolStage>
   );
 }

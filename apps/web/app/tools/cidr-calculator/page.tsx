@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Card, CardContent, Input } from '@/ui';
-import { Network, Copy, Check, AlertCircle } from 'lucide-react';
+import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import { AlertCircle } from 'lucide-react';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -19,12 +19,7 @@ function ipToNumber(octets: number[]): number {
 }
 
 function numberToIP(n: number): string {
-  return [
-    (n >>> 24) & 0xff,
-    (n >>> 16) & 0xff,
-    (n >>> 8) & 0xff,
-    n & 0xff,
-  ].join('.');
+  return [(n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff].join('.');
 }
 
 function numberToBinary(n: number): string {
@@ -55,33 +50,19 @@ function isPrivate(octets: number[]): string | null {
 }
 
 interface SubnetInfo {
-  networkAddress: string;
-  broadcastAddress: string;
-  subnetMask: string;
-  wildcardMask: string;
-  firstHost: string;
-  lastHost: string;
-  totalHosts: number;
-  usableHosts: number;
-  prefix: number;
-  ipClass: string;
-  privateRange: string | null;
-  ipBinary: string;
-  maskBinary: string;
-  networkBinary: string;
-  broadcastBinary: string;
+  networkAddress: string; broadcastAddress: string; subnetMask: string; wildcardMask: string;
+  firstHost: string; lastHost: string; totalHosts: number; usableHosts: number;
+  prefix: number; ipClass: string; privateRange: string | null;
+  ipBinary: string; maskBinary: string; networkBinary: string; broadcastBinary: string;
 }
 
 function calculate(cidr: string): { info: SubnetInfo | null; error: string | null } {
   const parts = cidr.trim().split('/');
   if (parts.length !== 2) return { info: null, error: 'Enter CIDR notation like 192.168.1.0/24' };
-
   const octets = parseIPv4(parts[0]);
   if (!octets) return { info: null, error: 'Invalid IP address' };
-
   const prefix = parseInt(parts[1], 10);
   if (isNaN(prefix) || prefix < 0 || prefix > 32) return { info: null, error: 'Prefix must be 0–32' };
-
   const ipNum = ipToNumber(octets);
   const maskNum = prefixToMask(prefix);
   const wildcardNum = (~maskNum) >>> 0;
@@ -91,30 +72,19 @@ function calculate(cidr: string): { info: SubnetInfo | null; error: string | nul
   const lastHostNum = prefix < 31 ? broadcastNum - 1 : broadcastNum;
   const totalHosts = Math.pow(2, 32 - prefix);
   const usableHosts = prefix < 31 ? totalHosts - 2 : totalHosts;
-
   return {
     info: {
-      networkAddress: numberToIP(networkNum),
-      broadcastAddress: numberToIP(broadcastNum),
-      subnetMask: numberToIP(maskNum),
-      wildcardMask: numberToIP(wildcardNum),
-      firstHost: numberToIP(firstHostNum),
-      lastHost: numberToIP(lastHostNum),
-      totalHosts,
-      usableHosts,
-      prefix,
-      ipClass: getIPClass(octets[0]),
-      privateRange: isPrivate(octets),
-      ipBinary: numberToBinary(ipNum),
-      maskBinary: numberToBinary(maskNum),
-      networkBinary: numberToBinary(networkNum),
+      networkAddress: numberToIP(networkNum), broadcastAddress: numberToIP(broadcastNum),
+      subnetMask: numberToIP(maskNum), wildcardMask: numberToIP(wildcardNum),
+      firstHost: numberToIP(firstHostNum), lastHost: numberToIP(lastHostNum),
+      totalHosts, usableHosts, prefix, ipClass: getIPClass(octets[0]),
+      privateRange: isPrivate(octets), ipBinary: numberToBinary(ipNum),
+      maskBinary: numberToBinary(maskNum), networkBinary: numberToBinary(networkNum),
       broadcastBinary: numberToBinary(broadcastNum),
     },
     error: null,
   };
 }
-
-// ─── examples ────────────────────────────────────────────────────────────────
 
 const EXAMPLES = [
   { label: 'Home network', cidr: '192.168.1.0/24' },
@@ -125,32 +95,13 @@ const EXAMPLES = [
   { label: '/32 host route', cidr: '192.168.1.1/32' },
 ];
 
-// ─── component ────────────────────────────────────────────────────────────────
-
 export default function CIDRCalculatorPage() {
   const [cidr, setCIDR] = useState('192.168.1.0/24');
-  const [copied, setCopied] = useState<string | null>(null);
 
   const { info, error } = calculate(cidr);
 
-  const handleCopy = async (text: string, key: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 2000);
-  };
-
-  const CopyRow = ({ label, value, mono = true }: { label: string; value: string; mono?: boolean }) => (
-    <div className='flex items-center gap-2'>
-      <span className='text-xs text-gray-500 w-36 shrink-0'>{label}</span>
-      <code className={`flex-1 bg-[#121212] rounded px-3 py-1.5 text-sm text-gray-200 ${mono ? 'font-mono' : ''}`}>{value}</code>
-      <Button variant='outline' size='sm' onClick={() => handleCopy(value, label)}>
-        {copied === label ? <Check className='w-3 h-3' /> : <Copy className='w-3 h-3' />}
-      </Button>
-    </div>
-  );
-
   return (
-    <div className='h-full flex flex-col'>
+    <BpToolStage cat='infra'>
       <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
         <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>CIDR / Subnet Calculator</h1>
         <p className='text-xs sm:text-sm text-gray-400'>Calculate IP ranges, netmasks, and broadcast addresses from CIDR notation</p>
@@ -159,54 +110,33 @@ export default function CIDRCalculatorPage() {
       <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
         <div className='max-w-3xl mx-auto space-y-4'>
 
-          {/* Input */}
-          <Card>
-            <CardContent className='pt-6 space-y-3'>
-              <label className='block text-sm font-medium text-gray-300'>CIDR Notation</label>
-              <Input
-                value={cidr}
-                onChange={(e) => setCIDR(e.target.value)}
-                placeholder='192.168.1.0/24'
-                className={`font-mono text-lg ${error ? 'border-red-500/50' : ''}`}
-              />
-              <p className='text-xs text-gray-500'>Format: &lt;ip-address&gt;/&lt;prefix-length&gt; — e.g. 10.0.0.0/8</p>
-            </CardContent>
-          </Card>
+          <BpPanel title='CIDR Notation'>
+            <input value={cidr} onChange={(e) => setCIDR(e.target.value)} placeholder='192.168.1.0/24'
+              className={`bp-input w-full font-mono text-lg mb-2 ${error ? 'border-red-500/50' : ''}`} />
+            <p className='text-xs text-gray-500'>Format: &lt;ip-address&gt;/&lt;prefix-length&gt; — e.g. 10.0.0.0/8</p>
+          </BpPanel>
 
-          {/* Quick examples */}
-          <Card>
-            <CardContent className='pt-6 space-y-3'>
-              <p className='text-xs text-gray-500 uppercase tracking-wide'>Examples</p>
-              <div className='grid grid-cols-2 sm:grid-cols-3 gap-2'>
-                {EXAMPLES.map((ex) => (
-                  <button
-                    key={ex.cidr}
-                    onClick={() => setCIDR(ex.cidr)}
-                    className='text-left rounded-md px-3 py-2 bg-[#121212] hover:bg-[#222] border border-[hsla(0,0%,20%,1)] transition-colors'
-                  >
-                    <p className='text-xs text-gray-400 mb-0.5'>{ex.label}</p>
-                    <p className='font-mono text-xs text-blue-400'>{ex.cidr}</p>
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <BpPanel title='Examples'>
+            <div className='grid grid-cols-2 sm:grid-cols-3 gap-2'>
+              {EXAMPLES.map((ex) => (
+                <button key={ex.cidr} type='button' onClick={() => setCIDR(ex.cidr)}
+                  className='text-left rounded px-3 py-2 bg-[#121212] hover:bg-[#222] border border-[hsla(0,0%,20%,1)] transition-colors'>
+                  <p className='text-xs text-gray-400 mb-0.5'>{ex.label}</p>
+                  <p className='font-mono text-xs text-blue-400'>{ex.cidr}</p>
+                </button>
+              ))}
+            </div>
+          </BpPanel>
 
-          {/* Error */}
           {error && (
-            <Card className='border-red-500/40'>
-              <CardContent className='pt-6'>
-                <div className='flex items-center gap-2 text-red-400'>
-                  <AlertCircle className='w-4 h-4 shrink-0' />
-                  <span className='text-sm'>{error}</span>
-                </div>
-              </CardContent>
-            </Card>
+            <div className='flex items-center gap-2 p-3 rounded border border-red-500/40 bg-red-950/20'>
+              <AlertCircle className='w-4 h-4 text-red-400 shrink-0' />
+              <span className='text-sm text-red-300'>{error}</span>
+            </div>
           )}
 
           {info && (
             <>
-              {/* Summary bar */}
               <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
                 {[
                   { label: 'Network', value: info.networkAddress },
@@ -221,32 +151,36 @@ export default function CIDRCalculatorPage() {
                 ))}
               </div>
 
-              {/* Details */}
-              <Card>
-                <CardContent className='pt-6 space-y-3'>
-                  <p className='text-xs text-gray-500 uppercase tracking-wide'>Network Details</p>
-                  <CopyRow label='Network Address' value={info.networkAddress} />
-                  <CopyRow label='Broadcast Address' value={info.broadcastAddress} />
-                  <CopyRow label='Subnet Mask' value={info.subnetMask} />
-                  <CopyRow label='Wildcard Mask' value={info.wildcardMask} />
-                  <CopyRow label='First Usable Host' value={info.firstHost} />
-                  <CopyRow label='Last Usable Host' value={info.lastHost} />
-                  <CopyRow label='CIDR Range' value={`${info.networkAddress}/${info.prefix}`} />
-                  <CopyRow label='Total Addresses' value={info.totalHosts.toLocaleString()} mono={false} />
-                  <CopyRow label='Usable Hosts' value={info.usableHosts.toLocaleString()} mono={false} />
+              <BpPanel title='Network Details'>
+                <div className='space-y-2'>
+                  {[
+                    { label: 'Network Address', value: info.networkAddress },
+                    { label: 'Broadcast Address', value: info.broadcastAddress },
+                    { label: 'Subnet Mask', value: info.subnetMask },
+                    { label: 'Wildcard Mask', value: info.wildcardMask },
+                    { label: 'First Usable Host', value: info.firstHost },
+                    { label: 'Last Usable Host', value: info.lastHost },
+                    { label: 'CIDR Range', value: `${info.networkAddress}/${info.prefix}` },
+                    { label: 'Total Addresses', value: info.totalHosts.toLocaleString() },
+                    { label: 'Usable Hosts', value: info.usableHosts.toLocaleString() },
+                  ].map(({ label, value }) => (
+                    <div key={label} className='flex items-center gap-2'>
+                      <span className='text-xs text-gray-500 w-36 shrink-0'>{label}</span>
+                      <code className='flex-1 bp-code-view px-3 py-1.5 font-mono text-sm text-gray-200'>{value}</code>
+                      <BpCopyBtn text={value} label='COPY' />
+                    </div>
+                  ))}
                   {info.privateRange && (
                     <div className='flex items-center gap-2'>
                       <span className='text-xs text-gray-500 w-36 shrink-0'>Private Range</span>
                       <span className='flex-1 bg-green-500/10 border border-green-500/30 rounded px-3 py-1.5 text-sm text-green-400 font-mono'>{info.privateRange}</span>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </BpPanel>
 
-              {/* Binary view */}
-              <Card>
-                <CardContent className='pt-6 space-y-3'>
-                  <p className='text-xs text-gray-500 uppercase tracking-wide'>Binary Representation</p>
+              <BpPanel title='Binary Representation'>
+                <div className='space-y-2'>
                   {[
                     { label: 'Input IP', value: info.ipBinary },
                     { label: 'Subnet Mask', value: info.maskBinary },
@@ -255,16 +189,16 @@ export default function CIDRCalculatorPage() {
                   ].map(({ label, value }) => (
                     <div key={label} className='flex items-start gap-2'>
                       <span className='text-xs text-gray-500 w-24 shrink-0 pt-1.5'>{label}</span>
-                      <code className='flex-1 bg-[#121212] rounded px-3 py-1.5 font-mono text-xs text-gray-300 break-all'>{value}</code>
+                      <code className='flex-1 bp-code-view px-3 py-1.5 font-mono text-xs text-gray-300 break-all'>{value}</code>
                     </div>
                   ))}
-                </CardContent>
-              </Card>
+                </div>
+              </BpPanel>
             </>
           )}
 
         </div>
       </div>
-    </div>
+    </BpToolStage>
   );
 }
