@@ -779,6 +779,17 @@
   min-height: 100vh;
 }
 
+/* ---- Per-category accent colours ---- */
+.bp-tool-root[data-cat="api"]      { --bp-accent: #5fb0ff; --bp-line-major: rgba(95,176,255,0.10); --bp-line-minor: rgba(95,176,255,0.045); }
+.bp-tool-root[data-cat="data"]     { --bp-accent: #4ad29a; --bp-line-major: rgba(74,210,154,0.10); --bp-line-minor: rgba(74,210,154,0.045); }
+.bp-tool-root[data-cat="text"]     { --bp-accent: #f0c674; --bp-line-major: rgba(240,198,116,0.10); --bp-line-minor: rgba(240,198,116,0.045); }
+.bp-tool-root[data-cat="time"]     { --bp-accent: #61dafb; --bp-line-major: rgba(97,218,251,0.10); --bp-line-minor: rgba(97,218,251,0.045); }
+.bp-tool-root[data-cat="security"] { --bp-accent: #ff7a85; --bp-line-major: rgba(255,122,133,0.10); --bp-line-minor: rgba(255,122,133,0.045); }
+.bp-tool-root[data-cat="backend"]  { --bp-accent: #c792ea; --bp-line-major: rgba(199,146,234,0.10); --bp-line-minor: rgba(199,146,234,0.045); }
+.bp-tool-root[data-cat="systems"]  { --bp-accent: #b48cff; --bp-line-major: rgba(180,140,255,0.10); --bp-line-minor: rgba(180,140,255,0.045); }
+.bp-tool-root[data-cat="ffmpeg"]   { --bp-accent: #ff9d57; --bp-line-major: rgba(255,157,87,0.10); --bp-line-minor: rgba(255,157,87,0.045); }
+.bp-tool-root[data-cat="ai"]       { --bp-accent: #e879f9; --bp-line-major: rgba(232,121,249,0.10); --bp-line-minor: rgba(232,121,249,0.045); }
+
 /* Grid paper background on the scrollable content area */
 .bp-tool-root > div:last-child {
   background-image:

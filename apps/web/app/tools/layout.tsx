@@ -15,8 +15,17 @@ export default function ToolsLayout({ children }: { children: React.ReactNode })
   // Don't render the topbar on the /tools grid page itself
   const isGrid = pathname === '/tools';
 
+  const categoryKey = activeTool?.category ?? null;
+  // Map internal category keys to the dataCat values used in blueprint CSS
+  const CAT_TO_DATA: Record<string, string> = {
+    api: 'api', data: 'data', text: 'text', time: 'time',
+    security: 'security', backend: 'backend', infra: 'systems',
+    ffmpeg: 'ffmpeg', ai: 'ai',
+  };
+  const dataCat = categoryKey ? (CAT_TO_DATA[categoryKey] ?? categoryKey) : null;
+
   return (
-    <div className='bp-tool-root h-full flex flex-col' style={{ minHeight: '100vh' }}>
+    <div className='bp-tool-root h-full flex flex-col' data-cat={dataCat ?? undefined} style={{ minHeight: '100vh' }}>
       {!isGrid && (
         <div className='flex items-center gap-3 px-4 py-3 border-b border-[hsla(0,0%,20%,1)] bg-[#121212]' style={{ minHeight: 48 }}>
           <Link
@@ -39,8 +48,8 @@ export default function ToolsLayout({ children }: { children: React.ReactNode })
             </>
           )}
           <div className='ml-auto flex items-center gap-1.5'>
-            <span className='w-1.5 h-1.5 rounded-full bg-emerald-500' />
-            <span className='text-xs text-neutral-500 font-mono'>local · browser</span>
+            <span className='w-1.5 h-1.5 rounded-full' style={{ background: 'var(--bp-accent, #5fb0ff)' }} />
+            <span className='text-xs font-mono' style={{ color: 'var(--bp-accent, #5fb0ff)', opacity: 0.7 }}>local · browser</span>
           </div>
         </div>
       )}
