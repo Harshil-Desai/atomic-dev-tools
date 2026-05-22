@@ -330,12 +330,20 @@
   margin-top: 24px;
   padding: 30px 32px 18px;
   border: 1px solid var(--line);
+  height: auto;
+  overflow: visible;
 }
 .bp-page .hero-grid {
   display: grid;
   grid-template-columns: 1fr 1.15fr;
   gap: 36px;
   margin-top: 14px;
+  align-items: stretch;
+}
+.bp-page .hero-right {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 .bp-page .hero-left { padding: 8px 8px 0 14px; }
 .bp-page .hero-lede {
@@ -375,7 +383,7 @@
 /* Live Demo */
 .bp-page .demo-frame {
   background: var(--paper);
-  height: 100%;
+  flex: 1;
   min-height: 460px;
   display: flex;
   flex-direction: column;
