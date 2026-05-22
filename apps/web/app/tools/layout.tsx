@@ -1,88 +1,51 @@
 'use client';
 
-import { useState } from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu } from 'lucide-react';
-import { Sidebar } from '@/components/sidebar';
 import { TOOLS } from '@/lib/tools';
 import { TOOL_CATEGORIES } from '@/utils';
 
-type Theme = 'dark' | 'light';
-
 export default function ToolsLayout({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark');
-  const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
-
   const activeTool = TOOLS.find((t) => t.path === pathname);
   const categoryLabel = activeTool
     ? (TOOL_CATEGORIES[activeTool.category as keyof typeof TOOL_CATEGORIES] ?? activeTool.category)
     : null;
 
+  // Don't render the topbar on the /tools grid page itself
+  const isGrid = pathname === '/tools';
+
   return (
-    // NOTE: intentionally NOT using the .adt class here — that class adds
-    // `overflow:hidden` + `position:relative` + z-index rules on direct children
-    // which conflict with the grid layout. Use a dedicated .ws-root wrapper instead.
-    <div className="ws-root" data-theme={theme}>
-
-      {/* Mobile backdrop — only rendered when drawer is open */}
-      {mobileOpen && (
-        <div
-          className="ws-overlay"
-          onClick={() => setMobileOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-
-      {/* Grid item 1: sidebar (exactly one DOM node) */}
-      <Sidebar
-        theme={theme}
-        onThemeChange={setTheme}
-        mobileOpen={mobileOpen}
-        onMobileClose={() => setMobileOpen(false)}
-      />
-
-      {/* Grid item 2: main content column */}
-      <div className="ws-main">
-        {/* Topbar with breadcrumb */}
-        <div className="ws-topbar">
-          {/* Hamburger — hidden on desktop, visible on mobile via CSS */}
-          <button
-            className="ws-hamburger"
-            onClick={() => setMobileOpen(true)}
-            aria-label="Open sidebar"
+    <div className='h-full flex flex-col' style={{ minHeight: '100vh', background: '#0a0a0a' }}>
+      {!isGrid && (
+        <div className='flex items-center gap-3 px-4 py-3 border-b border-[hsla(0,0%,20%,1)] bg-[#121212]' style={{ minHeight: 48 }}>
+          <Link
+            href='/tools'
+            className='flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white transition-colors font-mono tracking-wide'
           >
-            <Menu size={16} />
-          </button>
-
-          <div className="t-crumb">
-            <span>Tools</span>
-            {categoryLabel && (
-              <>
-                <span className="t-sep">/</span>
-                <span>{categoryLabel}</span>
-              </>
-            )}
-            {activeTool && (
-              <>
-                <span className="t-sep">/</span>
-                <span className="t-now">{activeTool.name}</span>
-              </>
-            )}
-          </div>
-
-          <div className="t-topbar-actions">
-            <span className="t-status-pill">
-              <span className="t-dot" />
-              Local · all browser
-            </span>
+            <span style={{ fontSize: 14 }}>←</span>
+            <span>All tools</span>
+          </Link>
+          {categoryLabel && (
+            <>
+              <span className='text-neutral-700 text-xs'>/</span>
+              <span className='text-xs text-neutral-500 font-mono'>{categoryLabel}</span>
+            </>
+          )}
+          {activeTool && (
+            <>
+              <span className='text-neutral-700 text-xs'>/</span>
+              <span className='text-xs text-neutral-300 font-mono'>{activeTool.name}</span>
+            </>
+          )}
+          <div className='ml-auto flex items-center gap-1.5'>
+            <span className='w-1.5 h-1.5 rounded-full bg-emerald-500' />
+            <span className='text-xs text-neutral-500 font-mono'>local · browser</span>
           </div>
         </div>
-
-        {/* Tool page fills remaining height */}
-        <div className="ws-content">
-          {children}
-        </div>
+      )}
+      <div className='flex-1 min-h-0'>
+        {children}
       </div>
     </div>
   );
