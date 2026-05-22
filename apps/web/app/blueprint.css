@@ -733,3 +733,312 @@
   .bp-page .foot-cols { grid-template-columns: 1fr 1fr; }
   .bp-page .grid-search-i { min-width: 120px; }
 }
+
+/* =============================================================================
+ * Tool pages — .bp-tool-root
+ * Remaps Tailwind semantic tokens + overrides hardcoded classes so all 44 tool
+ * pages adopt the blueprint palette without touching individual page files.
+ * =========================================================================== */
+
+.bp-tool-root {
+  /* ---- Palette ---- */
+  --bp-bg:          #0a0e14;
+  --bp-surface:     #0f141c;
+  --bp-elevated:    #131a24;
+  --bp-border:      #1e2d3d;
+  --bp-border-str:  #2a3a52;
+  --bp-ink:         #cfd8e3;
+  --bp-ink-mute:    #6b7a8c;
+  --bp-ink-faint:   #3a4554;
+  --bp-accent:      #5fb0ff;
+  --bp-line-major:  rgba(80, 130, 200, 0.10);
+  --bp-line-minor:  rgba(80, 130, 200, 0.045);
+
+  /* ---- Remap Tailwind's semantic CSS vars ---- */
+  --background:          14 20 28;      /* #0a0e14 as HSL-ish values Tailwind uses */
+  --foreground:          207 16% 84%;   /* #cfd8e3 */
+  --card:                15 17% 10%;    /* #0f141c */
+  --card-foreground:     207 16% 84%;
+  --border:              210 30% 18%;   /* #1e2d3d */
+  --input:               210 30% 18%;
+  --primary:             210 100% 68%;  /* #5fb0ff */
+  --primary-foreground:  213 27% 8%;
+  --muted:               213 22% 13%;   /* #131a24 */
+  --muted-foreground:    213 12% 48%;   /* #6b7a8c */
+  --secondary:           213 22% 13%;
+  --secondary-foreground: 207 16% 84%;
+  --accent:              213 22% 13%;
+  --accent-foreground:   207 16% 84%;
+  --ring:                210 100% 68%;
+  --radius:              0px;
+
+  font-family: var(--font-jetbrains-mono), ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 13px;
+  background: var(--bp-bg);
+  color: var(--bp-ink);
+  min-height: 100vh;
+}
+
+/* Grid paper background on the scrollable content area */
+.bp-tool-root > div:last-child {
+  background-image:
+    linear-gradient(var(--bp-line-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bp-line-major) 1px, transparent 1px),
+    linear-gradient(var(--bp-line-minor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bp-line-minor) 1px, transparent 1px);
+  background-size: 64px 64px, 64px 64px, 8px 8px, 8px 8px;
+  background-position: -1px -1px, -1px -1px, -1px -1px, -1px -1px;
+}
+
+/* ---- Card overrides ---- */
+.bp-tool-root .rounded-lg,
+.bp-tool-root .rounded-md,
+.bp-tool-root .rounded-sm,
+.bp-tool-root .rounded {
+  border-radius: 0 !important;
+}
+
+.bp-tool-root [class*="bg-card"] {
+  background: var(--bp-surface) !important;
+}
+
+/* Card hover — kill float effect */
+.bp-tool-root .hover-lift {
+  transform: none !important;
+  box-shadow: none !important;
+  transition: border-color 0.15s, background 0.15s !important;
+}
+.bp-tool-root .hover-lift:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: var(--bp-border-str) !important;
+}
+
+/* Kill Framer Motion button shimmer */
+.bp-tool-root button > .absolute.inset-0.-z-10,
+.bp-tool-root button > div[class*="absolute"][class*="inset-0"] {
+  display: none !important;
+}
+
+/* ---- Borders ---- */
+.bp-tool-root [class*="border-border"] {
+  border-color: var(--bp-border) !important;
+}
+.bp-tool-root [class*="border-b"] {
+  border-bottom-color: var(--bp-border) !important;
+}
+
+/* ---- Backgrounds ---- */
+.bp-tool-root [class*="bg-background"],
+.bp-tool-root [class*="bg-muted"] {
+  background: var(--bp-surface) !important;
+}
+.bp-tool-root [class*="bg-gray-950"],
+.bp-tool-root .bg-gray-950 {
+  background: var(--bp-bg) !important;
+}
+.bp-tool-root [class*="bg-primary"] {
+  background: var(--bp-accent) !important;
+}
+
+/* ---- Text colours ---- */
+.bp-tool-root [class*="text-muted-foreground"] {
+  color: var(--bp-ink-mute) !important;
+}
+.bp-tool-root [class*="text-foreground"] {
+  color: var(--bp-ink) !important;
+}
+.bp-tool-root [class*="text-primary"] {
+  color: var(--bp-accent) !important;
+}
+
+/* ---- Inputs & Textareas ---- */
+.bp-tool-root input,
+.bp-tool-root textarea,
+.bp-tool-root select {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace !important;
+  background: var(--bp-bg) !important;
+  border-color: var(--bp-border) !important;
+  color: var(--bp-ink) !important;
+  border-radius: 0 !important;
+  outline: none;
+}
+.bp-tool-root input:focus,
+.bp-tool-root textarea:focus,
+.bp-tool-root select:focus {
+  border-color: var(--bp-accent) !important;
+  box-shadow: 0 0 0 1px var(--bp-accent) !important;
+}
+
+/* ---- Buttons ---- */
+.bp-tool-root button,
+.bp-tool-root [role="button"] {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace !important;
+  border-radius: 0 !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 11px !important;
+}
+
+/* Primary (solid) buttons */
+.bp-tool-root button[class*="bg-primary"],
+.bp-tool-root .btn-primary {
+  background: transparent !important;
+  border: 1px solid var(--bp-accent) !important;
+  color: var(--bp-accent) !important;
+}
+.bp-tool-root button[class*="bg-primary"]:hover {
+  background: rgba(95, 176, 255, 0.10) !important;
+}
+
+/* Ghost / outline buttons */
+.bp-tool-root button[class*="border-border"],
+.bp-tool-root button[class*="border-input"] {
+  border-color: var(--bp-border-str) !important;
+  background: transparent !important;
+  color: var(--bp-ink-mute) !important;
+}
+.bp-tool-root button[class*="border-border"]:hover,
+.bp-tool-root button[class*="border-input"]:hover {
+  border-color: var(--bp-ink-mute) !important;
+  color: var(--bp-ink) !important;
+}
+
+/* ---- Labels ---- */
+.bp-tool-root label,
+.bp-tool-root .text-sm.font-medium {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace !important;
+  font-size: 10px !important;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bp-ink-mute) !important;
+  font-weight: 500;
+}
+
+/* ---- Tool header (border-b bg-card / bg-[#1C1C1C]) ---- */
+.bp-tool-root > div:last-child > div > div:first-child,
+.bp-tool-root .tool-header {
+  background: var(--bp-surface) !important;
+  border-bottom: 1px solid var(--bp-border) !important;
+}
+
+/* ---- Status / badge colours ---- */
+.bp-tool-root [class*="bg-green"],
+.bp-tool-root [class*="text-green"] {
+  color: #4ad29a !important;
+  background: transparent !important;
+}
+.bp-tool-root [class*="bg-red"],
+.bp-tool-root [class*="text-red"],
+.bp-tool-root [class*="bg-rose"],
+.bp-tool-root [class*="text-rose"] {
+  color: #ff7a85 !important;
+  background: transparent !important;
+}
+.bp-tool-root [class*="bg-yellow"],
+.bp-tool-root [class*="text-yellow"],
+.bp-tool-root [class*="bg-amber"],
+.bp-tool-root [class*="text-amber"] {
+  color: #f0c674 !important;
+  background: transparent !important;
+}
+.bp-tool-root [class*="bg-blue"],
+.bp-tool-root [class*="text-blue"] {
+  color: #5fb0ff !important;
+  background: transparent !important;
+}
+
+/* Error / success panel backgrounds */
+.bp-tool-root [class*="bg-red-900"],
+.bp-tool-root [class*="bg-rose-900"] {
+  background: rgba(255, 122, 133, 0.08) !important;
+  border-color: rgba(255, 122, 133, 0.3) !important;
+}
+.bp-tool-root [class*="bg-green-900"] {
+  background: rgba(74, 210, 154, 0.08) !important;
+  border-color: rgba(74, 210, 154, 0.3) !important;
+}
+
+/* ---- Ring focus ---- */
+.bp-tool-root [class*="ring-primary"] {
+  --tw-ring-color: var(--bp-accent) !important;
+}
+
+/* ---- Scrollbars ---- */
+.bp-tool-root ::-webkit-scrollbar { width: 6px; height: 6px; }
+.bp-tool-root ::-webkit-scrollbar-track { background: var(--bp-bg); }
+.bp-tool-root ::-webkit-scrollbar-thumb { background: var(--bp-border-str); border-radius: 0; }
+.bp-tool-root ::-webkit-scrollbar-thumb:hover { background: var(--bp-ink-faint); }
+
+/* ---- Topbar (the layout.tsx back-link bar) ---- */
+.bp-tool-root > .flex.items-center {
+  background: var(--bp-surface) !important;
+  border-bottom-color: var(--bp-border) !important;
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+}
+
+/* ---- Code / pre blocks ---- */
+.bp-tool-root pre,
+.bp-tool-root code {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace !important;
+  background: var(--bp-bg) !important;
+  border-color: var(--bp-border) !important;
+  border-radius: 0 !important;
+  color: var(--bp-ink) !important;
+}
+
+/* ---- Headings ---- */
+.bp-tool-root h1,
+.bp-tool-root h2,
+.bp-tool-root h3 {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace !important;
+  letter-spacing: 0.04em;
+}
+
+/* ---- Horizontal rules / dividers ---- */
+.bp-tool-root hr,
+.bp-tool-root [class*="divide-"] > * + * {
+  border-color: var(--bp-border) !important;
+}
+
+/* ---- Select / dropdown ---- */
+.bp-tool-root [class*="bg-popover"],
+.bp-tool-root [class*="bg-dropdown"] {
+  background: var(--bp-elevated) !important;
+  border-color: var(--bp-border-str) !important;
+  border-radius: 0 !important;
+}
+
+/* ---- Tabs (Radix / shadcn style) ---- */
+.bp-tool-root [role="tablist"] {
+  background: var(--bp-bg) !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid var(--bp-border);
+}
+.bp-tool-root [role="tab"] {
+  border-radius: 0 !important;
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace !important;
+  font-size: 11px !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bp-ink-mute) !important;
+}
+.bp-tool-root [role="tab"][data-state="active"] {
+  background: transparent !important;
+  color: var(--bp-accent) !important;
+  border-bottom: 1px solid var(--bp-accent);
+  box-shadow: none !important;
+}
+
+/* ---- Switch / Toggle ---- */
+.bp-tool-root [role="switch"] {
+  border-radius: 0 !important;
+}
+.bp-tool-root [role="switch"][data-state="checked"] {
+  background: var(--bp-accent) !important;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .bp-tool-root button { font-size: 10px !important; }
+}

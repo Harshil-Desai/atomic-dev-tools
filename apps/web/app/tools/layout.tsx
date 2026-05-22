@@ -16,7 +16,7 @@ export default function ToolsLayout({ children }: { children: React.ReactNode })
   const isGrid = pathname === '/tools';
 
   return (
-    <div className='h-full flex flex-col' style={{ minHeight: '100vh', background: '#0a0a0a' }}>
+    <div className='bp-tool-root h-full flex flex-col' style={{ minHeight: '100vh' }}>
       {!isGrid && (
         <div className='flex items-center gap-3 px-4 py-3 border-b border-[hsla(0,0%,20%,1)] bg-[#121212]' style={{ minHeight: 48 }}>
           <Link
