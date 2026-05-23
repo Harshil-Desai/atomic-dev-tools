@@ -250,8 +250,8 @@
   letter-spacing: 0.08em;
   font-family: var(--font-mono);
 }
-.bp-page .bp-h1 { font-size: 52px; line-height: 1.02; letter-spacing: -0.02em; font-weight: 500; margin: 0; font-family: var(--font-mono); }
-.bp-page .bp-h2 { font-size: 26px; line-height: 1.1;  letter-spacing: -0.01em; font-weight: 500; margin: 0; font-family: var(--font-mono); }
+.bp-page .bp-h1 { font-size: 56px; line-height: 1.02; letter-spacing: -0.02em; font-weight: 500; margin: 0; font-family: var(--font-mono); }
+.bp-page .bp-h2 { font-size: 28px; line-height: 1.1;  letter-spacing: -0.01em; font-weight: 500; margin: 0; font-family: var(--font-mono); }
 .bp-page .bp-h3 { font-size: 18px; line-height: 1.2;  font-weight: 500; margin: 0; font-family: var(--font-mono); }
 
 /* ---- Status pills ---- */
@@ -431,7 +431,7 @@
 
 /* Sections */
 .bp-page .section-head {
-  margin: 70px 0 24px;
+  margin: 80px 0 24px;
 }
 .bp-page .section-head .bp-label { display: block; margin-bottom: 10px; }
 
@@ -460,7 +460,7 @@
   font-family: var(--font-mono);
 }
 .bp-page .principle-t {
-  font-size: 18px;
+  font-size: 20px;
   margin-top: 4px;
   margin-bottom: 14px;
   font-family: var(--font-mono);
@@ -1061,3 +1061,36 @@
 @media (max-width: 768px) {
   .bp-tool-root button { font-size: 10px !important; }
 }
+
+/* =============================================================================
+ * Per-category accent: remap hardcoded Tailwind `blue` classes → --bp-accent
+ * Applies inside any .bp-tool-root so all categories get their correct colour
+ * (API stays blue, ffmpeg becomes orange, security becomes coral, etc.)
+ * =========================================================================== */
+
+/* Solid active/selected buttons */
+.bp-tool-root .bg-blue-600 { background-color: var(--bp-accent) !important; color: var(--bp-bg) !important; }
+.bp-tool-root .border-blue-600 { border-color: var(--bp-accent) !important; }
+
+/* Progress / indicator fills */
+.bp-tool-root .bg-blue-500 { background-color: var(--bp-accent) !important; }
+
+/* Subtle tinted selection backgrounds */
+.bp-tool-root .bg-blue-500\/10 { background-color: color-mix(in srgb, var(--bp-accent) 10%, transparent) !important; }
+.bp-tool-root .bg-blue-500\/20 { background-color: color-mix(in srgb, var(--bp-accent) 20%, transparent) !important; }
+.bp-tool-root .bg-blue-500\/30 { background-color: color-mix(in srgb, var(--bp-accent) 30%, transparent) !important; }
+.bp-tool-root .bg-blue-900\/40 { background-color: color-mix(in srgb, var(--bp-accent) 12%, transparent) !important; }
+
+/* Accent text */
+.bp-tool-root .text-blue-200 { color: var(--bp-accent) !important; }
+.bp-tool-root .text-blue-300 { color: var(--bp-accent) !important; }
+.bp-tool-root .text-blue-400 { color: var(--bp-accent) !important; }
+
+/* Borders */
+.bp-tool-root .border-blue-400 { border-color: var(--bp-accent) !important; }
+.bp-tool-root .border-blue-500 { border-color: var(--bp-accent) !important; }
+.bp-tool-root .border-blue-500\/40 { border-color: color-mix(in srgb, var(--bp-accent) 40%, transparent) !important; }
+.bp-tool-root .border-blue-500\/50 { border-color: color-mix(in srgb, var(--bp-accent) 50%, transparent) !important; }
+
+/* Focus rings */
+.bp-tool-root .focus\:ring-blue-500:focus { --tw-ring-color: var(--bp-accent) !important; }

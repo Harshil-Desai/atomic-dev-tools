@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ["@/ui", "@/utils"],
+  transpilePackages: ["@/utils"],
   assetPrefix: process.env.NODE_ENV === 'production' ? 'https://atomic-dev-tools-web.vercel.app' : undefined,
 };
 
