@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { BpToolStage, BpPanel, BpStatus } from '@/components/blueprint';
-import { Shield, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Shield, X } from 'lucide-react';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS';
 
@@ -12,217 +11,499 @@ interface CorsHeaders {
   'Access-Control-Allow-Headers'?: string;
   'Access-Control-Allow-Credentials'?: string;
   'Access-Control-Max-Age'?: string;
+  'Access-Control-Expose-Headers'?: string;
 }
 
 interface CorsResult {
-  success: boolean;
   status: number;
   headers: CorsHeaders;
-  method: string;
-  explanation: string[];
+  requestMethod: string;
 }
 
+interface CheckItem {
+  id: string;
+  num: string;
+  title: string;
+  value: string;
+  detail: string;
+  state: 'ok' | 'warn' | 'fail' | 'info';
+}
+
+const METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
+
+function analyseResult(result: CorsResult, origin: string, method: HttpMethod, customHeaders: string[]): { items: CheckItem[]; blocked: boolean; blockReason: string } {
+  const items: CheckItem[] = [];
+  const h = result.headers;
+  let blocked = false;
+  let blockReason = '';
+
+  // #01 Origin
+  const acao = h['Access-Control-Allow-Origin'];
+  if (!acao) {
+    items.push({ id: 'origin', num: '01', title: 'Origin header missing', value: 'No Access-Control-Allow-Origin', detail: 'Server did not return an Allow-Origin header. All cross-origin requests will be blocked.', state: 'fail' });
+    blocked = true;
+    blockReason = 'Missing Access-Control-Allow-Origin header.';
+  } else if (acao === '*') {
+    items.push({ id: 'origin', num: '01', title: 'Origin matched', value: `Access-Control-Allow-Origin: *`, detail: `Wildcard (*) allows requests from any origin, including ${origin}.`, state: 'ok' });
+  } else if (acao === origin) {
+    items.push({ id: 'origin', num: '01', title: 'Origin matched', value: `Access-Control-Allow-Origin: ${acao}`, detail: `Server explicitly allows requests from ${origin}.`, state: 'ok' });
+  } else {
+    items.push({ id: 'origin', num: '01', title: 'Origin mismatch', value: `Access-Control-Allow-Origin: ${acao}`, detail: `Server only allows ${acao}, but your origin is ${origin}.`, state: 'fail' });
+    blocked = true;
+    blockReason = `Origin ${origin} is not in the allowed list.`;
+  }
+
+  // #02 Method
+  const acam = h['Access-Control-Allow-Methods'];
+  if (acam) {
+    const allowed = acam.split(',').map(s => s.trim().toUpperCase());
+    const methodOk = allowed.includes(method.toUpperCase()) || allowed.includes('*');
+    items.push({
+      id: 'method', num: '02', title: methodOk ? 'Method allowed' : 'Method not allowed',
+      value: `Access-Control-Allow-Methods: ${acam}`,
+      detail: methodOk ? `${method} is included in the allowed methods list.` : `${method} is not allowed. Allowed: ${acam}.`,
+      state: methodOk ? 'ok' : 'fail',
+    });
+    if (!methodOk) { blocked = true; blockReason = blockReason || `Method ${method} is not allowed.`; }
+  } else {
+    items.push({ id: 'method', num: '02', title: 'Method — no preflight header', value: 'Access-Control-Allow-Methods: (not set)', detail: 'No Allow-Methods header in preflight response. Simple requests (GET/POST) may still work.', state: 'warn' });
+  }
+
+  // #03 Headers
+  const acah = h['Access-Control-Allow-Headers'];
+  if (customHeaders.length > 0) {
+    if (acah) {
+      const allowed = acah.split(',').map(s => s.trim().toLowerCase());
+      const allOk = customHeaders.every(ch => allowed.includes(ch.toLowerCase()) || acah === '*');
+      items.push({
+        id: 'headers', num: '03', title: allOk ? 'Headers allowed' : 'Header not allowed',
+        value: `Access-Control-Allow-Headers: ${acah}`,
+        detail: allOk ? `All requested headers are permitted by the server.` : `Some requested headers are not in the allowed list: ${acah}.`,
+        state: allOk ? 'ok' : 'fail',
+      });
+      if (!allOk) { blocked = true; blockReason = blockReason || 'Some request headers are not allowed.'; }
+    } else {
+      items.push({ id: 'headers', num: '03', title: 'Headers — no preflight header', value: 'Access-Control-Allow-Headers: (not set)', detail: 'Custom headers were requested but server did not respond with Allow-Headers.', state: 'warn' });
+    }
+  } else if (acah) {
+    items.push({ id: 'headers', num: '03', title: 'Header allowed', value: `Access-Control-Allow-Headers: ${acah}`, detail: 'Server specifies which headers are allowed in cross-origin requests.', state: 'ok' });
+  }
+
+  // #04 Credentials
+  const acac = h['Access-Control-Allow-Credentials'];
+  if (acac) {
+    const credOk = acac.toLowerCase() === 'true';
+    const wildcard = acao === '*';
+    if (credOk && wildcard) {
+      items.push({ id: 'creds', num: '04', title: 'Wildcard + credentials', value: `Access-Control-Allow-Credentials: true`, detail: "Wildcard origin ('*') cannot be used with credentials — browser will block this.", state: 'fail' });
+      blocked = true;
+      blockReason = blockReason || "Wildcard origin with credentials is forbidden by the browser.";
+    } else {
+      items.push({
+        id: 'creds', num: '04', title: 'Credentials',
+        value: `Access-Control-Allow-Credentials: ${acac}`,
+        detail: credOk ? 'Cookies and Authorization headers will be sent with cross-origin requests.' : 'Credentials (cookies, auth headers) will not be sent.',
+        state: credOk ? 'ok' : 'info',
+      });
+    }
+  }
+
+  // #05 Max-Age
+  const maxAge = h['Access-Control-Max-Age'];
+  if (maxAge) {
+    items.push({ id: 'maxage', num: '05', title: 'Max-Age cache', value: `Access-Control-Max-Age: ${maxAge}`, detail: `Preflight cached for ${maxAge}s — browser won't re-send OPTIONS for ${maxAge} seconds.`, state: 'info' });
+  }
+
+  // #06 Expose-Headers
+  const expose = h['Access-Control-Expose-Headers'];
+  if (expose) {
+    items.push({ id: 'expose', num: '06', title: 'Expose-Headers', value: `Access-Control-Expose-Headers: ${expose}`, detail: `These headers are accessible from JavaScript: ${expose}.`, state: 'info' });
+  }
+
+  return { items, blocked, blockReason };
+}
+
+const STATE_COLORS = {
+  ok:   '#4ad29a',
+  warn: '#f0c674',
+  fail: '#ff7a85',
+  info: '#5fb0ff',
+};
+
 export default function CorsCheckerPage() {
-  const [url, setUrl] = useState('');
+  const [origin, setOrigin] = useState('');
+  const [target, setTarget] = useState('');
   const [method, setMethod] = useState<HttpMethod>('GET');
-  const [customHeaders, setCustomHeaders] = useState('');
+  const [headerInput, setHeaderInput] = useState('');
+  const [headerTags, setHeaderTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CorsResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
-  const parseHeaders = (): Record<string, string> => {
-    const headers: Record<string, string> = {};
-    if (customHeaders.trim()) {
-      try {
-        Object.assign(headers, JSON.parse(customHeaders));
-      } catch {
-        customHeaders.split('\n').forEach((line) => {
-          const [key, ...valueParts] = line.split(':');
-          if (key && valueParts.length > 0) headers[key.trim()] = valueParts.join(':').trim();
-        });
-      }
-    }
-    return headers;
+  useEffect(() => {
+    if (typeof window !== 'undefined') setOrigin(window.location.origin);
+  }, []);
+
+  const addHeaderTag = () => {
+    const trimmed = headerInput.trim();
+    if (trimmed && !headerTags.includes(trimmed)) setHeaderTags(prev => [...prev, trimmed]);
+    setHeaderInput('');
   };
 
-  const explainCorsHeaders = (headers: CorsHeaders, status: number, method: string): string[] => {
-    const explanations: string[] = [];
-    if (status === 0 || status >= 500) {
-      explanations.push('Request failed or server error. CORS check cannot be completed.');
-      return explanations;
-    }
-    const origin = headers['Access-Control-Allow-Origin'];
-    const methods = headers['Access-Control-Allow-Methods'];
-    const allowHeaders = headers['Access-Control-Allow-Headers'];
-    const credentials = headers['Access-Control-Allow-Credentials'];
-    const maxAge = headers['Access-Control-Max-Age'];
-    if (!origin) {
-      explanations.push('No Access-Control-Allow-Origin header found. Cross-origin requests will be blocked.');
-    } else if (origin === '*') {
-      explanations.push('Access-Control-Allow-Origin: * allows all origins');
-      if (credentials === 'true') explanations.push('Warning: Credentials cannot be used with wildcard origin.');
-    } else {
-      explanations.push(`Access-Control-Allow-Origin: ${origin} allows requests from this origin`);
-    }
-    if (methods) {
-      const allowedMethods = methods.split(',').map((m) => m.trim());
-      if (allowedMethods.includes(method) || allowedMethods.includes('*')) {
-        explanations.push(`Method ${method} is allowed: ${methods}`);
-      } else {
-        explanations.push(`Method ${method} is not in allowed list: ${methods}`);
-      }
-    } else if (method !== 'OPTIONS') {
-      explanations.push('No Access-Control-Allow-Methods header found in preflight response');
-    }
-    if (allowHeaders) explanations.push(`Allowed headers: ${allowHeaders}`);
-    if (credentials === 'true') explanations.push('Credentials are allowed (cookies, authorization headers)');
-    else if (credentials === 'false') explanations.push('Credentials are explicitly disabled');
-    if (maxAge) explanations.push(`Preflight cache duration: ${maxAge} seconds`);
-    return explanations;
-  };
+  const removeTag = (tag: string) => setHeaderTags(prev => prev.filter(t => t !== tag));
 
   const normalizeCorsHeaders = (response: Response): CorsHeaders => {
-    const corsHeaders: CorsHeaders = {};
+    const out: CorsHeaders = {};
     response.headers.forEach((value, key) => {
       if (key.toLowerCase().startsWith('access-control-')) {
-        const normalizedKey = key.split('-').map((part, idx) => idx === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-') as keyof CorsHeaders;
-        corsHeaders[normalizedKey] = value;
+        const norm = key.split('-').map((p, i) => i === 0 ? p : p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('-') as keyof CorsHeaders;
+        out[norm] = value;
       }
     });
-    return corsHeaders;
+    return out;
   };
 
-  const checkCors = async () => {
+  const check = async () => {
+    if (!target.trim()) return;
     setLoading(true);
-    setError(null);
     setResult(null);
+    setFetchError(null);
     try {
-      const headers = parseHeaders();
-      const preflightController = new AbortController();
-      const preflightTimeout = setTimeout(() => preflightController.abort(), 10000);
+      const reqHeaders: Record<string, string> = {
+        Origin: origin || window.location.origin,
+        'Access-Control-Request-Method': method,
+      };
+      if (headerTags.length > 0) reqHeaders['Access-Control-Request-Headers'] = headerTags.join(', ');
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 10000);
       try {
-        const preflightResponse = await fetch(url, {
-          method: 'OPTIONS',
-          headers: {
-            Origin: typeof window !== 'undefined' ? window.location.origin : 'https://example.com',
-            'Access-Control-Request-Method': method,
-            'Access-Control-Request-Headers': Object.keys(headers).join(', '),
-            ...headers,
-          },
-          signal: preflightController.signal,
-        });
-        clearTimeout(preflightTimeout);
-        const corsHeaders = normalizeCorsHeaders(preflightResponse);
-        setResult({ success: preflightResponse.ok && corsHeaders['Access-Control-Allow-Origin'] !== undefined, status: preflightResponse.status, headers: corsHeaders, method: 'OPTIONS (Preflight)', explanation: explainCorsHeaders(corsHeaders, preflightResponse.status, method) });
-      } catch (preflightError) {
-        clearTimeout(preflightTimeout);
-        if (preflightError instanceof Error && preflightError.name === 'AbortError') {
-          setError('Preflight request timed out after 10 seconds');
-        } else {
-          try {
-            const actualController = new AbortController();
-            const actualTimeout = setTimeout(() => actualController.abort(), 10000);
-            const actualResponse = await fetch(url, { method, headers, signal: actualController.signal });
-            clearTimeout(actualTimeout);
-            const corsHeaders = normalizeCorsHeaders(actualResponse);
-            setResult({ success: actualResponse.ok && corsHeaders['Access-Control-Allow-Origin'] !== undefined, status: actualResponse.status, headers: corsHeaders, method, explanation: explainCorsHeaders(corsHeaders, actualResponse.status, method) });
-          } catch (actualError) {
-            setError(actualError instanceof Error ? `Network error: ${actualError.message}` : 'Unknown error occurred');
-          }
+        const res = await fetch(target, { method: 'OPTIONS', headers: reqHeaders, signal: ctrl.signal });
+        clearTimeout(t);
+        setResult({ status: res.status, headers: normalizeCorsHeaders(res), requestMethod: 'OPTIONS (Preflight)' });
+      } catch {
+        clearTimeout(t);
+        const ctrl2 = new AbortController();
+        const t2 = setTimeout(() => ctrl2.abort(), 10000);
+        try {
+          const res2 = await fetch(target, { method, headers: { Origin: origin }, signal: ctrl2.signal });
+          clearTimeout(t2);
+          setResult({ status: res2.status, headers: normalizeCorsHeaders(res2), requestMethod: method });
+        } catch (e2) {
+          setFetchError(e2 instanceof Error ? e2.message : 'Network error');
         }
       }
     } catch (e) {
-      setError(`Failed to check CORS: ${e instanceof Error ? e.message : 'An error occurred'}`);
+      setFetchError(e instanceof Error ? e.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
   };
 
+  const customHeaderNames = headerTags.map(t => t.split(':')[0].trim());
+  const analysis = result ? analyseResult(result, origin, method, customHeaderNames) : null;
+
   return (
-    <BpToolStage cat='api'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>CORS Preflight Checker</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Test CORS configuration and check if requests are allowed</p>
+    <div
+      className='bp-tool-root h-full flex flex-col overflow-hidden'
+      data-cat='api'
+      style={{
+        backgroundImage: `
+          linear-gradient(var(--bp-line-major) 1px, transparent 1px),
+          linear-gradient(90deg, var(--bp-line-major) 1px, transparent 1px),
+          linear-gradient(var(--bp-line-minor) 1px, transparent 1px),
+          linear-gradient(90deg, var(--bp-line-minor) 1px, transparent 1px)
+        `,
+        backgroundSize: '64px 64px, 64px 64px, 8px 8px, 8px 8px',
+        backgroundPosition: '-1px -1px',
+      }}
+    >
+      {/* Topbar */}
+      <div className='tool-topbar flex-shrink-0'>
+        <Shield className='w-3.5 h-3.5 flex-shrink-0' style={{ color: 'var(--bp-ink-mute)' }} />
+        <span className='tool-sep'>/</span>
+        <span className='tool-name'>CORS Checker</span>
+        <div className='tool-spacer' />
+        {result && (
+          <span
+            style={{
+              fontSize: '10px',
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: analysis?.blocked ? '#ff7a85' : '#4ad29a',
+              fontFamily: 'inherit',
+            }}
+          >
+            {analysis?.blocked ? '● BLOCKED' : '● ALLOWED'}
+          </span>
+        )}
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-3xl mx-auto space-y-4'>
-
-          <BpPanel title='Request'>
-            <div className='space-y-3'>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>URL</label>
-                <input className='bp-input w-full' placeholder='https://api.example.com/endpoint' value={url} onChange={(e) => setUrl(e.target.value)} />
-              </div>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>HTTP Method</label>
-                <select className='bp-input w-full' value={method} onChange={(e) => setMethod(e.target.value as HttpMethod)}>
-                  <option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option><option>PATCH</option><option>OPTIONS</option>
-                </select>
-              </div>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Custom Headers (JSON or key:value)</label>
-                <textarea className='bp-textarea font-mono text-xs' placeholder={'{\n  "Authorization": "Bearer token"\n}'} value={customHeaders} onChange={(e) => setCustomHeaders(e.target.value)} rows={4} />
-              </div>
-              <button className='bp-btn bp-btn-solid w-full' onClick={checkCors} disabled={loading || !url.trim()} type='button'>
-                <Shield className='w-4 h-4 mr-2 inline' />
-                {loading ? 'CHECKING…' : 'CHECK CORS'}
-              </button>
+      {/* Body */}
+      <div className='flex-1 overflow-hidden flex min-h-0'>
+        {/* Left — inputs */}
+        <div
+          className='flex flex-col flex-shrink-0 overflow-y-auto'
+          style={{
+            width: '320px',
+            borderRight: '1px solid var(--bp-border)',
+            padding: '20px',
+            gap: '16px',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {/* ORIGIN */}
+          <div>
+            <div style={{ fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: '6px', fontFamily: 'inherit' }}>
+              Origin
             </div>
-          </BpPanel>
+            <input
+              className='w-full'
+              style={{
+                background: 'transparent',
+                border: 'none',
+                borderBottom: '1px solid var(--bp-border)',
+                color: 'var(--bp-ink)',
+                fontFamily: 'inherit',
+                fontSize: '12px',
+                padding: '4px 0',
+                outline: 'none',
+                width: '100%',
+              }}
+              value={origin}
+              onChange={e => setOrigin(e.target.value)}
+              placeholder='https://app.example.com'
+              spellCheck={false}
+            />
+          </div>
 
-          {error && (
-            <div className='flex items-start gap-3 p-3 rounded border border-red-500/40 bg-red-950/20'>
-              <AlertCircle className='w-5 h-5 text-red-400 flex-shrink-0 mt-0.5' />
-              <pre className='text-sm text-red-300 whitespace-pre-wrap font-mono'>{error}</pre>
+          {/* TARGET */}
+          <div>
+            <div style={{ fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: '6px', fontFamily: 'inherit' }}>
+              Target
+            </div>
+            <input
+              className='w-full'
+              style={{
+                background: 'transparent',
+                border: 'none',
+                borderBottom: '1px solid var(--bp-border)',
+                color: 'var(--bp-ink)',
+                fontFamily: 'inherit',
+                fontSize: '12px',
+                padding: '4px 0',
+                outline: 'none',
+                width: '100%',
+              }}
+              value={target}
+              onChange={e => setTarget(e.target.value)}
+              placeholder='https://api.example.com/sessions'
+              spellCheck={false}
+            />
+          </div>
+
+          {/* METHOD */}
+          <div>
+            <div style={{ fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: '8px', fontFamily: 'inherit' }}>
+              Method
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+              {METHODS.map(m => (
+                <button
+                  key={m}
+                  onClick={() => setMethod(m)}
+                  style={{
+                    padding: '3px 8px',
+                    fontSize: '10px',
+                    letterSpacing: '0.1em',
+                    fontFamily: 'inherit',
+                    cursor: 'pointer',
+                    border: `1px solid ${method === m ? 'var(--bp-accent)' : 'var(--bp-border-str)'}`,
+                    background: method === m ? 'color-mix(in srgb, var(--bp-accent) 15%, transparent)' : 'transparent',
+                    color: method === m ? 'var(--bp-accent)' : 'var(--bp-ink-mute)',
+                    transition: 'all 100ms',
+                  }}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* HEADERS */}
+          <div>
+            <div style={{ fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: '8px', fontFamily: 'inherit' }}>
+              Headers
+            </div>
+            {headerTags.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
+                {headerTags.map(tag => (
+                  <span
+                    key={tag}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '2px 6px',
+                      fontSize: '10px',
+                      fontFamily: 'inherit',
+                      border: '1px solid var(--bp-border-str)',
+                      color: 'var(--bp-ink-mute)',
+                      background: 'var(--bp-surface)',
+                      maxWidth: '100%',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '220px' }}>{tag}</span>
+                    <button onClick={() => removeTag(tag)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--bp-ink-faint)', display: 'flex', alignItems: 'center' }}>
+                      <X size={10} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <input
+              style={{
+                background: 'transparent',
+                border: 'none',
+                borderBottom: '1px solid var(--bp-border)',
+                color: 'var(--bp-ink)',
+                fontFamily: 'inherit',
+                fontSize: '12px',
+                padding: '4px 0',
+                outline: 'none',
+                width: '100%',
+              }}
+              value={headerInput}
+              onChange={e => setHeaderInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addHeaderTag(); } }}
+              placeholder='Authorization: Bearer token'
+              spellCheck={false}
+            />
+            <div style={{ fontSize: '10px', color: 'var(--bp-ink-faint)', marginTop: '4px', fontFamily: 'inherit' }}>
+              Press Enter to add
+            </div>
+          </div>
+
+          <div style={{ flex: 1 }} />
+
+          {/* CHECK button */}
+          <button
+            onClick={check}
+            disabled={loading || !target.trim()}
+            style={{
+              padding: '8px 16px',
+              fontSize: '11px',
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              fontFamily: 'inherit',
+              cursor: loading || !target.trim() ? 'default' : 'pointer',
+              border: '1px solid var(--bp-accent)',
+              background: 'color-mix(in srgb, var(--bp-accent) 12%, transparent)',
+              color: loading || !target.trim() ? 'var(--bp-ink-faint)' : 'var(--bp-accent)',
+              borderColor: loading || !target.trim() ? 'var(--bp-border-str)' : 'var(--bp-accent)',
+              transition: 'all 120ms',
+              width: '100%',
+            }}
+          >
+            {loading ? 'CHECKING…' : 'CHECK CORS'}
+          </button>
+        </div>
+
+        {/* Right — results */}
+        <div className='flex-1 flex flex-col min-w-0 min-h-0 overflow-y-auto' style={{ padding: '20px' }}>
+          {!result && !fetchError && !loading && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--bp-ink-faint)', gap: '12px' }}>
+              <Shield size={32} style={{ opacity: 0.3 }} />
+              <span style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'inherit' }}>
+                Enter a target URL and click Check CORS
+              </span>
             </div>
           )}
 
-          {result && (
-            <>
-              <BpPanel title='Result' meta={`HTTP ${result.status}`}>
-                <div className='flex items-center gap-3 mb-3'>
-                  {result.success ? <CheckCircle className='w-5 h-5 text-green-400' /> : <XCircle className='w-5 h-5 text-red-400' />}
-                  <BpStatus state={result.success ? 'ok' : 'fail'}>{result.success ? 'CORS ALLOWED' : 'CORS BLOCKED'}</BpStatus>
-                  <span className='text-xs text-gray-500'>{result.method}</span>
+          {loading && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--bp-ink-faint)' }}>
+              <span style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'inherit' }}>CHECKING…</span>
+            </div>
+          )}
+
+          {fetchError && (
+            <div
+              style={{
+                padding: '12px 16px',
+                border: '1px solid rgba(255,122,133,0.3)',
+                background: 'rgba(255,122,133,0.06)',
+                color: '#ff7a85',
+                fontSize: '12px',
+                fontFamily: 'inherit',
+                marginBottom: '16px',
+              }}
+            >
+              <div style={{ fontSize: '10px', letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: '4px', opacity: 0.7 }}>Network Error</div>
+              {fetchError}
+            </div>
+          )}
+
+          {analysis && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              {analysis.items.map(item => (
+                <div
+                  key={item.id}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '36px 1fr',
+                    gap: '12px',
+                    padding: '12px 0',
+                    borderBottom: '1px solid var(--bp-border)',
+                  }}
+                >
+                  {/* Number */}
+                  <div style={{ fontSize: '10px', fontFamily: 'inherit', color: STATE_COLORS[item.state], letterSpacing: '0.08em', paddingTop: '1px', opacity: 0.8 }}>
+                    #{item.num}
+                  </div>
+                  {/* Content */}
+                  <div>
+                    <div style={{ fontSize: '12px', color: STATE_COLORS[item.state], fontFamily: 'inherit', marginBottom: '4px', letterSpacing: '0.02em' }}>
+                      {item.title}
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--bp-ink)', fontFamily: 'inherit', marginBottom: '4px', letterSpacing: '0.01em' }}>
+                      {item.value}
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--bp-ink-mute)', fontFamily: 'inherit', lineHeight: 1.5 }}>
+                      {item.detail}
+                    </div>
+                  </div>
                 </div>
-              </BpPanel>
+              ))}
 
-              <BpPanel title='CORS Headers'>
-                {Object.entries(result.headers).length === 0 ? (
-                  <p className='text-sm text-gray-500'>No CORS headers found</p>
-                ) : (
-                  <table className='bp-kv-table w-full'>
-                    <tbody>
-                      {Object.entries(result.headers).map(([key, value]) => (
-                        <tr key={key}>
-                          <td className='bp-kv-k font-mono text-xs'>{key}</td>
-                          <td className='bp-kv-v font-mono text-xs'>{value}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              {/* Verdict */}
+              <div style={{ marginTop: '20px', padding: '12px 0' }}>
+                <div
+                  style={{
+                    fontSize: '11px',
+                    letterSpacing: '0.18em',
+                    textTransform: 'uppercase',
+                    fontFamily: 'inherit',
+                    color: analysis.blocked ? '#ff7a85' : '#4ad29a',
+                  }}
+                >
+                  {analysis.blocked
+                    ? `REQUEST WOULD BE BLOCKED BY THE BROWSER`
+                    : `REQUEST WOULD BE ALLOWED BY THE BROWSER`}
+                </div>
+                {analysis.blockReason && (
+                  <div style={{ fontSize: '11px', color: 'var(--bp-ink-mute)', marginTop: '4px', fontFamily: 'inherit' }}>
+                    {analysis.blockReason}
+                  </div>
                 )}
-              </BpPanel>
-
-              <BpPanel title='Explanation'>
-                <ul className='space-y-1'>
-                  {result.explanation.map((exp, idx) => (
-                    <li key={idx} className='text-sm text-gray-300'>{exp}</li>
-                  ))}
-                </ul>
-              </BpPanel>
-            </>
-          )}
-
-          {!result && !error && !loading && (
-            <div className='text-center text-gray-600 py-12'>
-              <Shield className='w-12 h-12 mx-auto mb-4 opacity-40' />
-              <p className='text-sm'>Enter a URL and click Check CORS to test configuration</p>
+                <div style={{ fontSize: '10px', color: 'var(--bp-ink-faint)', marginTop: '8px', fontFamily: 'inherit' }}>
+                  HTTP {result!.status} — via {result!.requestMethod}
+                </div>
+              </div>
             </div>
           )}
         </div>
       </div>
-    </BpToolStage>
+    </div>
   );
 }
