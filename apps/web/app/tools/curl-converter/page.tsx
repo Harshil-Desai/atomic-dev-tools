@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Terminal } from 'lucide-react';
-import { BpToolStage, BpCopyBtn } from '@/components/blueprint';
+import { BpCopyBtn } from '@/components/blueprint';
 
 interface ParsedCurl {
   url: string;
@@ -83,9 +83,17 @@ function parseCurl(raw: string): ParsedCurl {
       body = args[++i] ?? '';
     } else if (arg === '-u' || arg === '--user') {
       headers['Authorization'] = `Basic ${btoa(args[++i] ?? '')}`;
-    } else if (arg === '--compressed' || arg === '-s' || arg === '--silent' || arg === '-v' || arg === '--verbose' || arg === '-i' || arg === '--include' || arg === '-L' || arg === '--location') {
+    } else if (
+      arg === '--compressed' || arg === '-s' || arg === '--silent' ||
+      arg === '-v' || arg === '--verbose' || arg === '-i' || arg === '--include' ||
+      arg === '-L' || arg === '--location'
+    ) {
       // skip
-    } else if (arg === '-o' || arg === '--output' || arg === '--max-time' || arg === '--connect-timeout' || arg === '-m' || arg === '--limit-rate' || arg === '-A' || arg === '--user-agent') {
+    } else if (
+      arg === '-o' || arg === '--output' || arg === '--max-time' ||
+      arg === '--connect-timeout' || arg === '-m' || arg === '--limit-rate' ||
+      arg === '-A' || arg === '--user-agent'
+    ) {
       i++;
     } else if (!arg.startsWith('-')) {
       if (!url) url = arg;
@@ -179,33 +187,29 @@ function parseFetchToCurl(raw: string, format: InputFormat): string {
   let method = 'GET';
   const methodMatch = raw.match(/method\s*:\s*['"`]([A-Z]+)['"`]/i);
   if (methodMatch) method = methodMatch[1].toUpperCase();
-
   const headerParts: string[] = [];
   const headersBlockMatch = raw.match(/headers\s*:\s*\{([\s\S]+?)\}/);
   if (headersBlockMatch) {
-    const headerPairs = headersBlockMatch[1].matchAll(/['"`]?([^'"`:\n]+)['"`]?\s*:\s*['"`]([^'"`\n]+)['"`]/g);
-    for (const m of headerPairs) headerParts.push(`-H '${m[1].trim()}: ${m[2].trim()}'`);
+    const pairs = headersBlockMatch[1].matchAll(/['"`]?([^'"`:\n]+)['"`]?\s*:\s*['"`]([^'"`\n]+)['"`]/g);
+    for (const m of pairs) headerParts.push(`-H '${m[1].trim()}: ${m[2].trim()}'`);
   }
-
   let bodyPart = '';
   const bodyMatch = raw.match(/body\s*:\s*JSON\.stringify\s*\(([\s\S]+?)\)/) || raw.match(/body\s*:\s*['"`]([^'"`]+)['"`]/);
   if (bodyMatch) bodyPart = `--data-raw '${bodyMatch[1].trim().replace(/\n\s*/g, ' ')}'`;
-
   if (format === 'single-line') {
     const parts = [`curl -X ${method}`];
     headerParts.forEach(h => parts.push(h));
     if (bodyPart) parts.push(bodyPart);
     parts.push(`'${url}'`);
     return parts.join(' ');
-  } else {
-    const lines = [`curl -X ${method} \\`];
-    headerParts.forEach(h => lines.push(`  ${h} \\`));
-    if (bodyPart) lines.push(`  ${bodyPart} \\`);
-    lines.push(`  '${url}'`);
-    const last = lines[lines.length - 1];
-    lines[lines.length - 1] = last.replace(/ \\$/, '');
-    return lines.join('\n');
   }
+  const lines = [`curl -X ${method} \\`];
+  headerParts.forEach(h => lines.push(`  ${h} \\`));
+  if (bodyPart) lines.push(`  ${bodyPart} \\`);
+  lines.push(`  '${url}'`);
+  const last = lines[lines.length - 1];
+  lines[lines.length - 1] = last.replace(/ \\$/, '');
+  return lines.join('\n');
 }
 
 function toSingleLine(curl: string): string {
@@ -235,11 +239,7 @@ export default function CurlConverterPage() {
 
   useEffect(() => {
     if (!input.trim()) {
-      setFetchOutput('');
-      setNodeFetchOutput('');
-      setAxiosOutput('');
-      setCurlOutput('');
-      setError(null);
+      setFetchOutput(''); setNodeFetchOutput(''); setAxiosOutput(''); setCurlOutput(''); setError(null);
       return;
     }
     try {
@@ -276,14 +276,6 @@ export default function CurlConverterPage() {
 
   const inputPlaceholder = isCurlToFetch ? curlPlaceholder : fetchPlaceholder;
 
-  const outputPlaceholder = isCurlToFetch
-    ? (outputTab === 'fetch'
-        ? `await fetch('https://api.atomicdevtools.com/v1/sessions', {\n  method: 'POST',\n  headers: {\n    'Authorization': 'Bearer ey3MAD32L',\n    'Content-Type': 'application/json',\n  },\n  body: JSON.stringify({\n    email: 'atlas@atomicdevtools.com',\n    remember: true,\n  }),\n});`
-        : outputTab === 'node-fetch'
-        ? `import fetch from 'node-fetch';\n\nawait fetch('https://api.atomicdevtools.com/v1/sessions', {\n  method: 'POST',\n  ...`
-        : `await axios({\n  method: 'post',\n  url: 'https://api.atomicdevtools.com/v1/sessions',\n  ...`)
-    : `curl -X POST \\\n  -H 'Authorization: Bearer ...' \\...`;
-
   const handleInputFormatChange = (fmt: InputFormat) => {
     setInputFormat(fmt);
     if (isCurlToFetch && input.trim()) {
@@ -292,37 +284,80 @@ export default function CurlConverterPage() {
   };
 
   return (
-    <BpToolStage cat='api'>
-      {/* Header */}
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] px-4 sm:px-5 md:px-6 py-3 flex items-center gap-3'>
-        <Terminal className='w-4 h-4 text-gray-400 flex-shrink-0' />
-        <h1 className='text-sm font-semibold text-white'>cURL ↔ Fetch</h1>
+    // Bypass BpToolStage — use the bp-tool-root shell classes directly so we can
+    // control overflow ourselves and keep the bottom tab bars always in view.
+    <div
+      className='bp-tool-root h-full flex flex-col overflow-hidden'
+      data-cat='api'
+      style={{
+        backgroundImage: `
+          linear-gradient(var(--bp-line-major) 1px, transparent 1px),
+          linear-gradient(90deg, var(--bp-line-major) 1px, transparent 1px),
+          linear-gradient(var(--bp-line-minor) 1px, transparent 1px),
+          linear-gradient(90deg, var(--bp-line-minor) 1px, transparent 1px)
+        `,
+        backgroundSize: '64px 64px, 64px 64px, 8px 8px, 8px 8px',
+        backgroundPosition: '-1px -1px, -1px -1px, -1px -1px, -1px -1px',
+      }}
+    >
+      {/* Tool header */}
+      <div className='tool-topbar flex-shrink-0'>
+        <Terminal className='w-3.5 h-3.5 flex-shrink-0' style={{ color: 'var(--bp-ink-mute)' }} />
+        <span className='tool-sep'>/</span>
+        <span className='tool-name'>cURL ↔ Fetch</span>
         {/* Direction tabs */}
-        <div className='flex gap-0.5 p-0.5 rounded-md bg-[#0f0f0f] border border-[hsla(0,0%,18%,1)] ml-2'>
-          <button
-            onClick={() => switchDirection('curl-to-fetch')}
-            className={`px-3 py-1 rounded text-xs font-medium transition-colors ${direction === 'curl-to-fetch' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'}`}
-          >
-            cURL → fetch
-          </button>
-          <button
-            onClick={() => switchDirection('fetch-to-curl')}
-            className={`px-3 py-1 rounded text-xs font-medium transition-colors ${direction === 'fetch-to-curl' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'}`}
-          >
-            fetch → cURL
-          </button>
+        <div
+          className='flex gap-px ml-3'
+          style={{
+            padding: '2px',
+            background: 'var(--bp-bg)',
+            border: '1px solid var(--bp-border-str)',
+          }}
+        >
+          {(['curl-to-fetch', 'fetch-to-curl'] as Direction[]).map((d) => (
+            <button
+              key={d}
+              onClick={() => switchDirection(d)}
+              style={{
+                padding: '3px 10px',
+                fontSize: '10px',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                fontFamily: 'inherit',
+                border: '1px solid transparent',
+                cursor: 'pointer',
+                transition: 'background 120ms, color 120ms, border-color 120ms',
+                background: direction === d ? 'var(--bp-accent)' : 'transparent',
+                color: direction === d ? 'var(--bp-bg)' : 'var(--bp-ink-mute)',
+                borderColor: direction === d ? 'var(--bp-accent)' : 'transparent',
+              }}
+            >
+              {d === 'curl-to-fetch' ? 'cURL → Fetch' : 'Fetch → cURL'}
+            </button>
+          ))}
         </div>
+        <div className='tool-spacer' />
       </div>
 
-      {/* Split editor */}
+      {/* Split editor — flex-1 with overflow-hidden so children can fill height */}
       <div className='flex-1 flex overflow-hidden min-h-0'>
         {/* Left pane */}
-        <div className='flex-1 flex flex-col border-r border-[hsla(0,0%,20%,1)] min-w-0'>
-          {/* Editor area */}
-          <div className='flex-1 relative min-h-0'>
+        <div
+          className='flex-1 flex flex-col min-w-0 min-h-0'
+          style={{ borderRight: '1px solid var(--bp-border)' }}
+        >
+          <div className='flex-1 min-h-0 relative'>
             <textarea
               ref={inputRef}
-              className='absolute inset-0 w-full h-full bg-[#0d0d0d] text-gray-200 font-mono text-xs leading-relaxed resize-none outline-none p-4 sm:p-5 placeholder-gray-700'
+              className='absolute inset-0 w-full h-full resize-none outline-none p-4 font-mono text-xs leading-relaxed'
+              style={{
+                background: 'transparent',
+                color: 'var(--bp-ink)',
+                fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+                fontSize: '12px',
+                caretColor: 'var(--bp-accent)',
+                border: 'none',
+              }}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={inputPlaceholder}
@@ -332,45 +367,85 @@ export default function CurlConverterPage() {
               autoCapitalize='off'
             />
           </div>
-          {/* Bottom tab bar */}
-          <div className='flex items-center justify-between px-3 py-1.5 bg-[#141414] border-t border-[hsla(0,0%,18%,1)] flex-shrink-0'>
+          {/* Left bottom bar */}
+          <div
+            className='flex items-center justify-between px-3 flex-shrink-0'
+            style={{
+              height: '32px',
+              background: 'var(--bp-surface)',
+              borderTop: '1px solid var(--bp-border)',
+            }}
+          >
             {isCurlToFetch ? (
-              <div className='flex gap-0.5'>
+              <div className='flex gap-px'>
                 {(['multiline', 'single-line'] as InputFormat[]).map((fmt) => (
                   <button
                     key={fmt}
                     onClick={() => handleInputFormatChange(fmt)}
-                    className={`px-2.5 py-1 rounded text-[10px] font-semibold tracking-wide uppercase transition-colors ${inputFormat === fmt ? 'bg-[#2a2a2a] text-gray-100' : 'text-gray-500 hover:text-gray-300'}`}
+                    style={{
+                      padding: '2px 8px',
+                      fontSize: '10px',
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      fontFamily: 'inherit',
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'background 100ms, color 100ms',
+                      background: inputFormat === fmt ? 'var(--bp-border-str)' : 'transparent',
+                      color: inputFormat === fmt ? 'var(--bp-ink)' : 'var(--bp-ink-faint)',
+                    }}
                   >
                     {fmt === 'multiline' ? 'Multiline' : 'Single Line'}
                   </button>
                 ))}
               </div>
             ) : (
-              <span className='text-[10px] text-gray-600 font-mono'>fetch()</span>
+              <span style={{ fontSize: '10px', color: 'var(--bp-ink-faint)', letterSpacing: '0.1em', fontFamily: 'inherit' }}>
+                FETCH()
+              </span>
             )}
             {error && (
-              <span className='text-[10px] text-red-400 truncate max-w-xs'>{error}</span>
+              <span style={{ fontSize: '10px', color: '#ff7a85', maxWidth: '60%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {error}
+              </span>
             )}
           </div>
         </div>
 
         {/* Right pane */}
-        <div className='flex-1 flex flex-col min-w-0'>
-          {/* Editor area */}
-          <div className='flex-1 relative min-h-0'>
-            <pre className='absolute inset-0 w-full h-full bg-[#0d0d0d] overflow-auto p-4 sm:p-5 font-mono text-xs leading-relaxed m-0'>
-              {currentOutput ? (
-                <code className='text-gray-200 whitespace-pre'>{currentOutput}</code>
-              ) : (
-                <code className='text-gray-700 whitespace-pre'>{outputPlaceholder}</code>
+        <div className='flex-1 flex flex-col min-w-0 min-h-0'>
+          <div className='flex-1 min-h-0 relative overflow-auto'>
+            <pre
+              className='absolute inset-0 p-4 m-0 font-mono text-xs leading-relaxed overflow-auto'
+              style={{
+                background: 'transparent',
+                fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+                fontSize: '12px',
+                color: currentOutput ? 'var(--bp-ink)' : 'var(--bp-ink-faint)',
+              }}
+            >
+              {currentOutput || (
+                isCurlToFetch
+                  ? outputTab === 'fetch'
+                    ? `await fetch('https://api.atomicdevtools.com/v1/sessions', {\n  method: 'POST',\n  headers: {\n    'Authorization': 'Bearer ey3MAD32L',\n    'Content-Type': 'application/json',\n  },\n  body: JSON.stringify({\n    email: 'atlas@atomicdevtools.com',\n    remember: true,\n  }),\n});\nconst data = await response.json();`
+                    : outputTab === 'node-fetch'
+                    ? `import fetch from 'node-fetch';\n\nawait fetch('https://api.atomicdevtools.com/v1/sessions', {\n  method: 'POST',\n  // ...same as fetch()\n});`
+                    : `await axios({\n  method: 'post',\n  url: 'https://api.atomicdevtools.com/v1/sessions',\n  headers: { ... },\n  data: { ... },\n});\nconst data = response.data;`
+                  : `curl -X POST \\\n  -H 'Authorization: Bearer ey3MAD32L' \\\n  -H 'Content-Type: application/json' \\\n  --data-raw '{"email":"atlas@atomicdevtools.com","remember":true}' \\\n  'https://api.atomicdevtools.com/v1/sessions'`
               )}
             </pre>
           </div>
-          {/* Bottom tab bar */}
-          <div className='flex items-center justify-between px-3 py-1.5 bg-[#141414] border-t border-[hsla(0,0%,18%,1)] flex-shrink-0'>
+          {/* Right bottom bar */}
+          <div
+            className='flex items-center justify-between px-3 flex-shrink-0'
+            style={{
+              height: '32px',
+              background: 'var(--bp-surface)',
+              borderTop: '1px solid var(--bp-border)',
+            }}
+          >
             {isCurlToFetch ? (
-              <div className='flex gap-0.5'>
+              <div className='flex gap-px'>
                 {([
                   { key: 'fetch', label: 'fetch()' },
                   { key: 'node-fetch', label: 'node-fetch' },
@@ -379,19 +454,41 @@ export default function CurlConverterPage() {
                   <button
                     key={key}
                     onClick={() => setOutputTab(key)}
-                    className={`px-2.5 py-1 rounded text-[10px] font-semibold tracking-wide uppercase transition-colors ${outputTab === key ? 'bg-[#2a2a2a] text-gray-100' : 'text-gray-500 hover:text-gray-300'}`}
+                    style={{
+                      padding: '2px 8px',
+                      fontSize: '10px',
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      fontFamily: 'inherit',
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'background 100ms, color 100ms',
+                      background: outputTab === key ? 'var(--bp-border-str)' : 'transparent',
+                      color: outputTab === key ? 'var(--bp-ink)' : 'var(--bp-ink-faint)',
+                    }}
                   >
                     {label}
                   </button>
                 ))}
               </div>
             ) : (
-              <div className='flex gap-0.5'>
+              <div className='flex gap-px'>
                 {(['multiline', 'single-line'] as InputFormat[]).map((fmt) => (
                   <button
                     key={fmt}
                     onClick={() => setInputFormat(fmt)}
-                    className={`px-2.5 py-1 rounded text-[10px] font-semibold tracking-wide uppercase transition-colors ${inputFormat === fmt ? 'bg-[#2a2a2a] text-gray-100' : 'text-gray-500 hover:text-gray-300'}`}
+                    style={{
+                      padding: '2px 8px',
+                      fontSize: '10px',
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      fontFamily: 'inherit',
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'background 100ms, color 100ms',
+                      background: inputFormat === fmt ? 'var(--bp-border-str)' : 'transparent',
+                      color: inputFormat === fmt ? 'var(--bp-ink)' : 'var(--bp-ink-faint)',
+                    }}
                   >
                     {fmt === 'multiline' ? 'Multiline' : 'Single Line'}
                   </button>
@@ -402,6 +499,6 @@ export default function CurlConverterPage() {
           </div>
         </div>
       </div>
-    </BpToolStage>
+    </div>
   );
 }
