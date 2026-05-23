@@ -1,353 +1,475 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Link, AlertCircle, Plus, Trash2 } from 'lucide-react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import { Plus, Trash2 } from 'lucide-react';
+import { BpCopyBtn } from '@/components/blueprint';
 
-interface QueryParam {
-  id: number;
-  key: string;
-  value: string;
-}
+/* ── types ───────────────────────────────────────────────────────────── */
 
+interface QParam { id: number; key: string; value: string; }
 type Tab = 'parse' | 'build';
 
-let nextId = 1;
-function makeParam(key = '', value = ''): QueryParam {
-  return { id: nextId++, key, value };
-}
+let _id = 1;
+const mkParam = (k = '', v = ''): QParam => ({ id: _id++, key: k, value: v });
 
-interface ParsedURL {
-  protocol: string;
+interface Parsed {
+  protocol: string;   // "https:"
+  username: string;
+  password: string;
   hostname: string;
   port: string;
   pathname: string;
   search: string;
   hash: string;
   origin: string;
-  params: QueryParam[];
+  params: QParam[];
 }
 
-function parseURL(raw: string): ParsedURL {
-  const u = new URL(raw);
-  const params: QueryParam[] = [];
-  u.searchParams.forEach((v, k) => {
-    params.push(makeParam(k, v));
-  });
-  if (params.length === 0) params.push(makeParam());
+function parseURL(raw: string): Parsed {
+  const u   = new URL(raw.trim());
+  const params: QParam[] = [];
+  u.searchParams.forEach((v, k) => params.push(mkParam(k, v)));
+  if (!params.length) params.push(mkParam());
   return {
     protocol: u.protocol,
+    username: u.username,
+    password: u.password,
     hostname: u.hostname,
-    port: u.port,
+    port:     u.port,
     pathname: u.pathname,
-    search: u.search,
-    hash: u.hash,
-    origin: u.origin,
+    search:   u.search,
+    hash:     u.hash,
+    origin:   u.origin,
     params,
   };
 }
 
-function rebuildFromParsed(base: string, params: QueryParam[]): string {
+function rebuildURL(p: Parsed, params: QParam[]): string {
   try {
-    const u = new URL(base);
+    const u = new URL(p.origin + p.pathname + p.hash);
     u.search = '';
-    for (const p of params) {
-      if (p.key.trim()) u.searchParams.append(p.key.trim(), p.value);
-    }
+    params.forEach(q => { if (q.key.trim()) u.searchParams.append(q.key.trim(), q.value); });
     return u.toString();
-  } catch {
-    return base;
-  }
+  } catch { return ''; }
 }
 
-function assembleURL(
-  protocol: string,
-  hostname: string,
-  port: string,
-  pathname: string,
-  params: QueryParam[],
-  hash: string,
-): string {
-  if (!hostname.trim()) return '';
+function assembleURL(proto: string, user: string, pass: string, host: string, port: string, path: string, params: QParam[], hash: string): string {
+  if (!host.trim()) return '';
   try {
-    const portPart = port.trim() ? `:${port.trim()}` : '';
-    const pathPart = pathname.startsWith('/') ? pathname : `/${pathname}`;
-    let raw = `${protocol}//${hostname.trim()}${portPart}${pathPart}`;
-    if (hash.trim()) raw += `#${hash.replace(/^#/, '')}`;
-    const u = new URL(raw);
-    u.search = '';
-    for (const p of params) {
-      if (p.key.trim()) u.searchParams.append(p.key.trim(), p.value);
-    }
+    const cred = user ? `${user}${pass ? ':' + pass : ''}@` : '';
+    const raw  = `${proto}//${cred}${host.trim()}${port ? ':' + port : ''}${path.startsWith('/') ? path : '/' + path}`;
+    const u    = new URL(raw);
+    u.search   = '';
+    params.forEach(q => { if (q.key.trim()) u.searchParams.append(q.key.trim(), q.value); });
+    if (hash.trim()) u.hash = hash.replace(/^#/, '');
     return u.toString();
-  } catch {
-    return '';
-  }
+  } catch { return ''; }
 }
+
+/* ── segment colours ─────────────────────────────────────────────────── */
+
+const C = {
+  scheme:   '#5fb0ff',   // blue
+  userinfo: '#c792ea',   // purple
+  host:     '#4ad29a',   // green
+  port:     '#f0c674',   // yellow
+  path:     '#61dafb',   // cyan
+  query:    '#ff9d57',   // orange
+  fragment: '#e879f9',   // magenta
+  sep:      '#3a4554',   // faint
+} as const;
+
+/* ── colour-coded URL display ────────────────────────────────────────── */
+
+function ColorURL({ raw }: { raw: string }) {
+  let p: URL | null = null;
+  try { p = new URL(raw); } catch { /* */ }
+
+  if (!p) {
+    return <span style={{ color: 'var(--bp-ink-mute)' }}>{raw}</span>;
+  }
+
+  const scheme   = p.protocol + '//';
+  const userinfo = p.username ? `${p.username}${p.password ? ':' + p.password : ''}@` : '';
+  const host     = p.hostname;
+  const port     = p.port ? `:${p.port}` : '';
+  const path     = p.pathname;
+  const query    = p.search;
+  const frag     = p.hash;
+
+  return (
+    <>
+      <span style={{ color: C.scheme }}>{scheme}</span>
+      {userinfo && <span style={{ color: C.userinfo }}>{userinfo}</span>}
+      <span style={{ color: C.host }}>{host}</span>
+      {port && <span style={{ color: C.port }}>{port}</span>}
+      <span style={{ color: C.path }}>{path}</span>
+      {query && <span style={{ color: C.query }}>{query}</span>}
+      {frag  && <span style={{ color: C.fragment }}>{frag}</span>}
+    </>
+  );
+}
+
+/* ── segment strip ───────────────────────────────────────────────────── */
+
+function SegmentStrip({ p, raw }: { p: Parsed; raw: string }) {
+  let u: URL | null = null;
+  try { u = new URL(raw); } catch { /* */ }
+  if (!u) return null;
+
+  const segs = [
+    { label: 'SCHEME',   value: u.protocol.replace(':', ''), color: C.scheme },
+    ...(u.username ? [{ label: 'USERINFO', value: u.username + (u.password ? ':' + u.password : ''), color: C.userinfo }] : []),
+    { label: 'HOST',     value: u.hostname, color: C.host },
+    ...(u.port ? [{ label: 'PORT', value: u.port, color: C.port }] : []),
+    { label: 'PATH',     value: u.pathname, color: C.path },
+    ...(u.search ? [{ label: 'QUERY', value: u.search, color: C.query }] : []),
+    ...(u.hash   ? [{ label: 'FRAGMENT', value: u.hash, color: C.fragment }] : []),
+  ];
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-bg)', flexShrink: 0 }}>
+      {segs.map((s, i) => (
+        <div key={s.label} style={{ display: 'flex', alignItems: 'stretch' }}>
+          {i > 0 && <div style={{ width: 1, background: 'var(--bp-border)', alignSelf: 'stretch' }} />}
+          <div style={{ padding: '7px 14px' }}>
+            <div style={{ fontSize: 8, letterSpacing: '0.2em', textTransform: 'uppercase', color: s.color, marginBottom: 2, opacity: 0.7 }}>{s.label}</div>
+            <div style={{ fontSize: 11, color: s.color, wordBreak: 'break-all', maxWidth: 200 }}>{s.value}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── KV param table ─────────────────────────────────────────────────── */
+
+function ParamTable({ params, onChange, onAdd, onRemove }: {
+  params: QParam[];
+  onChange: (id: number, f: 'key' | 'value', v: string) => void;
+  onAdd: () => void;
+  onRemove: (id: number) => void;
+}) {
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* col headers */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 28px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-bg)', flexShrink: 0 }}>
+        <div style={{ padding: '4px 10px', fontSize: 9, color: 'var(--bp-ink-faint)', letterSpacing: '0.18em', textTransform: 'uppercase', borderRight: '1px solid var(--bp-border)' }}>KEY</div>
+        <div style={{ padding: '4px 10px', fontSize: 9, color: 'var(--bp-ink-faint)', letterSpacing: '0.18em', textTransform: 'uppercase', borderRight: '1px solid var(--bp-border)' }}>VALUE</div>
+        <div />
+      </div>
+      {/* rows */}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {params.map(p => (
+          <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 28px', borderBottom: '1px solid var(--bp-border)' }}>
+            <input value={p.key} onChange={e => onChange(p.id, 'key', e.target.value)} placeholder='key'
+              style={{ background: 'transparent', border: 0, borderRight: '1px solid var(--bp-border)', padding: '6px 10px', color: C.query, fontFamily: 'inherit', fontSize: 12, outline: 'none', width: '100%', boxSizing: 'border-box' }} />
+            <input value={p.value} onChange={e => onChange(p.id, 'value', e.target.value)} placeholder='value'
+              style={{ background: 'transparent', border: 0, borderRight: '1px solid var(--bp-border)', padding: '6px 10px', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, outline: 'none', width: '100%', boxSizing: 'border-box' }} />
+            <button onClick={() => onRemove(p.id)}
+              style={{ background: 'transparent', border: 0, color: 'var(--bp-ink-faint)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Trash2 size={10} />
+            </button>
+          </div>
+        ))}
+      </div>
+      <button onClick={onAdd}
+        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', background: 'transparent', border: 0, borderTop: '1px solid var(--bp-border)', color: 'var(--bp-ink-faint)', fontFamily: 'inherit', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0 }}>
+        <Plus size={10} /> Add param
+      </button>
+    </div>
+  );
+}
+
+/* ── shared panel shell ──────────────────────────────────────────────── */
+
+function Panel({ title, accent, children, style }: { title: string; accent?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ border: '1px solid var(--bp-border)', display: 'flex', flexDirection: 'column', overflow: 'hidden', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 26, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: accent ?? 'var(--bp-accent)', flexShrink: 0, display: 'inline-block' }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/* ── component row ───────────────────────────────────────────────────── */
+
+function CompRow({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr', borderBottom: '1px solid var(--bp-border)', minHeight: 30 }}>
+      <div style={{ padding: '6px 10px', fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', borderRight: '1px solid var(--bp-border)', display: 'flex', alignItems: 'center' }}>{label}</div>
+      <div style={{ padding: '6px 10px', fontSize: 11, color, wordBreak: 'break-all', display: 'flex', alignItems: 'center' }}>{value || <span style={{ color: 'var(--bp-ink-faint)', fontStyle: 'italic' }}>—</span>}</div>
+    </div>
+  );
+}
+
+/* ── page ────────────────────────────────────────────────────────────── */
+
+const TAB_STYLE = (active: boolean): React.CSSProperties => ({
+  padding: '8px 16px', background: 'transparent', border: 0,
+  borderBottom: active ? '2px solid var(--bp-accent)' : '2px solid transparent',
+  color: active ? 'var(--bp-accent)' : 'var(--bp-ink-mute)',
+  fontFamily: 'inherit', fontSize: 10, letterSpacing: '0.14em',
+  textTransform: 'uppercase', cursor: 'pointer', transition: 'color 100ms', whiteSpace: 'nowrap',
+});
 
 export default function URLParserPage() {
   const [tab, setTab] = useState<Tab>('parse');
 
-  const [parseInput, setParseInput] = useState('');
-  const [parseError, setParseError] = useState<string | null>(null);
-  const [parsedData, setParsedData] = useState<ParsedURL | null>(null);
-  const [parseParams, setParseParams] = useState<QueryParam[]>([makeParam()]);
+  /* ── PARSE state ── */
+  const [parseInput, setParseInput]   = useState('https://user:pass@api.atomicdevtools.com:8443/v1/users/8pM6?expand=team_perms&fields=id,email#section-3');
+  const [parsed,     setParsed]       = useState<Parsed | null>(null);
+  const [parseErr,   setParseErr]     = useState<string | null>(null);
+  const [parseParams,setParseParams]  = useState<QParam[]>([mkParam()]);
 
-  const [buildProtocol, setBuildProtocol] = useState('https:');
-  const [buildHostname, setBuildHostname] = useState('');
-  const [buildPort, setBuildPort] = useState('');
-  const [buildPathname, setBuildPathname] = useState('/');
-  const [buildHash, setBuildHash] = useState('');
-  const [buildParams, setBuildParams] = useState<QueryParam[]>([makeParam()]);
+  /* ── BUILD state ── */
+  const [bProto,  setBProto]  = useState('https:');
+  const [bUser,   setBUser]   = useState('');
+  const [bPass,   setBPass]   = useState('');
+  const [bHost,   setBHost]   = useState('');
+  const [bPort,   setBPort]   = useState('');
+  const [bPath,   setBPath]   = useState('/');
+  const [bHash,   setBHash]   = useState('');
+  const [bParams, setBParams] = useState<QParam[]>([mkParam()]);
   const [builtURL, setBuiltURL] = useState('');
 
-  const handleParseInputChange = (value: string) => {
-    setParseInput(value);
-    if (!value.trim()) {
-      setParsedData(null);
-      setParseError(null);
-      setParseParams([makeParam()]);
-      return;
-    }
-    try {
-      const result = parseURL(value.trim());
-      setParsedData(result);
-      setParseParams(result.params);
-      setParseError(null);
-    } catch {
-      setParsedData(null);
-      setParseError('Invalid URL. Make sure it includes a protocol (e.g. https://).');
-    }
-  };
-
-  const handleParseParamChange = (id: number, field: 'key' | 'value', val: string) => {
-    const updated = parseParams.map((p) => (p.id === id ? { ...p, [field]: val } : p));
-    setParseParams(updated);
-    if (parsedData) {
-      const rebuilt = rebuildFromParsed(parsedData.origin + parsedData.pathname + parsedData.hash, updated);
-      setParseInput(rebuilt);
-      try {
-        const re = parseURL(rebuilt);
-        setParsedData(re);
-      } catch {}
-    }
-  };
-
-  const addParseParam = () => setParseParams((prev) => [...prev, makeParam()]);
-
-  const removeParseParam = (id: number) => {
-    const updated = parseParams.filter((p) => p.id !== id);
-    if (updated.length === 0) updated.push(makeParam());
-    setParseParams(updated);
-    if (parsedData) {
-      const rebuilt = rebuildFromParsed(parsedData.origin + parsedData.pathname + parsedData.hash, updated);
-      setParseInput(rebuilt);
-      try {
-        const re = parseURL(rebuilt);
-        setParsedData(re);
-      } catch {}
-    }
-  };
-
-  const rebuildBuiltURL = useCallback(() => {
-    const url = assembleURL(buildProtocol, buildHostname, buildPort, buildPathname, buildParams, buildHash);
-    setBuiltURL(url);
-  }, [buildProtocol, buildHostname, buildPort, buildPathname, buildParams, buildHash]);
-
+  /* init parse */
   useEffect(() => {
-    rebuildBuiltURL();
-  }, [rebuildBuiltURL]);
+    try {
+      const p = parseURL(parseInput);
+      setParsed(p);
+      setParseParams(p.params);
+    } catch { /* */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const handleBuildParamChange = (id: number, field: 'key' | 'value', val: string) => {
-    setBuildParams((prev) => prev.map((p) => (p.id === id ? { ...p, [field]: val } : p)));
+  const onParseChange = (val: string) => {
+    setParseInput(val);
+    if (!val.trim()) { setParsed(null); setParseErr(null); setParseParams([mkParam()]); return; }
+    try   { const p = parseURL(val); setParsed(p); setParseParams(p.params); setParseErr(null); }
+    catch { setParsed(null); setParseErr('Invalid URL — make sure it includes a protocol (https://)'); }
   };
 
-  const addBuildParam = () => setBuildParams((prev) => [...prev, makeParam()]);
-
-  const removeBuildParam = (id: number) => {
-    setBuildParams((prev) => {
-      const updated = prev.filter((p) => p.id !== id);
-      return updated.length === 0 ? [makeParam()] : updated;
-    });
+  const onParamChange = (id: number, f: 'key' | 'value', v: string) => {
+    const next = parseParams.map(p => p.id === id ? { ...p, [f]: v } : p);
+    setParseParams(next);
+    if (parsed) {
+      const rebuilt = rebuildURL(parsed, next);
+      setParseInput(rebuilt);
+      try { setParsed(parseURL(rebuilt)); } catch { /* */ }
+    }
   };
 
-  const rows: { label: string; value: string }[] = parsedData ? [
-    { label: 'Protocol', value: parsedData.protocol },
-    { label: 'Origin', value: parsedData.origin },
-    { label: 'Hostname', value: parsedData.hostname },
-    { label: 'Port', value: parsedData.port || '(default)' },
-    { label: 'Pathname', value: parsedData.pathname },
-    { label: 'Search', value: parsedData.search || '(none)' },
-    { label: 'Hash', value: parsedData.hash || '(none)' },
-  ] : [];
+  const addParseParam = () => setParseParams(p => [...p, mkParam()]);
+  const delParseParam = (id: number) => {
+    const next = parseParams.filter(p => p.id !== id);
+    const safe = next.length ? next : [mkParam()];
+    setParseParams(safe);
+    if (parsed) {
+      const rebuilt = rebuildURL(parsed, safe);
+      setParseInput(rebuilt);
+      try { setParsed(parseURL(rebuilt)); } catch { /* */ }
+    }
+  };
+
+  /* build */
+  const rebuild = useCallback(() => {
+    setBuiltURL(assembleURL(bProto, bUser, bPass, bHost, bPort, bPath, bParams, bHash));
+  }, [bProto, bUser, bPass, bHost, bPort, bPath, bParams, bHash]);
+  useEffect(() => { rebuild(); }, [rebuild]);
+
+  const onBParamChange = (id: number, f: 'key' | 'value', v: string) =>
+    setBParams(p => p.map(q => q.id === id ? { ...q, [f]: v } : q));
+  const addBParam = () => setBParams(p => [...p, mkParam()]);
+  const delBParam = (id: number) => setBParams(p => { const n = p.filter(q => q.id !== id); return n.length ? n : [mkParam()]; });
+
+  const CSS: React.CSSProperties = {
+    '--bp-bg':         '#0a0e14',
+    '--bp-surface':    '#0f141c',
+    '--bp-border':     '#1e2d3d',
+    '--bp-border-str': '#2a3a52',
+    '--bp-ink':        '#cfd8e3',
+    '--bp-ink-mute':   '#6b7a8c',
+    '--bp-ink-faint':  '#3a4554',
+    '--bp-accent':     '#5fb0ff',
+  } as React.CSSProperties;
 
   return (
-    <BpToolStage cat='api'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <div className='flex items-center gap-2 mb-1'>
-          <Link className='w-5 h-5 text-gray-400' />
-          <h1 className='text-xl sm:text-2xl font-semibold text-white'>URL Parser & Builder</h1>
+    <div className='bp-paper h-full flex flex-col overflow-hidden relative' data-cat='api' style={CSS}>
+      <div className='bp-ruler-x' />
+      <div className='bp-ruler-y' />
+
+      <div className='flex-1 min-h-0 flex flex-col overflow-hidden'
+        style={{ paddingLeft: 20, paddingTop: 18, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}>
+
+        {/* ── Tool header ───────────────────────────────────────── */}
+        <div style={{ padding: '14px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+          <h1 style={{ fontSize: 17, fontWeight: 700, color: 'var(--bp-ink)', margin: '0 0 3px', letterSpacing: '-0.01em' }}>URL Parser</h1>
+          <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', margin: 0, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Break down URLs into components — and rebuild them from scratch</p>
         </div>
-        <p className='text-xs sm:text-sm text-gray-400'>Break down URLs into their components and rebuild them from scratch</p>
-      </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-4xl mx-auto space-y-4'>
+        {/* ── Tab bar ───────────────────────────────────────────── */}
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-bg)', flexShrink: 0 }}>
+          <button style={TAB_STYLE(tab === 'parse')} onClick={() => setTab('parse')}>Parse</button>
+          <button style={TAB_STYLE(tab === 'build')} onClick={() => setTab('build')}>Build</button>
+        </div>
 
-          {/* Tab switcher */}
-          <div className='flex gap-1 p-1 rounded-lg bg-[#1a1a1a] border border-[hsla(0,0%,20%,1)] w-fit'>
-            {(['parse', 'build'] as Tab[]).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-150 ${tab === t ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'}`}
-              >
-                {t === 'parse' ? 'Parse' : 'Build'}
-              </button>
-            ))}
-          </div>
+        {/* ══════════════════════ PARSE TAB ════════════════════════ */}
+        {tab === 'parse' && (
+          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
-          {/* PARSE TAB */}
-          {tab === 'parse' && (
-            <>
-              <BpPanel title='Full URL'>
-                <div className='flex gap-2'>
-                  <input
-                    className='bp-input flex-1 font-mono text-sm'
-                    value={parseInput}
-                    onChange={(e) => handleParseInputChange(e.target.value)}
-                    placeholder='https://example.com/path?foo=bar&baz=1#section'
+            {/* URL input row */}
+            <div style={{ padding: '10px 20px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+              {/* colour-coded display */}
+              {parseInput && (
+                <div style={{ fontSize: 11, lineHeight: 1.7, wordBreak: 'break-all', marginBottom: 8, padding: '6px 10px', background: 'var(--bp-bg)', border: '1px solid var(--bp-border)' }}>
+                  <ColorURL raw={parseInput} />
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 0 }}>
+                <input
+                  value={parseInput}
+                  onChange={e => onParseChange(e.target.value)}
+                  placeholder='https://user:pass@example.com:8443/path?key=val#section'
+                  style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', borderRight: 0, color: 'var(--bp-ink-mute)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
+                  onFocus={e => { e.target.style.borderColor = 'var(--bp-accent)'; }}
+                  onBlur={e => { e.target.style.borderColor = 'var(--bp-border-str)'; }}
+                />
+                <BpCopyBtn text={parseInput} />
+              </div>
+              {parseErr && (
+                <div style={{ marginTop: 6, fontSize: 11, color: '#ff7a85', letterSpacing: '0.04em' }}>⚠ {parseErr}</div>
+              )}
+            </div>
+
+            {/* Segment strip */}
+            {parsed && <SegmentStrip p={parsed} raw={parseInput} />}
+
+            {/* Main two-column area */}
+            {parsed ? (
+              <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+
+                {/* Left: URL components */}
+                <Panel title='URL COMPONENTS' style={{ borderRight: 0, borderBottom: 0, borderLeft: 0 }}>
+                  <div style={{ overflowY: 'auto', flex: 1 }}>
+                    <CompRow label='PROTOCOL' value={parsed.protocol.replace(':', '')} color={C.scheme} />
+                    {parsed.username && <CompRow label='USERINFO'  value={parsed.username + (parsed.password ? ':' + parsed.password : '')} color={C.userinfo} />}
+                    <CompRow label='HOST'     value={parsed.hostname} color={C.host} />
+                    <CompRow label='PORT'     value={parsed.port || '(default)'} color={C.port} />
+                    <CompRow label='ORIGIN'   value={parsed.origin}   color='var(--bp-ink)' />
+                    <CompRow label='PATH'     value={parsed.pathname}  color={C.path} />
+                    <CompRow label='SEARCH'   value={parsed.search || '—'} color={C.query} />
+                    <CompRow label='HASH'     value={parsed.hash   || '—'} color={C.fragment} />
+                  </div>
+                </Panel>
+
+                {/* Right: Query params (editable) */}
+                <Panel title='QUERY PARAMETERS' accent={C.query} style={{ borderBottom: 0, borderRight: 0 }}>
+                  <ParamTable
+                    params={parseParams}
+                    onChange={onParamChange}
+                    onAdd={addParseParam}
+                    onRemove={delParseParam}
                   />
-                  <BpCopyBtn text={parseInput.trim()} label='COPY' />
+                </Panel>
+
+              </div>
+            ) : (
+              /* empty state */
+              !parseErr && (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, color: 'var(--bp-ink-faint)' }}>
+                  <div style={{ fontSize: 13, letterSpacing: 2, opacity: 0.4 }}>
+                    <span style={{ color: C.scheme }}>https://</span>
+                    <span style={{ color: C.host }}>example.com</span>
+                    <span style={{ color: C.path }}>/path</span>
+                    <span style={{ color: C.query }}>?key=val</span>
+                    <span style={{ color: C.fragment }}>#hash</span>
+                  </div>
+                  <p style={{ fontSize: 11, margin: 0, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Paste a URL above to inspect it</p>
                 </div>
-              </BpPanel>
+              )
+            )}
+          </div>
+        )}
 
-              {parseError && (
-                <div className='flex items-start gap-3 p-3 rounded border border-red-500/40 bg-red-950/20'>
-                  <AlertCircle className='w-5 h-5 text-red-400 flex-shrink-0 mt-0.5' />
-                  <p className='text-sm text-red-300'>{parseError}</p>
+        {/* ══════════════════════ BUILD TAB ════════════════════════ */}
+        {tab === 'build' && (
+          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+            {/* Assembled URL preview */}
+            <div style={{ padding: '10px 20px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+              {builtURL ? (
+                <div style={{ fontSize: 11, lineHeight: 1.7, wordBreak: 'break-all', marginBottom: 8, padding: '6px 10px', background: 'var(--bp-bg)', border: '1px solid var(--bp-border)' }}>
+                  <ColorURL raw={builtURL} />
                 </div>
-              )}
-
-              {parsedData && (
-                <>
-                  <BpPanel title='URL Components'>
-                    <table className='bp-kv-table w-full'>
-                      <tbody>
-                        {rows.map(({ label, value }) => (
-                          <tr key={label}>
-                            <td className='bp-kv-k'>{label}</td>
-                            <td className='bp-kv-v font-mono'>{value}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </BpPanel>
-
-                  <BpPanel title='Query Parameters'>
-                    <div className='bp-panel-actions mb-3'>
-                      <button className='bp-btn' onClick={addParseParam} type='button'>
-                        <Plus className='w-3.5 h-3.5 mr-1 inline' />ADD
-                      </button>
-                    </div>
-                    <div className='space-y-2'>
-                      {parseParams.map((p) => (
-                        <div key={p.id} className='flex items-center gap-2'>
-                          <input className='bp-input flex-1 font-mono text-sm' value={p.key}
-                            onChange={(e) => handleParseParamChange(p.id, 'key', e.target.value)} placeholder='key' />
-                          <span className='text-gray-500'>=</span>
-                          <input className='bp-input flex-1 font-mono text-sm' value={p.value}
-                            onChange={(e) => handleParseParamChange(p.id, 'value', e.target.value)} placeholder='value' />
-                          <button className='bp-btn' onClick={() => removeParseParam(p.id)} type='button'>
-                            <Trash2 className='w-3.5 h-3.5' />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    <p className='text-xs text-gray-600 mt-2'>Editing params rebuilds the URL above in real time.</p>
-                  </BpPanel>
-                </>
-              )}
-
-              {!parseInput && (
-                <div className='text-center text-gray-600 py-12'>
-                  <Link className='w-10 h-10 mx-auto mb-3 opacity-40' />
-                  <p className='text-sm'>Paste a URL above to inspect its parts</p>
+              ) : (
+                <div style={{ fontSize: 11, color: 'var(--bp-ink-faint)', marginBottom: 8, padding: '6px 10px', background: 'var(--bp-bg)', border: '1px solid var(--bp-border)' }}>
+                  Enter a hostname below to start building…
                 </div>
               )}
-            </>
-          )}
+              <div style={{ display: 'flex', gap: 0 }}>
+                <input readOnly value={builtURL}
+                  style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', borderRight: 0, color: 'var(--bp-ink-mute)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }} />
+                <BpCopyBtn text={builtURL} />
+              </div>
+            </div>
 
-          {/* BUILD TAB */}
-          {tab === 'build' && (
-            <>
-              <BpPanel title='URL Parts'>
-                <div className='space-y-3'>
-                  <div className='flex flex-col sm:flex-row gap-2'>
-                    <select
-                      value={buildProtocol}
-                      onChange={(e) => setBuildProtocol(e.target.value)}
-                      className='bp-input sm:w-32'
-                    >
+            {/* Segment strip for built URL */}
+            {builtURL && <SegmentStrip p={{} as Parsed} raw={builtURL} />}
+
+            {/* Build fields + params */}
+            <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+
+              {/* Left: URL part inputs */}
+              <Panel title='URL PARTS' style={{ borderRight: 0, borderBottom: 0, borderLeft: 0 }}>
+                <div style={{ overflowY: 'auto', flex: 1, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {/* Protocol + host + port */}
+                  <div style={{ display: 'flex', gap: 0 }}>
+                    <select value={bProto} onChange={e => setBProto(e.target.value)}
+                      style={{ background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', borderRight: 0, color: C.scheme, fontFamily: 'inherit', fontSize: 11, padding: '6px 8px', outline: 'none', cursor: 'pointer', flexShrink: 0 }}>
                       <option value='https:'>https://</option>
                       <option value='http:'>http://</option>
+                      <option value='ftp:'>ftp://</option>
                     </select>
-                    <input className='bp-input flex-1 font-mono text-sm' value={buildHostname}
-                      onChange={(e) => setBuildHostname(e.target.value)} placeholder='example.com' />
-                    <input className='bp-input font-mono text-sm sm:w-36' value={buildPort}
-                      onChange={(e) => setBuildPort(e.target.value)} placeholder='Port (optional)' type='number' min={1} max={65535} />
+                    <input value={bHost} onChange={e => setBHost(e.target.value)} placeholder='hostname (e.g. example.com)'
+                      style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', borderRight: 0, color: C.host, fontFamily: 'inherit', fontSize: 11, padding: '6px 8px', outline: 'none', boxSizing: 'border-box' }} />
+                    <input value={bPort} onChange={e => setBPort(e.target.value)} placeholder='port'
+                      style={{ width: 64, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: C.port, fontFamily: 'inherit', fontSize: 11, padding: '6px 8px', outline: 'none', boxSizing: 'border-box' }} />
                   </div>
-                  <div>
-                    <label className='block text-xs text-gray-500 mb-1'>Path</label>
-                    <input className='bp-input w-full font-mono text-sm' value={buildPathname}
-                      onChange={(e) => setBuildPathname(e.target.value)} placeholder='/api/v1/users' />
-                  </div>
-                  <div>
-                    <label className='block text-xs text-gray-500 mb-1'>Hash / Fragment</label>
-                    <input className='bp-input w-full font-mono text-sm' value={buildHash}
-                      onChange={(e) => setBuildHash(e.target.value)} placeholder='section-id (no # needed)' />
-                  </div>
-                </div>
-              </BpPanel>
 
-              <BpPanel title='Query Parameters'>
-                <div className='bp-panel-actions mb-3'>
-                  <button className='bp-btn' onClick={addBuildParam} type='button'>
-                    <Plus className='w-3.5 h-3.5 mr-1 inline' />ADD
-                  </button>
-                </div>
-                <div className='space-y-2'>
-                  {buildParams.map((p) => (
-                    <div key={p.id} className='flex items-center gap-2'>
-                      <input className='bp-input flex-1 font-mono text-sm' value={p.key}
-                        onChange={(e) => handleBuildParamChange(p.id, 'key', e.target.value)} placeholder='key' />
-                      <span className='text-gray-500'>=</span>
-                      <input className='bp-input flex-1 font-mono text-sm' value={p.value}
-                        onChange={(e) => handleBuildParamChange(p.id, 'value', e.target.value)} placeholder='value' />
-                      <button className='bp-btn' onClick={() => removeBuildParam(p.id)} type='button'>
-                        <Trash2 className='w-3.5 h-3.5' />
-                      </button>
+                  {[
+                    { label: 'USERNAME', val: bUser, set: setBUser, color: C.userinfo, ph: 'username (optional)' },
+                    { label: 'PASSWORD', val: bPass, set: setBPass, color: C.userinfo, ph: 'password (optional)' },
+                    { label: 'PATH',     val: bPath, set: setBPath, color: C.path,     ph: '/api/v1/resource' },
+                    { label: 'FRAGMENT', val: bHash, set: setBHash, color: C.fragment, ph: 'section-id (no # needed)' },
+                  ].map(f => (
+                    <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+                      <div style={{ width: 80, flexShrink: 0, fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', padding: '0 10px 0 0' }}>{f.label}</div>
+                      <input value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.ph}
+                        style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: f.color, fontFamily: 'inherit', fontSize: 11, padding: '6px 8px', outline: 'none', boxSizing: 'border-box' }} />
                     </div>
                   ))}
                 </div>
-              </BpPanel>
+              </Panel>
 
-              <BpPanel title='Assembled URL'>
-                <div className='bp-panel-actions mb-3'>
-                  <BpCopyBtn text={builtURL} label='COPY' />
-                </div>
-                {builtURL ? (
-                  <div className='bp-code-view'>
-                    <pre className='bp-code-pre text-green-300'>{builtURL}</pre>
-                  </div>
-                ) : (
-                  <p className='text-xs text-gray-600'>Enter a hostname to start building the URL.</p>
-                )}
-              </BpPanel>
-            </>
-          )}
-        </div>
+              {/* Right: Query params */}
+              <Panel title='QUERY PARAMETERS' accent={C.query} style={{ borderBottom: 0, borderRight: 0 }}>
+                <ParamTable
+                  params={bParams}
+                  onChange={onBParamChange}
+                  onAdd={addBParam}
+                  onRemove={delBParam}
+                />
+              </Panel>
+
+            </div>
+          </div>
+        )}
+
       </div>
-    </BpToolStage>
+    </div>
   );
 }
