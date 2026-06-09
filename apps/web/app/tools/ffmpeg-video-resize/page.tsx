@@ -1,14 +1,37 @@
 'use client';
 
-import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import React, { useState } from 'react';
+import { BpCopyBtn } from '@/components/blueprint';
 import { Maximize2 } from 'lucide-react';
 
 type ResizeMethod = 'preset' | 'custom' | 'percentage';
 type ScaleAlgorithm = 'fast' | 'bilinear' | 'lanczos';
 type PaddingMode = 'pad' | 'crop' | 'stretch';
 
-const SELECT_CLS = 'w-full h-9 px-3 rounded border border-[hsla(0,0%,20%,1)] bg-[#121212] text-gray-100 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500';
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#ff9d57',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export default function FfmpegVideoResizePage() {
   const [inputFile, setInputFile] = useState('input.mp4');
@@ -67,126 +90,262 @@ export default function FfmpegVideoResizePage() {
     setTimeout(generateCommand, 100);
   };
 
-  const TAB_CLS = (active: boolean) => `px-4 py-2 text-sm font-medium transition ${active ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-gray-300'}`;
+  const tabStyle = (active: boolean): React.CSSProperties => ({
+    padding: '6px 14px',
+    fontSize: 11,
+    fontWeight: 500,
+    background: 'none',
+    border: 'none',
+    borderBottom: active ? '2px solid var(--bp-accent)' : '2px solid transparent',
+    color: active ? 'var(--bp-accent)' : 'var(--bp-ink-mute)',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    transition: 'color 0.15s',
+    letterSpacing: '0.05em',
+  });
+
+  const inputStyle: React.CSSProperties = {
+    background: 'var(--bp-bg)',
+    border: '1px solid var(--bp-border-str)',
+    color: 'var(--bp-ink)',
+    fontFamily: 'inherit',
+    fontSize: 12,
+    padding: '7px 10px',
+    outline: 'none',
+    boxSizing: 'border-box',
+    width: '100%',
+  };
+
+  const selectStyle: React.CSSProperties = {
+    background: 'var(--bp-bg)',
+    border: '1px solid var(--bp-border)',
+    color: 'var(--bp-ink)',
+    fontFamily: 'inherit',
+    fontSize: 11,
+    padding: '5px 8px',
+    outline: 'none',
+    width: '100%',
+  };
 
   return (
-    <BpToolStage cat='ffmpeg'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>FFmpeg Video Resize & Scale</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Generate FFmpeg commands to resize and scale videos</p>
+    <div
+      className='h-full flex flex-col overflow-hidden'
+      data-cat='ffmpeg'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Video Resize & Convert</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Resize video to standard presets and convert between formats</p>
       </div>
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-3xl mx-auto space-y-4'>
 
-          <BpPanel title='Resize Method'>
-            <div className='flex gap-0 border-b border-[hsla(0,0%,20%,1)]'>
-              <button type='button' className={TAB_CLS(resizeMethod === 'preset')} onClick={() => setResizeMethod('preset')}>Preset Resolutions</button>
-              <button type='button' className={TAB_CLS(resizeMethod === 'custom')} onClick={() => setResizeMethod('custom')}>Custom Size</button>
-              <button type='button' className={TAB_CLS(resizeMethod === 'percentage')} onClick={() => setResizeMethod('percentage')}>Scale by Percentage</button>
-            </div>
-          </BpPanel>
+      {/* Content */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
 
-          <BpPanel title='Input / Output'>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Input Video</label>
-                <input value={inputFile} onChange={(e) => setInputFile(e.target.value)} placeholder='input.mp4' className='bp-input w-full font-mono' />
-              </div>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Output Video</label>
-                <input value={outputFile} onChange={(e) => setOutputFile(e.target.value)} placeholder='output.mp4' className='bp-input w-full font-mono' />
+        {/* Left: Configuration */}
+        <Panel title='Configuration' style={{ borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+
+            {/* Resize Method Tabs */}
+            <div style={{ borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-end', paddingTop: 4 }}>
+                <button type='button' style={tabStyle(resizeMethod === 'preset')} onClick={() => setResizeMethod('preset')}>Preset Resolutions</button>
+                <button type='button' style={tabStyle(resizeMethod === 'custom')} onClick={() => setResizeMethod('custom')}>Custom Size</button>
+                <button type='button' style={tabStyle(resizeMethod === 'percentage')} onClick={() => setResizeMethod('percentage')}>Percentage</button>
               </div>
             </div>
-          </BpPanel>
 
-          {resizeMethod === 'preset' && (
-            <BpPanel title='Preset Resolutions'>
-              <div className='flex flex-wrap gap-2 mb-3'>
-                {[['4K', '4K (3840x2160)'], ['1080p', '1080p'], ['720p', '720p'], ['480p', '480p'], ['instagram', 'Instagram (1:1)'], ['instagram-story', 'IG Story (9:16)'], ['youtube-thumbnail', 'YT Thumbnail']].map(([key, label]) => (
-                  <button key={key} type='button' className='bp-btn text-xs' onClick={() => applyPreset(key)}>{label}</button>
-                ))}
-              </div>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Selected Preset</label>
-                <select value={preset} onChange={(e) => { setPreset(e.target.value); generateCommand(); }} className={SELECT_CLS}>
-                  <option value='4K'>4K (3840x2160)</option><option value='1080p'>1080p (1920x1080)</option><option value='720p'>720p (1280x720)</option><option value='480p'>480p (854x480)</option><option value='instagram'>Instagram (1080x1080)</option><option value='instagram-story'>Instagram Story (1080x1920)</option><option value='youtube-thumbnail'>YouTube Thumbnail (1280x720)</option>
-                </select>
-              </div>
-            </BpPanel>
-          )}
-
-          {resizeMethod === 'custom' && (
-            <BpPanel title='Custom Size'>
-              <div className='grid grid-cols-2 gap-3 mb-3'>
+            {/* Input / Output */}
+            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+              <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: 8 }}>Input / Output</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 <div>
-                  <label className='block text-xs text-gray-500 mb-1'>Width (pixels)</label>
-                  <input type='number' value={customWidth} onChange={(e) => setCustomWidth(e.target.value)} placeholder='1920' className='bp-input w-full' />
+                  <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Input Video</div>
+                  <input
+                    value={inputFile}
+                    onChange={(e) => setInputFile(e.target.value)}
+                    placeholder='input.mp4'
+                    style={inputStyle}
+                  />
                 </div>
                 <div>
-                  <label className='block text-xs text-gray-500 mb-1'>Height (pixels)</label>
-                  <input type='number' value={customHeight} onChange={(e) => setCustomHeight(e.target.value)} placeholder='1080' className='bp-input w-full' disabled={maintainAspectRatio} />
+                  <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Output Video</div>
+                  <input
+                    value={outputFile}
+                    onChange={(e) => setOutputFile(e.target.value)}
+                    placeholder='output.mp4'
+                    style={inputStyle}
+                  />
                 </div>
               </div>
-              <label className='flex items-center gap-2 cursor-pointer'>
-                <input type='checkbox' checked={maintainAspectRatio} onChange={(e) => setMaintainAspectRatio(e.target.checked)} className='w-4 h-4 rounded' />
-                <span className='text-sm text-gray-300'>Maintain aspect ratio</span>
-              </label>
-            </BpPanel>
-          )}
+            </div>
 
-          {resizeMethod === 'percentage' && (
-            <BpPanel title='Scale by Percentage'>
-              <div className='flex gap-2 flex-wrap'>
-                <input type='number' value={percentage} onChange={(e) => setPercentage(e.target.value)} placeholder='100' className='bp-input w-24 font-mono' />
-                {[25, 50, 75, 100, 150, 200].map((p) => (
-                  <button key={p} type='button' className='bp-btn text-xs' onClick={() => setPercentage(p.toString())}>{p}%</button>
-                ))}
-              </div>
-            </BpPanel>
-          )}
-
-          <BpPanel title='Options'>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3'>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Scaling Algorithm</label>
-                <select value={scaleAlgorithm} onChange={(e) => setScaleAlgorithm(e.target.value as ScaleAlgorithm)} className={SELECT_CLS}>
-                  <option value='fast'>Fast (fast bilinear)</option><option value='bilinear'>Balanced (bilinear)</option><option value='lanczos'>High Quality (lanczos)</option>
-                </select>
-              </div>
-              {resizeMethod === 'preset' && (
+            {/* Preset Resolutions */}
+            {resizeMethod === 'preset' && (
+              <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+                <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: 8 }}>Preset Resolutions</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                  {[['4K', '4K (3840x2160)'], ['1080p', '1080p'], ['720p', '720p'], ['480p', '480p'], ['instagram', 'Instagram (1:1)'], ['instagram-story', 'IG Story (9:16)'], ['youtube-thumbnail', 'YT Thumbnail']].map(([key, label]) => (
+                    <button key={key} type='button' className='bp-btn' style={{ fontSize: 10 }} onClick={() => applyPreset(key)}>{label}</button>
+                  ))}
+                </div>
                 <div>
-                  <label className='block text-xs text-gray-500 mb-1'>Padding Mode</label>
-                  <select value={paddingMode} onChange={(e) => setPaddingMode(e.target.value as PaddingMode)} className={SELECT_CLS}>
-                    <option value='pad'>Pad (add black bars)</option><option value='crop'>Crop</option><option value='stretch'>Stretch</option>
+                  <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Selected Preset</div>
+                  <select
+                    value={preset}
+                    onChange={(e) => { setPreset(e.target.value); generateCommand(); }}
+                    style={selectStyle}
+                  >
+                    <option value='4K'>4K (3840x2160)</option>
+                    <option value='1080p'>1080p (1920x1080)</option>
+                    <option value='720p'>720p (1280x720)</option>
+                    <option value='480p'>480p (854x480)</option>
+                    <option value='instagram'>Instagram (1080x1080)</option>
+                    <option value='instagram-story'>Instagram Story (1080x1920)</option>
+                    <option value='youtube-thumbnail'>YouTube Thumbnail (1280x720)</option>
                   </select>
                 </div>
-              )}
+              </div>
+            )}
+
+            {/* Custom Size */}
+            {resizeMethod === 'custom' && (
+              <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+                <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: 8 }}>Custom Size</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                  <div>
+                    <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Width (pixels)</div>
+                    <input
+                      type='number'
+                      value={customWidth}
+                      onChange={(e) => setCustomWidth(e.target.value)}
+                      placeholder='1920'
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Height (pixels)</div>
+                    <input
+                      type='number'
+                      value={customHeight}
+                      onChange={(e) => setCustomHeight(e.target.value)}
+                      placeholder='1080'
+                      disabled={maintainAspectRatio}
+                      style={{ ...inputStyle, opacity: maintainAspectRatio ? 0.4 : 1 }}
+                    />
+                  </div>
+                </div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input
+                    type='checkbox'
+                    checked={maintainAspectRatio}
+                    onChange={(e) => setMaintainAspectRatio(e.target.checked)}
+                    style={{ width: 14, height: 14 }}
+                  />
+                  <span style={{ fontSize: 12, color: 'var(--bp-ink)' }}>Maintain aspect ratio</span>
+                </label>
+              </div>
+            )}
+
+            {/* Percentage */}
+            {resizeMethod === 'percentage' && (
+              <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+                <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: 8 }}>Scale by Percentage</div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <input
+                    type='number'
+                    value={percentage}
+                    onChange={(e) => setPercentage(e.target.value)}
+                    placeholder='100'
+                    style={{ ...inputStyle, width: 80 }}
+                  />
+                  {[25, 50, 75, 100, 150, 200].map((p) => (
+                    <button key={p} type='button' className='bp-btn' style={{ fontSize: 10 }} onClick={() => setPercentage(p.toString())}>{p}%</button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Options */}
+            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+              <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: 8 }}>Options</div>
+              <div style={{ display: 'grid', gridTemplateColumns: resizeMethod === 'preset' ? '1fr 1fr' : '1fr', gap: 8, marginBottom: 10 }}>
+                <div>
+                  <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Scaling Algorithm</div>
+                  <select
+                    value={scaleAlgorithm}
+                    onChange={(e) => setScaleAlgorithm(e.target.value as ScaleAlgorithm)}
+                    style={selectStyle}
+                  >
+                    <option value='fast'>Fast (fast bilinear)</option>
+                    <option value='bilinear'>Balanced (bilinear)</option>
+                    <option value='lanczos'>High Quality (lanczos)</option>
+                  </select>
+                </div>
+                {resizeMethod === 'preset' && (
+                  <div>
+                    <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Padding Mode</div>
+                    <select
+                      value={paddingMode}
+                      onChange={(e) => setPaddingMode(e.target.value as PaddingMode)}
+                      style={selectStyle}
+                    >
+                      <option value='pad'>Pad (add black bars)</option>
+                      <option value='crop'>Crop</option>
+                      <option value='stretch'>Stretch</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <input
+                  type='checkbox'
+                  checked={keepCodec}
+                  onChange={(e) => setKeepCodec(e.target.checked)}
+                  style={{ width: 14, height: 14 }}
+                />
+                <span style={{ fontSize: 12, color: 'var(--bp-ink)' }}>Keep original codec (copy, no re-encode)</span>
+              </label>
             </div>
-            <label className='flex items-center gap-2 cursor-pointer'>
-              <input type='checkbox' checked={keepCodec} onChange={(e) => setKeepCodec(e.target.checked)} className='w-4 h-4 rounded' />
-              <span className='text-sm text-gray-300'>Keep original codec (copy, no re-encode)</span>
-            </label>
-          </BpPanel>
 
-          <button type='button' className='bp-btn bp-btn-solid w-full' onClick={generateCommand}>
-            <Maximize2 className='w-4 h-4 mr-2 inline' />GENERATE COMMAND
-          </button>
+          </div>
 
-          {command && (
-            <BpPanel title='Generated FFmpeg Command'>
-              <div className='bp-panel-actions mb-3'><BpCopyBtn text={command} label='COPY' /></div>
-              <code className='block bp-code-view px-4 py-3 font-mono text-sm text-gray-300 whitespace-pre-wrap break-all'>{command}</code>
-            </BpPanel>
-          )}
+          {/* Action bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <button
+              type='button'
+              className='bp-btn bp-btn-solid'
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              onClick={generateCommand}
+            >
+              <Maximize2 style={{ width: 13, height: 13 }} />
+              GENERATE COMMAND
+            </button>
+          </div>
+        </Panel>
 
-          {!command && (
-            <div className='text-center text-gray-600 py-12'>
-              <Maximize2 className='w-10 h-10 mx-auto mb-3 opacity-40' />
-              <p className='text-sm'>Configure settings and click Generate Command</p>
+        {/* Right: Output */}
+        <Panel title='Generated FFmpeg Command' style={{ borderTop: 0, borderRight: 0, borderBottom: 0 }}>
+          {command ? (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+                <BpCopyBtn text={command} label='COPY' />
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '14px' }}>
+                <code style={{ display: 'block', fontFamily: 'inherit', fontSize: 12, color: 'var(--bp-ink)', whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.7 }}>
+                  {command}
+                </code>
+              </div>
+            </>
+          ) : (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, color: 'var(--bp-ink-faint)' }}>
+              <Maximize2 style={{ width: 36, height: 36, opacity: 0.3 }} />
+              <span style={{ fontSize: 11 }}>Configure settings and click Generate Command</span>
             </div>
           )}
-        </div>
+        </Panel>
+
       </div>
-    </BpToolStage>
+    </div>
   );
 }

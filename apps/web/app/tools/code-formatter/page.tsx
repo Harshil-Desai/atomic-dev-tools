@@ -1,11 +1,36 @@
 'use client';
 
-import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import React, { useState } from 'react';
+import { BpCopyBtn } from '@/components/blueprint';
 import { Code2, AlertCircle, Minimize2, Sparkles } from 'lucide-react';
 
 type Language = 'json' | 'javascript' | 'css' | 'html';
 type Action = 'minify' | 'beautify';
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#f0c674',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export default function CodeFormatterPage() {
   const [input, setInput] = useState('');
@@ -146,75 +171,170 @@ export default function CodeFormatterPage() {
     }
   };
 
+  const selectStyle: React.CSSProperties = {
+    background: 'var(--bp-bg)',
+    border: '1px solid var(--bp-border-str)',
+    color: 'var(--bp-ink)',
+    fontFamily: 'inherit',
+    fontSize: 12,
+    padding: '7px 10px',
+    outline: 'none',
+    boxSizing: 'border-box',
+    width: '100%',
+  };
+
   return (
-    <BpToolStage cat='text'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Code Minifier/Beautifier</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Format or minify code in various languages</p>
+    <div
+      data-cat='text'
+      style={{
+        ...CSS_VARS,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative',
+        background: 'var(--bp-bg)',
+        color: 'var(--bp-ink)',
+        fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+      }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#fff', letterSpacing: '0.01em' }}>Code Formatter</h1>
+        <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--bp-ink-mute)' }}>Beautify and minify JSON, JavaScript, CSS and HTML</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-6xl mx-auto space-y-4'>
-
-          <BpPanel title='Configuration'>
-            <div className='flex flex-wrap items-end gap-3 mb-3'>
-              <div className='flex-1 min-w-32'>
-                <label className='block text-xs text-gray-500 mb-1'>Language</label>
-                <select className='bp-input w-full' value={language} onChange={(e) => setLanguage(e.target.value as Language)}>
-                  <option value='json'>JSON</option>
-                  <option value='javascript'>JavaScript</option>
-                  <option value='css'>CSS</option>
-                  <option value='html'>HTML</option>
-                </select>
-              </div>
-              <div className='flex-1 min-w-32'>
-                <label className='block text-xs text-gray-500 mb-1'>Indentation Size</label>
-                <select className='bp-input w-full' value={indentSize} onChange={(e) => setIndentSize(parseInt(e.target.value))}>
-                  <option value='0'>0 (none)</option>
-                  <option value='2'>2 spaces</option>
-                  <option value='4'>4 spaces</option>
-                  <option value='8'>8 spaces</option>
-                </select>
-              </div>
-            </div>
-            <div className='flex gap-2'>
-              <button className='bp-btn bp-btn-solid flex-1' onClick={() => handleProcess('beautify')} disabled={!input.trim()} type='button'>
-                <Sparkles className='w-4 h-4 mr-2 inline' />BEAUTIFY
-              </button>
-              <button className='bp-btn flex-1' onClick={() => handleProcess('minify')} disabled={!input.trim()} type='button'>
-                <Minimize2 className='w-4 h-4 mr-2 inline' />MINIFY
-              </button>
-            </div>
-          </BpPanel>
-
-          <div className='bp-layout-2col'>
-            <BpPanel title='Input Code' meta={inputStats.chars > 0 ? `${inputStats.lines} lines · ${inputStats.chars} chars` : undefined}>
-              <textarea className='bp-textarea font-mono text-sm' placeholder={`Enter ${language.toUpperCase()} code here...`} value={input} onChange={(e) => setInput(e.target.value)} rows={12} />
-            </BpPanel>
-
-            <BpPanel title='Output Code' meta={outputStats.chars > 0 ? `${outputStats.lines} lines · ${outputStats.chars} chars${reduction !== null && reduction > 0 ? ` · ${reduction}% smaller` : ''}` : undefined}>
-              <div className='bp-panel-actions mb-3'>
-                <BpCopyBtn text={output} label='COPY' />
-              </div>
-              <textarea className='bp-textarea font-mono text-sm' placeholder='Formatted code will appear here...' value={output} readOnly rows={12} />
-            </BpPanel>
+      {/* Config bar */}
+      <div style={{ flexShrink: 0, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, padding: '10px 16px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 120 }}>
+            <label style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', fontWeight: 600 }}>Language</label>
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as Language)}
+              style={selectStyle}
+            >
+              <option value='json'>JSON</option>
+              <option value='javascript'>JavaScript</option>
+              <option value='css'>CSS</option>
+              <option value='html'>HTML</option>
+            </select>
           </div>
-
-          {error && (
-            <div className='flex items-start gap-3 p-3 rounded border border-red-500/40 bg-red-950/20'>
-              <AlertCircle className='w-5 h-5 text-red-400 flex-shrink-0 mt-0.5' />
-              <p className='text-sm text-red-300'>{error}</p>
-            </div>
-          )}
-
-          {!input.trim() && !error && (
-            <div className='text-center text-gray-600 py-12'>
-              <Code2 className='w-12 h-12 mx-auto mb-4 opacity-40' />
-              <p className='text-sm'>Enter code and choose an operation to get started</p>
-            </div>
-          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 140 }}>
+            <label style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', fontWeight: 600 }}>Indentation Size</label>
+            <select
+              value={indentSize}
+              onChange={(e) => setIndentSize(parseInt(e.target.value))}
+              style={selectStyle}
+            >
+              <option value='0'>0 (none)</option>
+              <option value='2'>2 spaces</option>
+              <option value='4'>4 spaces</option>
+              <option value='8'>8 spaces</option>
+            </select>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexWrap: 'wrap' }}>
+            <button
+              className='bp-btn bp-btn-solid'
+              onClick={() => handleProcess('beautify')}
+              disabled={!input.trim()}
+              type='button'
+            >
+              <Sparkles className='w-4 h-4 mr-2 inline' />BEAUTIFY
+            </button>
+            <button
+              className='bp-btn'
+              onClick={() => handleProcess('minify')}
+              disabled={!input.trim()}
+              type='button'
+            >
+              <Minimize2 className='w-4 h-4 mr-2 inline' />MINIFY
+            </button>
+          </div>
         </div>
       </div>
-    </BpToolStage>
+
+      {/* Error bar */}
+      {error && (
+        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 16px', borderBottom: '1px solid rgba(239,68,68,0.3)', background: 'rgba(127,29,29,0.15)' }}>
+          <AlertCircle style={{ width: 14, height: 14, color: '#f87171', flexShrink: 0, marginTop: 1 }} />
+          <span style={{ fontSize: 12, color: '#fca5a5' }}>{error}</span>
+        </div>
+      )}
+
+      {/* Main 2-col layout */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+        <Panel
+          title='Input Code'
+          meta={inputStats.chars > 0 ? `${inputStats.lines} lines · ${inputStats.chars} chars` : undefined}
+          style={{ borderRight: 0, borderTop: 0, borderLeft: 0, borderBottom: 0 }}
+        >
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={`Enter ${language.toUpperCase()} code here...`}
+              spellCheck={false}
+              style={{
+                flex: 1,
+                width: '100%',
+                background: 'var(--bp-bg)',
+                border: 0,
+                color: 'var(--bp-ink)',
+                fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+                fontSize: 12,
+                padding: '12px 14px',
+                resize: 'none',
+                outline: 'none',
+                boxSizing: 'border-box',
+                lineHeight: 1.65,
+                minHeight: 300,
+              }}
+            />
+          </div>
+        </Panel>
+
+        <Panel
+          title='Output Code'
+          meta={outputStats.chars > 0 ? `${outputStats.lines} lines · ${outputStats.chars} chars${reduction !== null && reduction > 0 ? ` · ${reduction}% smaller` : ''}` : undefined}
+          style={{ borderTop: 0, borderRight: 0, borderBottom: 0, borderLeft: '1px solid var(--bp-border)' }}
+        >
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <textarea
+              value={output}
+              readOnly
+              placeholder='Formatted code will appear here...'
+              spellCheck={false}
+              style={{
+                flex: 1,
+                width: '100%',
+                background: 'var(--bp-bg)',
+                border: 0,
+                color: 'var(--bp-ink)',
+                fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+                fontSize: 12,
+                padding: '12px 14px',
+                resize: 'none',
+                outline: 'none',
+                boxSizing: 'border-box',
+                lineHeight: 1.65,
+                minHeight: 300,
+              }}
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0, flexWrap: 'wrap' }}>
+            <BpCopyBtn text={output} label='COPY' />
+          </div>
+        </Panel>
+      </div>
+
+      {/* Empty state */}
+      {!input.trim() && !error && (
+        <div style={{ position: 'absolute', bottom: 40, left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none' }}>
+          <Code2 style={{ width: 32, height: 32, color: 'var(--bp-ink-faint)', opacity: 0.5 }} />
+          <span style={{ fontSize: 11, color: 'var(--bp-ink-faint)' }}>Enter code and choose an operation to get started</span>
+        </div>
+      )}
+    </div>
   );
 }

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
-import { Palette, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { BpCopyBtn } from '@/components/blueprint';
+import { AlertCircle } from 'lucide-react';
 
 interface RGB { r: number; g: number; b: number }
 interface HSL { h: number; s: number; l: number }
@@ -118,6 +118,31 @@ const PRESETS = [
   { label: 'Tailwind Slate 900', hex: '#0f172a' },
 ];
 
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#4ad29a',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 export default function ColorConverterPage() {
   const [input, setInput] = useState('#3b82f6');
 
@@ -140,103 +165,174 @@ export default function ColorConverterPage() {
   const bestContrast = contrastOnWhite > contrastOnBlack ? 'white' : 'black';
 
   return (
-    <BpToolStage cat='data'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Color Format Converter</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Convert between HEX, RGB, HSL, and OKLCH with live preview and contrast info</p>
+    <div
+      className='h-full flex flex-col overflow-hidden relative'
+      data-cat='data'
+      style={{
+        ...CSS_VARS,
+        background: 'var(--bp-bg)',
+        color: 'var(--bp-ink)',
+        fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+      }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 700, color: '#fff', margin: 0, marginBottom: 2 }}>Color Converter</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Convert between HEX, RGB, HSL and other color formats</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-2xl mx-auto space-y-4'>
+      {/* Main content */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
 
-          <BpPanel title='Color Input'>
-            <div className='flex gap-3 items-center mb-2'>
-              <label className='relative cursor-pointer shrink-0'>
-                <div className='w-14 h-14 rounded-xl border-2 border-[hsla(0,0%,30%,1)] shadow-lg transition-transform hover:scale-105' style={{ backgroundColor: cssStr }} />
-                <input type='color' value={rgb ? rgbToHex(rgb) : '#000000'} onChange={(e) => setInput(e.target.value)} className='absolute inset-0 opacity-0 cursor-pointer w-full h-full' />
-              </label>
-              <div className='flex-1'>
-                <input className='bp-input w-full font-mono' value={input} onChange={(e) => setInput(e.target.value)} placeholder='#3b82f6 · rgb(59,130,246) · hsl(217,91%,60%)' />
-                <p className='text-xs text-gray-600 mt-1'>Accepts HEX, RGB, HSL, OKLCH, or CSS color names</p>
+        {/* Color Input Panel */}
+        <Panel title='Color Input'>
+          <div style={{ padding: '12px 14px', display: 'flex', gap: 12, alignItems: 'center' }}>
+            <label style={{ position: 'relative', cursor: 'pointer', flexShrink: 0 }}>
+              <div style={{
+                width: 56, height: 56, border: '2px solid var(--bp-border-str)',
+                backgroundColor: cssStr, cursor: 'pointer',
+              }} />
+              <input
+                type='color'
+                value={rgb ? rgbToHex(rgb) : '#000000'}
+                onChange={(e) => setInput(e.target.value)}
+                style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+              />
+            </label>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder='#3b82f6 · rgb(59,130,246) · hsl(217,91%,60%)'
+                style={{
+                  flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)',
+                  color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12,
+                  padding: '7px 10px', outline: 'none', boxSizing: 'border-box',
+                  width: '100%',
+                }}
+              />
+              <span style={{ fontSize: 10, color: 'var(--bp-ink-faint)' }}>Accepts HEX, RGB, HSL, OKLCH, or CSS color names</span>
+            </div>
+          </div>
+        </Panel>
+
+        {/* Presets Panel */}
+        <Panel title='Presets'>
+          <div style={{ padding: '10px 14px', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {PRESETS.map((p) => (
+              <button
+                key={p.hex}
+                onClick={() => setInput(p.hex)}
+                type='button'
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '5px 10px', border: '1px solid var(--bp-border)',
+                  background: 'var(--bp-elevated)', cursor: 'pointer',
+                  color: 'var(--bp-ink)', fontSize: 11, fontFamily: 'inherit',
+                }}
+              >
+                <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: p.hex, flexShrink: 0 }} />
+                <span>{p.label}</span>
+              </button>
+            ))}
+          </div>
+        </Panel>
+
+        {/* Error state */}
+        {input.trim() && !rgb && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', border: '1px solid rgba(239,68,68,0.4)', color: '#f87171', fontSize: 12 }}>
+            <AlertCircle style={{ width: 14, height: 14, flexShrink: 0 }} />
+            <span>Could not parse color — try #rrggbb, rgb(r,g,b), hsl(h,s%,l%), or oklch(L C H)</span>
+          </div>
+        )}
+
+        {rgb && (
+          <>
+            {/* Color Preview */}
+            <div style={{ height: 80, width: '100%', display: 'flex', alignItems: 'flex-end', padding: '10px 14px', backgroundColor: cssStr, boxSizing: 'border-box', border: '1px solid var(--bp-border)' }}>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <span style={{
+                  fontSize: 11, padding: '3px 8px', fontFamily: 'inherit',
+                  backgroundColor: bestContrast === 'white' ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.4)',
+                  color: bestContrast === 'white' ? '#fff' : '#000',
+                }}>Aa</span>
+                <span style={{
+                  fontSize: 11, padding: '3px 8px', fontFamily: 'inherit',
+                  backgroundColor: bestContrast === 'white' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)',
+                  color: bestContrast === 'white' ? '#fff' : '#000',
+                }}>{cssStr}</span>
               </div>
             </div>
-          </BpPanel>
 
-          <BpPanel title='Presets'>
-            <div className='flex flex-wrap gap-2'>
-              {PRESETS.map((p) => (
-                <button key={p.hex} onClick={() => setInput(p.hex)} type='button'
-                  className='flex items-center gap-2 px-3 py-1.5 rounded border border-[hsla(0,0%,20%,1)] bg-[#121212] hover:bg-[#222] transition-colors'>
-                  <div className='w-4 h-4 rounded-full shrink-0' style={{ backgroundColor: p.hex }} />
-                  <span className='text-xs text-gray-300'>{p.label}</span>
-                </button>
-              ))}
-            </div>
-          </BpPanel>
-
-          {input.trim() && !rgb && (
-            <div className='flex items-center gap-2 p-3 rounded border border-red-500/40 text-red-400'>
-              <AlertCircle className='w-4 h-4 shrink-0' />
-              <span className='text-sm'>Could not parse color — try #rrggbb, rgb(r,g,b), hsl(h,s%,l%), or oklch(L C H)</span>
-            </div>
-          )}
-
-          {rgb && (
-            <>
-              <div className='rounded-xl h-28 w-full flex items-end p-4 transition-colors' style={{ backgroundColor: cssStr }}>
-                <div className='flex gap-2'>
-                  <span className='text-xs px-2 py-1 rounded font-mono' style={{ backgroundColor: bestContrast === 'white' ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.4)', color: bestContrast === 'white' ? '#fff' : '#000' }}>Aa</span>
-                  <span className='text-xs px-2 py-1 rounded font-mono' style={{ backgroundColor: bestContrast === 'white' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)', color: bestContrast === 'white' ? '#fff' : '#000' }}>{cssStr}</span>
-                </div>
+            {/* All Formats Panel */}
+            <Panel title='All Formats'>
+              <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {outputs.map(({ label, value, key }) => (
+                  <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)', width: 44, flexShrink: 0, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{label}</span>
+                    <code
+                      onClick={() => setInput(value)}
+                      title='Click to use as input'
+                      style={{
+                        flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)',
+                        color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12,
+                        padding: '6px 10px', cursor: 'pointer', boxSizing: 'border-box',
+                      }}
+                    >{value}</code>
+                    <BpCopyBtn text={value} label='COPY' />
+                  </div>
+                ))}
               </div>
+            </Panel>
 
-              <BpPanel title='All Formats'>
-                <div className='space-y-2'>
-                  {outputs.map(({ label, value, key }) => (
-                    <div key={key} className='flex items-center gap-3'>
-                      <span className='text-xs font-mono text-gray-500 w-14 shrink-0'>{label}</span>
-                      <code className='flex-1 bg-[#121212] rounded px-3 py-2 font-mono text-sm text-gray-200 cursor-pointer hover:bg-[#1a1a1a] transition-colors' onClick={() => setInput(value)} title='Click to use as input'>{value}</code>
-                      <BpCopyBtn text={value} label='COPY' />
-                    </div>
-                  ))}
-                </div>
-              </BpPanel>
-
-              <BpPanel title='Contrast (WCAG)'>
-                <div className='grid grid-cols-2 gap-3'>
-                  {[{ bg: '#ffffff', label: 'on White', ratio: contrastOnWhite }, { bg: '#000000', label: 'on Black', ratio: contrastOnBlack }].map(({ bg, label, ratio }) => {
-                    const aa = ratio >= 4.5, aaa = ratio >= 7, aaLarge = ratio >= 3;
-                    return (
-                      <div key={label} className='bg-[#121212] rounded-lg p-3 space-y-2'>
-                        <div className='h-8 rounded flex items-center justify-center font-semibold text-sm' style={{ backgroundColor: bg, color: cssStr }}>Aa {label}</div>
-                        <p className='font-mono text-sm font-bold text-white'>{ratio.toFixed(2)}:1</p>
-                        <div className='flex gap-1 flex-wrap'>
-                          <span className={`text-xs px-1.5 py-0.5 rounded font-mono ${aaa ? 'bg-green-500/20 text-green-400' : 'bg-red-500/10 text-red-500'}`}>AAA</span>
-                          <span className={`text-xs px-1.5 py-0.5 rounded font-mono ${aa ? 'bg-green-500/20 text-green-400' : 'bg-red-500/10 text-red-500'}`}>AA</span>
-                          <span className={`text-xs px-1.5 py-0.5 rounded font-mono ${aaLarge ? 'bg-green-500/20 text-green-400' : 'bg-red-500/10 text-red-500'}`}>AA Large</span>
-                        </div>
+            {/* Contrast (WCAG) Panel */}
+            <Panel title='Contrast (WCAG)'>
+              <div style={{ padding: '10px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {[{ bg: '#ffffff', label: 'on White', ratio: contrastOnWhite }, { bg: '#000000', label: 'on Black', ratio: contrastOnBlack }].map(({ bg, label, ratio }) => {
+                  const aa = ratio >= 4.5, aaa = ratio >= 7, aaLarge = ratio >= 3;
+                  return (
+                    <div key={label} style={{ background: 'var(--bp-elevated)', border: '1px solid var(--bp-border)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 13, backgroundColor: bg, color: cssStr }}>
+                        Aa {label}
                       </div>
-                    );
-                  })}
-                </div>
-              </BpPanel>
+                      <p style={{ fontFamily: 'inherit', fontSize: 14, fontWeight: 700, color: '#fff', margin: 0 }}>{ratio.toFixed(2)}:1</p>
+                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 10, padding: '2px 6px', fontFamily: 'inherit', background: aaa ? 'rgba(74,210,154,0.15)' : 'rgba(239,68,68,0.1)', color: aaa ? '#4ad29a' : '#f87171' }}>AAA</span>
+                        <span style={{ fontSize: 10, padding: '2px 6px', fontFamily: 'inherit', background: aa ? 'rgba(74,210,154,0.15)' : 'rgba(239,68,68,0.1)', color: aa ? '#4ad29a' : '#f87171' }}>AA</span>
+                        <span style={{ fontSize: 10, padding: '2px 6px', fontFamily: 'inherit', background: aaLarge ? 'rgba(74,210,154,0.15)' : 'rgba(239,68,68,0.1)', color: aaLarge ? '#4ad29a' : '#f87171' }}>AA Large</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Panel>
 
-              <BpPanel title='Lightness Scale'>
-                <div className='flex gap-1 mb-2'>
+            {/* Lightness Scale Panel */}
+            <Panel title='Lightness Scale'>
+              <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ display: 'flex', gap: 4 }}>
                   {[10, 20, 30, 40, 50, 60, 70, 80, 90].map((l) => {
                     const shadeHex = rgbToHex(hslToRgb({ h: hsl_h, s: hsl_s, l }));
                     return (
-                      <button key={l} onClick={() => setInput(shadeHex)} title={`L=${l}% → ${shadeHex}`} type='button'
-                        className='flex-1 h-10 rounded transition-transform hover:scale-110 hover:z-10' style={{ backgroundColor: shadeHex }} />
+                      <button
+                        key={l}
+                        onClick={() => setInput(shadeHex)}
+                        title={`L=${l}% → ${shadeHex}`}
+                        type='button'
+                        style={{
+                          flex: 1, height: 36, border: 'none', cursor: 'pointer',
+                          backgroundColor: shadeHex,
+                        }}
+                      />
                     );
                   })}
                 </div>
-                <p className='text-xs text-gray-600'>Click a shade to use it as input</p>
-              </BpPanel>
-            </>
-          )}
-        </div>
+                <span style={{ fontSize: 10, color: 'var(--bp-ink-faint)' }}>Click a shade to use it as input</span>
+              </div>
+            </Panel>
+          </>
+        )}
       </div>
-    </BpToolStage>
+    </div>
   );
 }

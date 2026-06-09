@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import React, { useState } from 'react';
+import { BpCopyBtn } from '@/components/blueprint';
 import { encode, decode } from 'gpt-tokenizer';
 
 // ─── model definitions ────────────────────────────────────────────────────────
@@ -49,6 +49,35 @@ const TOKEN_COLORS = [
 
 const SAMPLE_TEXT = `The quick brown fox jumps over the lazy dog. This sentence is commonly used as a typing test because it contains every letter of the English alphabet. Tokenizers break text into subword units, and understanding token counts helps estimate API costs and context limits.`;
 
+// ─── css vars ─────────────────────────────────────────────────────────────────
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#e879f9',
+} as React.CSSProperties;
+
+// ─── panel component ──────────────────────────────────────────────────────────
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 // ─── component ────────────────────────────────────────────────────────────────
 
 export default function LLMTokenCounterPage() {
@@ -74,122 +103,194 @@ export default function LLMTokenCounterPage() {
     for (const t of tokens) tokenStrings.push(decode([t]) || `[${t}]`);
   }
 
-  const statColor = contextUsedPct > 90 ? 'text-red-400' : contextUsedPct > 70 ? 'text-yellow-400' : 'text-green-400';
+  const statColor = contextUsedPct > 90 ? '#f87171' : contextUsedPct > 70 ? '#facc15' : '#4ade80';
+  const barColor = contextUsedPct > 90 ? '#ef4444' : contextUsedPct > 70 ? '#eab308' : '#22c55e';
 
   return (
-    <BpToolStage cat='ai'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>LLM Token Counter</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Count tokens using cl100k_base, estimate API costs, and preview text chunks — all in-browser</p>
+    <div
+      className='h-full flex flex-col overflow-hidden'
+      data-cat='ai'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      {/* header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>LLM Token Counter</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Count tokens using cl100k_base, estimate API costs, and preview text chunks — all in-browser</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-4xl mx-auto space-y-4'>
+      {/* content */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 0 }}>
 
-          <BpPanel title='Model'>
-            <div className='flex flex-wrap gap-2 mb-3'>
+        {/* model selector */}
+        <Panel title='Model' style={{ margin: 16, marginBottom: 0 }}>
+          <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {Object.entries(MODELS).map(([key, m]) => (
-                <button key={key} type='button' onClick={() => setModelKey(key)}
-                  className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${modelKey === key ? 'bg-blue-600 text-white' : 'bp-btn'}`}>
+                <button
+                  key={key}
+                  type='button'
+                  onClick={() => setModelKey(key)}
+                  className={modelKey === key ? '' : 'bp-btn'}
+                  style={modelKey === key ? {
+                    padding: '4px 10px',
+                    fontSize: 12,
+                    fontWeight: 500,
+                    background: 'var(--bp-accent)',
+                    color: '#fff',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                  } : { fontSize: 12 }}
+                >
                   {m.label}
                 </button>
               ))}
             </div>
-            <p className='text-xs text-gray-500'>
-              Context window: <span className='text-gray-300 font-mono'>{model.contextWindow.toLocaleString()} tokens</span>
-              {' · '}Input: <span className='text-gray-300 font-mono'>${model.inputPricePer1M}/1M</span>
-              {' · '}Output: <span className='text-gray-300 font-mono'>${model.outputPricePer1M}/1M</span>
+            <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>
+              Context window: <span style={{ color: 'var(--bp-ink)', fontFamily: 'inherit' }}>{model.contextWindow.toLocaleString()} tokens</span>
+              {' · '}Input: <span style={{ color: 'var(--bp-ink)', fontFamily: 'inherit' }}>${model.inputPricePer1M}/1M</span>
+              {' · '}Output: <span style={{ color: 'var(--bp-ink)', fontFamily: 'inherit' }}>${model.outputPricePer1M}/1M</span>
             </p>
-          </BpPanel>
-
-          <BpPanel title='Input Text'>
-            <div className='bp-panel-actions mb-3'>
-              <BpCopyBtn text={text} label='COPY' />
-            </div>
-            <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder='Paste your text here…' rows={10} className='bp-textarea font-mono text-sm' />
-          </BpPanel>
-
-          <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
-            {[
-              { label: 'Tokens', value: tokenCount.toLocaleString(), highlight: true },
-              { label: 'Characters', value: charCount.toLocaleString() },
-              { label: 'Words', value: wordCount.toLocaleString() },
-              { label: 'Est. Input Cost', value: `$${inputCost < 0.001 ? inputCost.toFixed(6) : inputCost.toFixed(4)}` },
-            ].map(({ label, value, highlight }) => (
-              <div key={label} className='bg-[#1C1C1C] border border-[hsla(0,0%,20%,1)] rounded-lg p-3'>
-                <p className='text-xs text-gray-500 mb-1'>{label}</p>
-                <p className={`font-mono text-lg font-bold ${highlight ? 'text-white' : 'text-gray-300'}`}>{value}</p>
-              </div>
-            ))}
           </div>
+        </Panel>
 
-          {tokenCount > 0 && (
-            <BpPanel title='Context Window Usage'>
-              <div className='flex items-center justify-between mb-2'>
-                <span className='text-xs text-gray-500'>Usage</span>
-                <span className={`text-sm font-mono font-bold ${statColor}`}>
+        {/* input text */}
+        <Panel title='Input Text' style={{ margin: 16, marginBottom: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderBottom: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <BpCopyBtn text={text} label='COPY' />
+          </div>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder='Paste your text here…'
+            rows={10}
+            style={{ flex: 1, width: '100%', background: 'var(--bp-bg)', border: 0, color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '12px 14px', resize: 'none', outline: 'none', boxSizing: 'border-box', lineHeight: 1.65, minHeight: 200 }}
+          />
+        </Panel>
+
+        {/* stats */}
+        <div style={{ margin: 16, marginBottom: 0, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+          {[
+            { label: 'Tokens', value: tokenCount.toLocaleString(), highlight: true },
+            { label: 'Characters', value: charCount.toLocaleString() },
+            { label: 'Words', value: wordCount.toLocaleString() },
+            { label: 'Est. Input Cost', value: `$${inputCost < 0.001 ? inputCost.toFixed(6) : inputCost.toFixed(4)}` },
+          ].map(({ label, value, highlight }) => (
+            <div key={label} style={{ border: '1px solid var(--bp-border)', background: 'var(--bp-surface)', padding: '10px 12px' }}>
+              <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', margin: 0, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</p>
+              <p style={{ fontFamily: 'inherit', fontSize: 16, fontWeight: 700, margin: 0, color: highlight ? '#fff' : 'var(--bp-ink)' }}>{value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* context window usage */}
+        {tokenCount > 0 && (
+          <Panel title='Context Window Usage' style={{ margin: 16, marginBottom: 0 }}>
+            <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)' }}>Usage</span>
+                <span style={{ fontSize: 12, fontFamily: 'inherit', fontWeight: 700, color: statColor }}>
                   {tokenCount.toLocaleString()} / {model.contextWindow.toLocaleString()} ({contextUsedPct.toFixed(1)}%)
                 </span>
               </div>
-              <div className='h-3 bg-[#121212] rounded-full overflow-hidden mb-2'>
-                <div className={`h-full rounded-full transition-all duration-300 ${contextUsedPct > 90 ? 'bg-red-500' : contextUsedPct > 70 ? 'bg-yellow-500' : 'bg-green-500'}`}
-                  style={{ width: `${contextUsedPct}%` }} />
+              <div style={{ height: 8, background: 'var(--bp-bg)', borderRadius: 4, overflow: 'hidden' }}>
+                <div style={{ height: '100%', borderRadius: 4, transition: 'width 0.3s', width: `${contextUsedPct}%`, background: barColor }} />
               </div>
-              <p className='text-xs text-gray-500'>{(model.contextWindow - tokenCount).toLocaleString()} tokens remaining</p>
-            </BpPanel>
-          )}
+              <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>{(model.contextWindow - tokenCount).toLocaleString()} tokens remaining</p>
+            </div>
+          </Panel>
+        )}
 
-          {tokenCount > 0 && tokenCount <= 2000 && (
-            <BpPanel title='Token Visualization'>
-              <div className='bp-panel-actions mb-3'>
-                <button type='button' className='bp-btn text-xs' onClick={() => setShowTokenViz((v) => !v)}>
-                  {showTokenViz ? 'Hide' : 'Show'} tokens
-                </button>
-              </div>
-              {showTokenViz && (
-                <>
-                  <div className='flex flex-wrap gap-0.5 max-h-48 overflow-auto mb-2'>
-                    {tokens.map((t, i) => (
-                      <span key={i} title={`Token ID: ${t}`} className={`inline-block text-xs font-mono px-1 py-0.5 rounded ${TOKEN_COLORS[i % TOKEN_COLORS.length]}`}>
-                        {tokenStrings[i] ?? String(t)}
-                      </span>
-                    ))}
-                  </div>
-                  <p className='text-xs text-gray-500'>Each colored block = one token. Hover to see token ID.</p>
-                </>
-              )}
-            </BpPanel>
-          )}
-          {tokenCount > 2000 && (
-            <BpPanel title='Token Visualization'>
-              <p className='text-xs text-gray-500'>Token visualization is limited to texts under 2,000 tokens to keep the UI responsive.</p>
-            </BpPanel>
-          )}
-
-          <BpPanel title='Text Chunking'>
-            <div className='bp-panel-actions mb-4'>
-              <button type='button' className='bp-btn text-xs' onClick={() => setShowChunks((v) => !v)} disabled={!text.trim()}>
-                {showChunks ? 'Hide' : 'Preview'} chunks
+        {/* token visualization */}
+        {tokenCount > 0 && tokenCount <= 2000 && (
+          <Panel title='Token Visualization' style={{ margin: 16, marginBottom: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderBottom: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+              <button type='button' className='bp-btn' style={{ fontSize: 11 }} onClick={() => setShowTokenViz((v) => !v)}>
+                {showTokenViz ? 'Hide' : 'Show'} tokens
               </button>
             </div>
-            <div className='grid grid-cols-2 gap-4 mb-3'>
+            {showTokenViz && (
+              <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div className='flex flex-wrap gap-0.5 max-h-48 overflow-auto'>
+                  {tokens.map((t, i) => (
+                    <span key={i} title={`Token ID: ${t}`} className={`inline-block text-xs font-mono px-1 py-0.5 rounded ${TOKEN_COLORS[i % TOKEN_COLORS.length]}`}>
+                      {tokenStrings[i] ?? String(t)}
+                    </span>
+                  ))}
+                </div>
+                <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Each colored block = one token. Hover to see token ID.</p>
+              </div>
+            )}
+          </Panel>
+        )}
+        {tokenCount > 2000 && (
+          <Panel title='Token Visualization' style={{ margin: 16, marginBottom: 0 }}>
+            <div style={{ padding: '10px 12px' }}>
+              <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Token visualization is limited to texts under 2,000 tokens to keep the UI responsive.</p>
+            </div>
+          </Panel>
+        )}
+
+        {/* text chunking */}
+        <Panel title='Text Chunking' style={{ margin: 16, marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderBottom: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <button
+              type='button'
+              className='bp-btn'
+              style={{ fontSize: 11 }}
+              onClick={() => setShowChunks((v) => !v)}
+              disabled={!text.trim()}
+            >
+              {showChunks ? 'Hide' : 'Preview'} chunks
+            </button>
+          </div>
+          <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label className='block text-xs text-gray-400 mb-1'>Chunk size (tokens)</label>
-                <div className='flex gap-2 flex-wrap'>
+                <label style={{ display: 'block', fontSize: 11, color: 'var(--bp-ink-mute)', marginBottom: 6 }}>Chunk size (tokens)</label>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {[256, 512, 1024, 2048].map((n) => (
-                    <button key={n} type='button' onClick={() => setChunkSize(n)}
-                      className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${chunkSize === n ? 'bg-blue-600 text-white' : 'bp-btn'}`}>
+                    <button
+                      key={n}
+                      type='button'
+                      onClick={() => setChunkSize(n)}
+                      className={chunkSize === n ? '' : 'bp-btn'}
+                      style={chunkSize === n ? {
+                        padding: '3px 8px',
+                        fontSize: 11,
+                        fontWeight: 500,
+                        background: 'var(--bp-accent)',
+                        color: '#fff',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                      } : { fontSize: 11 }}
+                    >
                       {n}
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <label className='block text-xs text-gray-400 mb-1'>Overlap (tokens)</label>
-                <div className='flex gap-2 flex-wrap'>
+                <label style={{ display: 'block', fontSize: 11, color: 'var(--bp-ink-mute)', marginBottom: 6 }}>Overlap (tokens)</label>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {[0, 50, 100, 200].map((n) => (
-                    <button key={n} type='button' onClick={() => setOverlap(n)}
-                      className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${overlap === n ? 'bg-blue-600 text-white' : 'bp-btn'}`}>
+                    <button
+                      key={n}
+                      type='button'
+                      onClick={() => setOverlap(n)}
+                      className={overlap === n ? '' : 'bp-btn'}
+                      style={overlap === n ? {
+                        padding: '3px 8px',
+                        fontSize: 11,
+                        fontWeight: 500,
+                        background: 'var(--bp-accent)',
+                        color: '#fff',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                      } : { fontSize: 11 }}
+                    >
                       {n}
                     </button>
                   ))}
@@ -197,23 +298,23 @@ export default function LLMTokenCounterPage() {
               </div>
             </div>
             {showChunks && chunks.length > 0 && (
-              <div className='space-y-2 max-h-72 overflow-auto'>
-                <p className='text-xs text-gray-500'>{chunks.length} chunk{chunks.length !== 1 ? 's' : ''} total</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 280, overflowY: 'auto' }}>
+                <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>{chunks.length} chunk{chunks.length !== 1 ? 's' : ''} total</p>
                 {chunks.map((chunk) => (
-                  <div key={chunk.index} className='bg-[#121212] rounded p-3 border border-[hsla(0,0%,15%,1)]'>
-                    <div className='flex items-center justify-between mb-1'>
-                      <span className='text-xs text-gray-500'>Chunk {chunk.index + 1}</span>
-                      <span className='text-xs font-mono text-blue-400'>{chunk.tokenCount} tokens (starts at {chunk.startToken})</span>
+                  <div key={chunk.index} style={{ background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', padding: '8px 10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)' }}>Chunk {chunk.index + 1}</span>
+                      <span style={{ fontSize: 11, fontFamily: 'inherit', color: 'var(--bp-accent)' }}>{chunk.tokenCount} tokens (starts at {chunk.startToken})</span>
                     </div>
-                    <p className='text-xs text-gray-400 line-clamp-2 font-mono'>{chunk.text}</p>
+                    <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0, fontFamily: 'inherit', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{chunk.text}</p>
                   </div>
                 ))}
               </div>
             )}
-          </BpPanel>
+          </div>
+        </Panel>
 
-        </div>
       </div>
-    </BpToolStage>
+    </div>
   );
 }

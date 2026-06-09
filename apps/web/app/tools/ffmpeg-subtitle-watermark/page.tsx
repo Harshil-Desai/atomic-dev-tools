@@ -1,12 +1,35 @@
 'use client';
 
 import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import { BpCopyBtn } from '@/components/blueprint';
 import { FileText } from 'lucide-react';
 
 type OperationType = 'subtitles' | 'text-watermark' | 'image-watermark';
 
-const SELECT_CLS = 'w-full h-9 px-3 rounded border border-[hsla(0,0%,20%,1)] bg-[#121212] text-gray-100 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500';
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#ff9d57',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export default function FfmpegSubtitleWatermarkPage() {
   const [operation, setOperation] = useState<OperationType>('subtitles');
@@ -86,144 +109,237 @@ export default function FfmpegSubtitleWatermarkPage() {
     setCommand(cmd);
   };
 
-  const TAB_CLS = (active: boolean) => `px-4 py-2 text-sm font-medium transition ${active ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-gray-300'}`;
+  const tabStyle = (active: boolean): React.CSSProperties => ({
+    padding: '6px 14px',
+    fontSize: 11,
+    fontWeight: 600,
+    letterSpacing: '0.05em',
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    color: active ? 'var(--bp-accent)' : 'var(--bp-ink-mute)',
+    borderBottom: active ? '2px solid var(--bp-accent)' : '2px solid transparent',
+    transition: 'color 0.15s, border-color 0.15s',
+    fontFamily: 'inherit',
+  });
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    background: 'var(--bp-bg)',
+    border: '1px solid var(--bp-border-str)',
+    color: 'var(--bp-ink)',
+    fontFamily: 'inherit',
+    fontSize: 12,
+    padding: '7px 10px',
+    outline: 'none',
+    boxSizing: 'border-box',
+  };
+
+  const selectStyle: React.CSSProperties = {
+    width: '100%',
+    background: 'var(--bp-bg)',
+    border: '1px solid var(--bp-border)',
+    color: 'var(--bp-ink)',
+    fontFamily: 'inherit',
+    fontSize: 11,
+    padding: '5px 8px',
+    outline: 'none',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: 9,
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    color: 'var(--bp-ink-faint)',
+    marginBottom: 4,
+    fontWeight: 600,
+  };
+
+  const sectionHeadStyle: React.CSSProperties = {
+    fontSize: 9,
+    letterSpacing: '0.15em',
+    textTransform: 'uppercase',
+    color: 'var(--bp-ink-faint)',
+    fontWeight: 600,
+    marginBottom: 8,
+  };
 
   return (
-    <BpToolStage cat='ffmpeg'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>FFmpeg Subtitle/Watermark Burner</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Generate FFmpeg commands to burn subtitles or watermarks into videos</p>
+    <div
+      className='h-full flex flex-col overflow-hidden'
+      data-cat='ffmpeg'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Subtitle &amp; Watermark</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Burn subtitles and image overlays into video files</p>
       </div>
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-3xl mx-auto space-y-4'>
 
-          <BpPanel title='Operation'>
-            <div className='flex gap-0 border-b border-[hsla(0,0%,20%,1)]'>
-              <button type='button' className={TAB_CLS(operation === 'subtitles')} onClick={() => setOperation('subtitles')}>Burn Subtitles</button>
-              <button type='button' className={TAB_CLS(operation === 'text-watermark')} onClick={() => setOperation('text-watermark')}>Text Watermark</button>
-              <button type='button' className={TAB_CLS(operation === 'image-watermark')} onClick={() => setOperation('image-watermark')}>Image Watermark</button>
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+        {/* Left panel: configuration */}
+        <Panel title='Configuration' style={{ borderRight: 0, borderTop: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+
+            {/* Operation tabs */}
+            <div style={{ borderBottom: '1px solid var(--bp-border)', display: 'flex', flexShrink: 0 }}>
+              <button type='button' style={tabStyle(operation === 'subtitles')} onClick={() => setOperation('subtitles')}>Burn Subtitles</button>
+              <button type='button' style={tabStyle(operation === 'text-watermark')} onClick={() => setOperation('text-watermark')}>Text Watermark</button>
+              <button type='button' style={tabStyle(operation === 'image-watermark')} onClick={() => setOperation('image-watermark')}>Image Watermark</button>
             </div>
-          </BpPanel>
 
-          <BpPanel title='Input / Output'>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Input Video</label>
-                <input value={inputFile} onChange={(e) => setInputFile(e.target.value)} placeholder='input.mp4' className='bp-input w-full font-mono' />
-              </div>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Output Video</label>
-                <input value={outputFile} onChange={(e) => setOutputFile(e.target.value)} placeholder='output.mp4' className='bp-input w-full font-mono' />
+            {/* Input / Output */}
+            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+              <div style={sectionHeadStyle}>Input / Output</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <div>
+                  <label style={labelStyle}>Input Video</label>
+                  <input value={inputFile} onChange={(e) => setInputFile(e.target.value)} placeholder='input.mp4' style={{ ...inputStyle, fontFamily: 'monospace' }} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Output Video</label>
+                  <input value={outputFile} onChange={(e) => setOutputFile(e.target.value)} placeholder='output.mp4' style={{ ...inputStyle, fontFamily: 'monospace' }} />
+                </div>
               </div>
             </div>
-          </BpPanel>
 
-          {operation === 'subtitles' && (
-            <BpPanel title='Subtitle Settings'>
-              <div className='space-y-3'>
-                <div>
-                  <label className='block text-xs text-gray-500 mb-1'>Subtitle File (.srt, .ass, .vtt)</label>
-                  <input value={subtitleFile} onChange={(e) => setSubtitleFile(e.target.value)} placeholder='subtitle.srt' className='bp-input w-full font-mono' />
-                </div>
-                <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+            {/* Subtitle Settings */}
+            {operation === 'subtitles' && (
+              <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+                <div style={sectionHeadStyle}>Subtitle Settings</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <div>
-                    <label className='block text-xs text-gray-500 mb-1'>Font Size</label>
-                    <input type='number' value={subtitleFontSize} onChange={(e) => setSubtitleFontSize(parseInt(e.target.value) || 24)} className='bp-input w-full' />
+                    <label style={labelStyle}>Subtitle File (.srt, .ass, .vtt)</label>
+                    <input value={subtitleFile} onChange={(e) => setSubtitleFile(e.target.value)} placeholder='subtitle.srt' style={{ ...inputStyle, fontFamily: 'monospace' }} />
                   </div>
-                  <div>
-                    <label className='block text-xs text-gray-500 mb-1'>Color</label>
-                    <input type='color' value={subtitleColor} onChange={(e) => setSubtitleColor(e.target.value)} className='bp-input w-full h-9 p-1' />
-                  </div>
-                  <div>
-                    <label className='block text-xs text-gray-500 mb-1'>Position</label>
-                    <select value={subtitlePosition} onChange={(e) => setSubtitlePosition(e.target.value)} className={SELECT_CLS}>
-                      <option value='bottom'>Bottom</option><option value='top'>Top</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </BpPanel>
-          )}
-
-          {operation === 'text-watermark' && (
-            <BpPanel title='Text Watermark Settings'>
-              <div className='space-y-3'>
-                <div>
-                  <label className='block text-xs text-gray-500 mb-1'>Watermark Text</label>
-                  <input value={watermarkText} onChange={(e) => setWatermarkText(e.target.value)} placeholder='Copyright 2024' className='bp-input w-full' />
-                </div>
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                  <div>
-                    <label className='block text-xs text-gray-500 mb-1'>Position</label>
-                    <select value={textPosition} onChange={(e) => setTextPosition(e.target.value)} className={SELECT_CLS}>
-                      <option value='top-left'>Top Left</option><option value='top-right'>Top Right</option><option value='bottom-left'>Bottom Left</option><option value='bottom-right'>Bottom Right</option><option value='center'>Center</option><option value='custom'>Custom</option>
-                    </select>
-                    {textPosition === 'custom' && <input value={customTextPosition} onChange={(e) => setCustomTextPosition(e.target.value)} placeholder='10:10' className='bp-input w-full mt-2' />}
-                  </div>
-                  <div>
-                    <label className='block text-xs text-gray-500 mb-1'>Font Size</label>
-                    <input type='number' value={textFontSize} onChange={(e) => setTextFontSize(parseInt(e.target.value) || 24)} className='bp-input w-full' />
-                  </div>
-                  <div>
-                    <label className='block text-xs text-gray-500 mb-1'>Color</label>
-                    <input type='color' value={textColor} onChange={(e) => setTextColor(e.target.value)} className='bp-input w-full h-9 p-1' />
-                  </div>
-                  <div>
-                    <label className='block text-xs text-gray-500 mb-1'>Opacity (0–1)</label>
-                    <input type='number' min='0' max='1' step='0.1' value={textOpacity} onChange={(e) => setTextOpacity(parseFloat(e.target.value) || 0.7)} className='bp-input w-full' />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                    <div>
+                      <label style={labelStyle}>Font Size</label>
+                      <input type='number' value={subtitleFontSize} onChange={(e) => setSubtitleFontSize(parseInt(e.target.value) || 24)} style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Color</label>
+                      <input type='color' value={subtitleColor} onChange={(e) => setSubtitleColor(e.target.value)} style={{ ...inputStyle, height: 32, padding: '2px 6px' }} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Position</label>
+                      <select value={subtitlePosition} onChange={(e) => setSubtitlePosition(e.target.value)} style={selectStyle}>
+                        <option value='bottom'>Bottom</option>
+                        <option value='top'>Top</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
-            </BpPanel>
-          )}
+            )}
 
-          {operation === 'image-watermark' && (
-            <BpPanel title='Image Watermark Settings'>
-              <div className='space-y-3'>
-                <div>
-                  <label className='block text-xs text-gray-500 mb-1'>Image File</label>
-                  <input value={imageFile} onChange={(e) => setImageFile(e.target.value)} placeholder='watermark.png' className='bp-input w-full font-mono' />
-                </div>
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+            {/* Text Watermark Settings */}
+            {operation === 'text-watermark' && (
+              <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+                <div style={sectionHeadStyle}>Text Watermark Settings</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <div>
-                    <label className='block text-xs text-gray-500 mb-1'>Position</label>
-                    <select value={imagePosition} onChange={(e) => setImagePosition(e.target.value)} className={SELECT_CLS}>
-                      <option value='top-left'>Top Left</option><option value='top-right'>Top Right</option><option value='bottom-left'>Bottom Left</option><option value='bottom-right'>Bottom Right</option><option value='center'>Center</option><option value='custom'>Custom</option>
-                    </select>
-                    {imagePosition === 'custom' && <input value={customImagePosition} onChange={(e) => setCustomImagePosition(e.target.value)} placeholder='10:10' className='bp-input w-full mt-2' />}
+                    <label style={labelStyle}>Watermark Text</label>
+                    <input value={watermarkText} onChange={(e) => setWatermarkText(e.target.value)} placeholder='Copyright 2024' style={inputStyle} />
                   </div>
-                  <div>
-                    <label className='block text-xs text-gray-500 mb-1'>Scale (%)</label>
-                    <input type='number' value={imageScale} onChange={(e) => setImageScale(e.target.value)} placeholder='100' className='bp-input w-full' />
-                  </div>
-                  <div>
-                    <label className='block text-xs text-gray-500 mb-1'>Opacity (0–1)</label>
-                    <input type='number' min='0' max='1' step='0.1' value={imageOpacity} onChange={(e) => setImageOpacity(parseFloat(e.target.value) || 0.7)} className='bp-input w-full' />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <div>
+                      <label style={labelStyle}>Position</label>
+                      <select value={textPosition} onChange={(e) => setTextPosition(e.target.value)} style={selectStyle}>
+                        <option value='top-left'>Top Left</option>
+                        <option value='top-right'>Top Right</option>
+                        <option value='bottom-left'>Bottom Left</option>
+                        <option value='bottom-right'>Bottom Right</option>
+                        <option value='center'>Center</option>
+                        <option value='custom'>Custom</option>
+                      </select>
+                      {textPosition === 'custom' && (
+                        <input value={customTextPosition} onChange={(e) => setCustomTextPosition(e.target.value)} placeholder='10:10' style={{ ...inputStyle, marginTop: 6 }} />
+                      )}
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Font Size</label>
+                      <input type='number' value={textFontSize} onChange={(e) => setTextFontSize(parseInt(e.target.value) || 24)} style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Color</label>
+                      <input type='color' value={textColor} onChange={(e) => setTextColor(e.target.value)} style={{ ...inputStyle, height: 32, padding: '2px 6px' }} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Opacity (0–1)</label>
+                      <input type='number' min='0' max='1' step='0.1' value={textOpacity} onChange={(e) => setTextOpacity(parseFloat(e.target.value) || 0.7)} style={inputStyle} />
+                    </div>
                   </div>
                 </div>
               </div>
-            </BpPanel>
-          )}
+            )}
 
-          <button type='button' className='bp-btn bp-btn-solid w-full' onClick={generateCommand}>
-            <FileText className='w-4 h-4 mr-2 inline' />GENERATE COMMAND
-          </button>
+            {/* Image Watermark Settings */}
+            {operation === 'image-watermark' && (
+              <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+                <div style={sectionHeadStyle}>Image Watermark Settings</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div>
+                    <label style={labelStyle}>Image File</label>
+                    <input value={imageFile} onChange={(e) => setImageFile(e.target.value)} placeholder='watermark.png' style={{ ...inputStyle, fontFamily: 'monospace' }} />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <div>
+                      <label style={labelStyle}>Position</label>
+                      <select value={imagePosition} onChange={(e) => setImagePosition(e.target.value)} style={selectStyle}>
+                        <option value='top-left'>Top Left</option>
+                        <option value='top-right'>Top Right</option>
+                        <option value='bottom-left'>Bottom Left</option>
+                        <option value='bottom-right'>Bottom Right</option>
+                        <option value='center'>Center</option>
+                        <option value='custom'>Custom</option>
+                      </select>
+                      {imagePosition === 'custom' && (
+                        <input value={customImagePosition} onChange={(e) => setCustomImagePosition(e.target.value)} placeholder='10:10' style={{ ...inputStyle, marginTop: 6 }} />
+                      )}
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Scale (%)</label>
+                      <input type='number' value={imageScale} onChange={(e) => setImageScale(e.target.value)} placeholder='100' style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Opacity (0–1)</label>
+                      <input type='number' min='0' max='1' step='0.1' value={imageOpacity} onChange={(e) => setImageOpacity(parseFloat(e.target.value) || 0.7)} style={inputStyle} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
-          {command && (
-            <BpPanel title='Generated FFmpeg Command'>
-              <div className='bp-panel-actions mb-3'><BpCopyBtn text={command} label='COPY' /></div>
-              <code className='block bp-code-view px-4 py-3 font-mono text-sm text-gray-300 whitespace-pre-wrap break-all'>{command}</code>
-            </BpPanel>
-          )}
+          </div>
 
-          {!command && (
-            <div className='text-center text-gray-600 py-12'>
-              <FileText className='w-10 h-10 mx-auto mb-3 opacity-40' />
-              <p className='text-sm'>Configure settings and click Generate Command</p>
-            </div>
-          )}
-        </div>
+          {/* Action bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <button type='button' className='bp-btn bp-btn-solid' style={{ flex: 1 }} onClick={generateCommand}>
+              <FileText className='w-4 h-4 mr-2 inline' />GENERATE COMMAND
+            </button>
+          </div>
+        </Panel>
+
+        {/* Right panel: output */}
+        <Panel title='Generated FFmpeg Command' style={{ borderTop: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            {command ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+                  <BpCopyBtn text={command} label='COPY' />
+                </div>
+                <pre style={{ flex: 1, margin: 0, padding: '12px 14px', fontSize: 12, color: 'var(--bp-ink)', whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.65, overflowY: 'auto' }}>{command}</pre>
+              </>
+            ) : (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, color: 'var(--bp-ink-faint)' }}>
+                <FileText style={{ width: 36, height: 36, opacity: 0.35 }} />
+                <span style={{ fontSize: 11 }}>Configure settings and click Generate Command</span>
+              </div>
+            )}
+          </div>
+        </Panel>
       </div>
-    </BpToolStage>
+    </div>
   );
 }

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { Unlock, AlertCircle, Eye, EyeOff, Plus } from 'lucide-react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import React, { useState, useCallback } from 'react';
+import { AlertCircle, Eye, EyeOff, Plus } from 'lucide-react';
+import { BpCopyBtn } from '@/components/blueprint';
 
 function b64urlEncode(bytes: ArrayBuffer): string {
   const arr = new Uint8Array(bytes);
@@ -48,6 +48,31 @@ const QUICK_CLAIMS: { label: string; key: string; value: () => string | number }
   { label: '+24h exp', key: 'exp', value: () => nowEpoch() + 86400 },
 ];
 
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#ff7a85',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 export default function JwtGeneratorPage() {
   const [alg, setAlg] = useState<'HS256' | 'HS512'>('HS256');
   const [secret, setSecret] = useState('your-256-bit-secret');
@@ -80,107 +105,177 @@ export default function JwtGeneratorPage() {
   const inspect = () => { if (!inspectToken.trim()) { setInspected(null); return; } setInspected(decodeJwt(inspectToken)); };
 
   return (
-    <BpToolStage cat='security'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>JWT Generator & Signer</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Build and sign JWT tokens with HMAC — runs entirely in your browser</p>
+    <div
+      className='h-full flex flex-col overflow-hidden'
+      data-cat='security'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>JWT Generator & Signer</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Build and sign JWT tokens with HMAC — runs entirely in your browser</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-3xl mx-auto space-y-4'>
+      {/* Content */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
 
-          <BpPanel title='Algorithm & Secret'>
-            <div className='grid grid-cols-2 gap-4 mb-4'>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Algorithm</label>
-                <select value={alg} onChange={(e) => setAlg(e.target.value as 'HS256' | 'HS512')} className='bp-input w-full'>
-                  <option value='HS256'>HS256 (HMAC-SHA-256)</option>
-                  <option value='HS512'>HS512 (HMAC-SHA-512)</option>
-                </select>
+        {/* Left column: config + payload */}
+        <Panel title='Sign' style={{ borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+
+            {/* Algorithm & Secret */}
+            <div style={{ borderBottom: '1px solid var(--bp-border)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Algorithm</div>
+                  <select
+                    value={alg}
+                    onChange={(e) => setAlg(e.target.value as 'HS256' | 'HS512')}
+                    style={{ background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 11, padding: '5px 8px', outline: 'none', width: '100%' }}
+                  >
+                    <option value='HS256'>HS256 (HMAC-SHA-256)</option>
+                    <option value='HS512'>HS512 (HMAC-SHA-512)</option>
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Header (auto)</div>
+                  <code style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', padding: '5px 8px', fontFamily: 'inherit' }}>{JSON.stringify(header)}</code>
+                </div>
               </div>
               <div>
-                <label className='block text-xs text-gray-500 mb-1'>Header (auto)</label>
-                <code className='block text-xs text-gray-400 bp-code-view px-3 py-2 font-mono'>{JSON.stringify(header)}</code>
+                <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Secret key</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <input
+                    type={showSecret ? 'text' : 'password'}
+                    value={secret}
+                    onChange={(e) => setSecret(e.target.value)}
+                    placeholder='your-secret-key'
+                    style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                  <button type='button' className='bp-btn' onClick={() => setShowSecret(!showSecret)} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {showSecret ? <EyeOff className='w-4 h-4' /> : <Eye className='w-4 h-4' />}
+                  </button>
+                </div>
               </div>
             </div>
-            <div>
-              <label className='block text-xs text-gray-500 mb-1'>Secret key</label>
-              <div className='flex gap-2'>
-                <input type={showSecret ? 'text' : 'password'} value={secret} onChange={(e) => setSecret(e.target.value)} placeholder='your-secret-key' className='bp-input font-mono flex-1' />
-                <button type='button' className='bp-btn' onClick={() => setShowSecret(!showSecret)}>
-                  {showSecret ? <EyeOff className='w-4 h-4' /> : <Eye className='w-4 h-4' />}
-                </button>
+
+            {/* Quick claims + Payload textarea */}
+            <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+              <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 6 }}>Quick claims</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {QUICK_CLAIMS.map((c) => (
+                  <button
+                    key={c.label}
+                    type='button'
+                    onClick={() => addClaim(c.key, c.value())}
+                    className='bp-btn'
+                    style={{ fontSize: 10, display: 'flex', alignItems: 'center', gap: 3 }}
+                  >
+                    <Plus className='w-3 h-3' />{c.label}
+                  </button>
+                ))}
               </div>
             </div>
-          </BpPanel>
+            <textarea
+              value={payloadText}
+              onChange={(e) => setPayloadText(e.target.value)}
+              spellCheck={false}
+              style={{ flex: 1, width: '100%', background: 'var(--bp-bg)', border: 0, color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '12px 14px', resize: 'none', outline: 'none', boxSizing: 'border-box', lineHeight: 1.65, minHeight: 200 }}
+            />
 
-          <BpPanel title='Payload (JSON)'>
-            <div className='flex flex-wrap gap-1.5 mb-3'>
-              {QUICK_CLAIMS.map((c) => (
-                <button key={c.label} type='button' onClick={() => addClaim(c.key, c.value())}
-                  className='text-xs px-2 py-0.5 bg-[#121212] border border-[hsla(0,0%,20%,1)] rounded hover:border-white/30 text-gray-400 hover:text-gray-200 transition-colors flex items-center gap-1'>
-                  <Plus className='w-3 h-3' />{c.label}
-                </button>
-              ))}
-            </div>
-            <textarea value={payloadText} onChange={(e) => setPayloadText(e.target.value)} rows={8} className='bp-textarea font-mono text-sm' spellCheck={false} />
-          </BpPanel>
+          </div>
 
-          <button type='button' className='bp-btn bp-btn-solid w-full' onClick={generate} disabled={generating}>
-            {generating ? 'Signing…' : 'GENERATE TOKEN'}
-          </button>
+          {/* Action bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <button
+              type='button'
+              className='bp-btn bp-btn-solid'
+              onClick={generate}
+              disabled={generating}
+              style={{ flex: 1 }}
+            >
+              {generating ? 'Signing…' : 'GENERATE TOKEN'}
+            </button>
+          </div>
+        </Panel>
 
-          {error && (
-            <div className='flex items-start gap-2 p-3 rounded border border-red-500/40 bg-red-950/20'>
-              <AlertCircle className='w-4 h-4 text-red-400 shrink-0 mt-0.5' />
-              <p className='text-sm text-red-300'>{error}</p>
-            </div>
-          )}
+        {/* Right column: output + decode */}
+        <Panel title='Output' style={{ borderTop: 0, borderRight: 0, borderBottom: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
 
-          {token && (
-            <BpPanel title='Signed JWT'>
-              <div className='bp-panel-actions mb-3'>
-                <BpCopyBtn text={token} label='COPY' />
+            {/* Error */}
+            {error && (
+              <div style={{ margin: '10px 12px', padding: '8px 10px', border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(127,29,29,0.2)', display: 'flex', gap: 8, alignItems: 'flex-start', flexShrink: 0 }}>
+                <AlertCircle style={{ width: 14, height: 14, color: '#f87171', flexShrink: 0, marginTop: 1 }} />
+                <span style={{ fontSize: 12, color: '#fca5a5' }}>{error}</span>
               </div>
-              <textarea readOnly value={token} rows={4} className='bp-textarea font-mono text-xs text-green-400 break-all' />
-              <p className='text-xs text-gray-500 mt-2'>
-                <span className='text-blue-400'>header</span>{' · '}
-                <span className='text-purple-400'>payload</span>{' · '}
-                <span className='text-green-400'>signature</span>
-                {' — separated by dots'}
-              </p>
-            </BpPanel>
-          )}
-
-          <BpPanel title='Decode any JWT'>
-            <textarea value={inspectToken} onChange={(e) => setInspectToken(e.target.value)} rows={3} placeholder='Paste a JWT token here…' className='bp-textarea font-mono text-xs mb-3' spellCheck={false} />
-            <button type='button' className='bp-btn w-full mb-3' onClick={inspect}>DECODE</button>
-            {inspected && (
-              <>
-                {inspected.error ? (
-                  <div className='flex items-start gap-2 p-3 rounded border border-red-500/40 bg-red-950/20'>
-                    <AlertCircle className='w-4 h-4 text-red-400 shrink-0 mt-0.5' />
-                    <p className='text-sm text-red-300'>{inspected.error}</p>
-                  </div>
-                ) : (
-                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                    {([['Header', 'h', inspected.header], ['Payload', 'p', inspected.payload]] as const).map(([title, key, obj]) => (
-                      <div key={key} className='bp-code-view rounded p-3'>
-                        <div className='flex justify-between items-center mb-2'>
-                          <span className='text-xs font-medium text-gray-400 uppercase tracking-wider'>{title}</span>
-                          <BpCopyBtn text={JSON.stringify(obj, null, 2)} label='COPY' />
-                        </div>
-                        <pre className='text-xs text-gray-200 font-mono whitespace-pre-wrap break-all'>{JSON.stringify(obj, null, 2)}</pre>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
             )}
-          </BpPanel>
 
-        </div>
+            {/* Signed JWT */}
+            {token && (
+              <div style={{ borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px solid var(--bp-border)' }}>
+                  <span style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)' }}>Signed JWT</span>
+                  <BpCopyBtn text={token} label='COPY' />
+                </div>
+                <textarea
+                  readOnly
+                  value={token}
+                  rows={4}
+                  style={{ width: '100%', background: 'var(--bp-bg)', border: 0, color: '#4ade80', fontFamily: 'inherit', fontSize: 11, padding: '12px 14px', resize: 'none', outline: 'none', boxSizing: 'border-box', lineHeight: 1.65, wordBreak: 'break-all' }}
+                />
+                <div style={{ padding: '4px 12px 8px', fontSize: 10, color: 'var(--bp-ink-mute)' }}>
+                  <span style={{ color: '#60a5fa' }}>header</span>{' · '}
+                  <span style={{ color: '#c084fc' }}>payload</span>{' · '}
+                  <span style={{ color: '#4ade80' }}>signature</span>
+                  {' — separated by dots'}
+                </div>
+              </div>
+            )}
+
+            {/* Decode section */}
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+              <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+                <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 6 }}>Decode any JWT</div>
+                <textarea
+                  value={inspectToken}
+                  onChange={(e) => setInspectToken(e.target.value)}
+                  rows={3}
+                  placeholder='Paste a JWT token here…'
+                  spellCheck={false}
+                  style={{ width: '100%', background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 11, padding: '8px 10px', resize: 'none', outline: 'none', boxSizing: 'border-box', lineHeight: 1.65 }}
+                />
+                <button type='button' className='bp-btn' onClick={inspect} style={{ marginTop: 6, width: '100%' }}>DECODE</button>
+              </div>
+
+              {inspected && (
+                <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {inspected.error ? (
+                    <div style={{ padding: '8px 10px', border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(127,29,29,0.2)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                      <AlertCircle style={{ width: 14, height: 14, color: '#f87171', flexShrink: 0, marginTop: 1 }} />
+                      <span style={{ fontSize: 12, color: '#fca5a5' }}>{inspected.error}</span>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      {([['Header', 'h', inspected.header], ['Payload', 'p', inspected.payload]] as const).map(([title, key, obj]) => (
+                        <div key={key} style={{ background: 'var(--bp-surface)', border: '1px solid var(--bp-border)', padding: 10 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                            <span style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', fontWeight: 600 }}>{title}</span>
+                            <BpCopyBtn text={JSON.stringify(obj, null, 2)} label='COPY' />
+                          </div>
+                          <pre style={{ fontSize: 10, color: 'var(--bp-ink)', fontFamily: 'inherit', whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: 0 }}>{JSON.stringify(obj, null, 2)}</pre>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+          </div>
+        </Panel>
+
       </div>
-    </BpToolStage>
+    </div>
   );
 }

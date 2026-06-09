@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import React, { useState, useEffect } from 'react';
+import { BpCopyBtn } from '@/components/blueprint';
 import { Globe } from 'lucide-react';
 
 const TIMEZONES = ['UTC','America/New_York','America/Chicago','America/Denver','America/Los_Angeles','America/Phoenix','America/Anchorage','America/Honolulu','America/Toronto','America/Vancouver','America/Mexico_City','America/Bogota','America/Lima','America/Santiago','America/Sao_Paulo','America/Argentina/Buenos_Aires','America/Caracas','America/Halifax','Europe/London','Europe/Dublin','Europe/Lisbon','Europe/Paris','Europe/Berlin','Europe/Amsterdam','Europe/Madrid','Europe/Rome','Europe/Vienna','Europe/Warsaw','Europe/Prague','Europe/Budapest','Europe/Stockholm','Europe/Oslo','Europe/Copenhagen','Europe/Helsinki','Europe/Athens','Europe/Istanbul','Europe/Moscow','Africa/Cairo','Africa/Johannesburg','Africa/Lagos','Africa/Nairobi','Africa/Casablanca','Asia/Dubai','Asia/Riyadh','Asia/Tehran','Asia/Karachi','Asia/Kolkata','Asia/Colombo','Asia/Dhaka','Asia/Kathmandu','Asia/Almaty','Asia/Bangkok','Asia/Ho_Chi_Minh','Asia/Jakarta','Asia/Singapore','Asia/Kuala_Lumpur','Asia/Manila','Asia/Hong_Kong','Asia/Shanghai','Asia/Taipei','Asia/Seoul','Asia/Tokyo','Australia/Perth','Australia/Darwin','Australia/Adelaide','Australia/Brisbane','Australia/Sydney','Australia/Melbourne','Pacific/Auckland','Pacific/Fiji','Pacific/Honolulu','Pacific/Guam'];
@@ -16,6 +16,18 @@ const WORLD_CLOCK_CITIES = [
   { label: 'Singapore', zone: 'Asia/Singapore' },
   { label: 'Tokyo', zone: 'Asia/Tokyo' },
 ];
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#61dafb',
+} as React.CSSProperties;
 
 function getUtcOffset(zone: string, date: Date): string {
   try {
@@ -59,6 +71,19 @@ function localDatetimeToUtc(localStr: string, sourceZone: string): Date | null {
   } catch { return null; }
 }
 
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 export default function TimezoneConverterPage() {
   const now = new Date();
   const localDatetime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -100,75 +125,135 @@ export default function TimezoneConverterPage() {
   };
 
   const ZoneSelect = ({ value, onChange, search, onSearchChange, filtered }: { value: string; onChange: (v: string) => void; search: string; onSearchChange: (v: string) => void; filtered: string[]; }) => (
-    <div className='space-y-1'>
-      <input placeholder='Search timezone...' value={search} onChange={(e) => onSearchChange(e.target.value)} className='bp-input w-full text-xs' />
-      <select value={value} onChange={(e) => onChange(e.target.value)} size={6} className='w-full rounded border border-[hsla(0,0%,20%,1)] bg-[#121212] text-gray-100 text-sm px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500'>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <input
+        placeholder='Search timezone...'
+        value={search}
+        onChange={(e) => onSearchChange(e.target.value)}
+        style={{ background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 11, padding: '5px 8px', outline: 'none', boxSizing: 'border-box', width: '100%' }}
+      />
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        size={6}
+        style={{ background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 11, padding: '5px 8px', outline: 'none', width: '100%' }}
+      >
         {filtered.map(z => <option key={z} value={z}>{z}</option>)}
       </select>
-      <p className='text-xs text-gray-500'>Selected: <span className='text-blue-400'>{value}</span></p>
+      <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', margin: 0 }}>
+        Selected: <span style={{ color: 'var(--bp-accent)' }}>{value}</span>
+      </p>
     </div>
   );
 
   return (
-    <BpToolStage cat='time'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Timezone Converter</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Convert date & time between any IANA timezones</p>
+    <div
+      className='h-full flex flex-col overflow-hidden'
+      data-cat='time'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Timezone Converter</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Convert datetimes across timezones with a world clock reference</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-4xl mx-auto space-y-4'>
+      {/* Content */}
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Top: Conversion — 2-column split */}
+        <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+          {/* Left: Inputs */}
+          <Panel title='Conversion — Input' style={{ borderRight: 0, borderBottom: 0 }}>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '12px 14px', gap: 12 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 5 }}>Date &amp; Time</label>
+                <input
+                  type='datetime-local'
+                  value={datetimeInput}
+                  onChange={(e) => setDatetimeInput(e.target.value)}
+                  style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box', width: '100%' }}
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 5 }}>Source Timezone</label>
+                  <ZoneSelect
+                    value={sourceZone}
+                    onChange={setSourceZone}
+                    search={tzSearch.source || ''}
+                    onSearchChange={(v) => setTzSearch(s => ({ ...s, source: v }))}
+                    filtered={filteredSource}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 5 }}>Target Timezone</label>
+                  <ZoneSelect
+                    value={targetZone}
+                    onChange={setTargetZone}
+                    search={tzSearch.target || ''}
+                    onSearchChange={(v) => setTzSearch(s => ({ ...s, target: v }))}
+                    filtered={filteredTarget}
+                  />
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+              <button type='button' className='bp-btn bp-btn-solid' onClick={handleConvert} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Globe style={{ width: 14, height: 14 }} />
+                CONVERT
+              </button>
+            </div>
+          </Panel>
 
-          <BpPanel title='Conversion'>
-            <div className='mb-4'>
-              <label className='block text-xs text-gray-500 mb-1'>Date & Time</label>
-              <input type='datetime-local' value={datetimeInput} onChange={(e) => setDatetimeInput(e.target.value)} className='bp-input w-full' />
-            </div>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4'>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Source Timezone</label>
-                <ZoneSelect value={sourceZone} onChange={setSourceZone} search={tzSearch.source || ''} onSearchChange={(v) => setTzSearch(s => ({ ...s, source: v }))} filtered={filteredSource} />
-              </div>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Target Timezone</label>
-                <ZoneSelect value={targetZone} onChange={setTargetZone} search={tzSearch.target || ''} onSearchChange={(v) => setTzSearch(s => ({ ...s, target: v }))} filtered={filteredTarget} />
-              </div>
-            </div>
-            <button type='button' className='bp-btn bp-btn-solid w-full mb-3' onClick={handleConvert}>
-              <Globe className='w-4 h-4 mr-2 inline' />CONVERT
-            </button>
-            {error && <p className='text-sm text-red-400'>{error}</p>}
-            {converted && (
-              <div className='bp-code-view px-4 py-3 space-y-2'>
-                <div className='flex items-start justify-between gap-4'>
-                  <div>
-                    <p className='text-xs text-gray-500 mb-1'>Converted time in {targetZone}</p>
-                    <p className='text-lg font-mono font-semibold text-white'>{converted}</p>
+          {/* Right: Output */}
+          <Panel title='Conversion — Output' style={{ borderBottom: 0 }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {error && (
+                <p style={{ fontSize: 12, color: '#f87171', margin: 0 }}>{error}</p>
+              )}
+              {converted && (
+                <div style={{ background: 'var(--bp-surface)', border: '1px solid var(--bp-border)', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                    <div>
+                      <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', margin: 0, marginBottom: 4 }}>Converted time in {targetZone}</p>
+                      <p style={{ fontSize: 16, fontWeight: 600, color: '#fff', margin: 0, fontFamily: 'inherit' }}>{converted}</p>
+                    </div>
+                    <BpCopyBtn text={converted} label='COPY' />
                   </div>
-                  <BpCopyBtn text={converted} label='COPY' />
+                  <div style={{ display: 'flex', gap: 20, fontSize: 11 }}>
+                    <div>
+                      <span style={{ color: 'var(--bp-ink-mute)' }}>Source: </span>
+                      <span style={{ color: 'var(--bp-accent)', fontFamily: 'inherit' }}>{sourceOffset}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--bp-ink-mute)' }}>Target: </span>
+                      <span style={{ color: '#4ade80', fontFamily: 'inherit' }}>{targetOffset}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className='flex gap-6 text-sm'>
-                  <div><span className='text-gray-500'>Source: </span><span className='text-blue-400 font-mono'>{sourceOffset}</span></div>
-                  <div><span className='text-gray-500'>Target: </span><span className='text-green-400 font-mono'>{targetOffset}</span></div>
-                </div>
-              </div>
-            )}
-          </BpPanel>
+              )}
+              {!converted && !error && (
+                <p style={{ fontSize: 11, color: 'var(--bp-ink-faint)', margin: 0 }}>Select a source timezone, target timezone, and date/time, then click CONVERT.</p>
+              )}
+            </div>
+          </Panel>
+        </div>
 
-          <BpPanel title='World Clock'>
-            <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
+        {/* Bottom: World Clock */}
+        <Panel title='World Clock' style={{ flexShrink: 0, borderTop: 0 }}>
+          <div style={{ overflowY: 'auto', padding: '10px 14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 8 }}>
               {WORLD_CLOCK_CITIES.map((city) => (
-                <div key={city.zone} className='bg-[#121212] rounded px-3 py-3'>
-                  <p className='text-xs text-gray-400 mb-1'>{city.label}</p>
-                  <p className='font-mono text-base font-semibold text-white'>{worldClock[city.zone] || '--:--:--'}</p>
-                  <p className='text-xs text-gray-500 mt-0.5'>{worldClockDates[city.zone] || ''}</p>
+                <div key={city.zone} style={{ background: 'var(--bp-surface)', border: '1px solid var(--bp-border)', padding: '8px 10px' }}>
+                  <p style={{ fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', margin: 0, marginBottom: 4 }}>{city.label}</p>
+                  <p style={{ fontFamily: 'inherit', fontSize: 13, fontWeight: 600, color: '#fff', margin: 0 }}>{worldClock[city.zone] || '--:--:--'}</p>
+                  <p style={{ fontSize: 9, color: 'var(--bp-ink-faint)', margin: 0, marginTop: 2 }}>{worldClockDates[city.zone] || ''}</p>
                 </div>
               ))}
             </div>
-          </BpPanel>
-
-        </div>
+          </div>
+        </Panel>
       </div>
-    </BpToolStage>
+    </div>
   );
 }

@@ -1,14 +1,37 @@
 'use client';
 
-import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import React, { useState } from 'react';
+import { BpCopyBtn } from '@/components/blueprint';
 import { Image } from 'lucide-react';
 
 type ExtractMode = 'single' | 'interval' | 'evenly';
 type OutputFormat = 'png' | 'jpg' | 'webp';
 type ScalePreset = 'original' | '1280x720' | '640x360' | '320x180' | 'custom';
 
-const SELECT_CLS = 'w-full h-9 px-3 rounded border border-[hsla(0,0%,20%,1)] bg-[#121212] text-gray-100 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500';
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#ff9d57',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export default function FfmpegThumbnailPage() {
   const [inputFile, setInputFile] = useState('input.mp4');
@@ -96,145 +119,235 @@ export default function FfmpegThumbnailPage() {
     return [outputPattern];
   };
 
-  const TAB_CLS = (active: boolean) => `px-4 py-2 text-sm font-medium transition ${active ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-gray-300'}`;
+  const TAB_CLS = (active: boolean) => `px-4 py-2 text-sm font-medium transition ${active ? 'border-b-2' : 'text-gray-400 hover:text-gray-300'}`;
+
+  const inputStyle: React.CSSProperties = {
+    flex: 1,
+    background: 'var(--bp-bg)',
+    border: '1px solid var(--bp-border-str)',
+    color: 'var(--bp-ink)',
+    fontFamily: 'inherit',
+    fontSize: 12,
+    padding: '7px 10px',
+    outline: 'none',
+    boxSizing: 'border-box',
+  };
+
+  const selectStyle: React.CSSProperties = {
+    background: 'var(--bp-bg)',
+    border: '1px solid var(--bp-border)',
+    color: 'var(--bp-ink)',
+    fontFamily: 'inherit',
+    fontSize: 11,
+    padding: '5px 8px',
+    outline: 'none',
+    width: '100%',
+  };
 
   return (
-    <BpToolStage cat='ffmpeg'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>FFmpeg Thumbnail Extractor</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Generate FFmpeg commands to extract video frames as images</p>
+    <div
+      className='h-full flex flex-col overflow-hidden'
+      data-cat='ffmpeg'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Thumbnail Generator</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Extract thumbnail frames from video at specific timestamps</p>
       </div>
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-3xl mx-auto space-y-4'>
 
-          <BpPanel title='Extraction Mode'>
-            <div className='flex gap-0 border-b border-[hsla(0,0%,20%,1)]'>
-              <button type='button' className={TAB_CLS(extractMode === 'single')} onClick={() => { setExtractMode('single'); setCommand(''); }}>Single Frame</button>
-              <button type='button' className={TAB_CLS(extractMode === 'interval')} onClick={() => { setExtractMode('interval'); setCommand(''); }}>Every N Seconds</button>
-              <button type='button' className={TAB_CLS(extractMode === 'evenly')} onClick={() => { setExtractMode('evenly'); setCommand(''); }}>N Evenly Spaced</button>
+      {/* Content */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+        {/* Left: Configuration */}
+        <Panel title='Configuration' style={{ borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+
+            {/* Extraction Mode Tabs */}
+            <div style={{ borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)' }}>
+                <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+                <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>Extraction Mode</span>
+              </div>
+              <div style={{ display: 'flex' }}>
+                <button
+                  type='button'
+                  className={TAB_CLS(extractMode === 'single')}
+                  style={extractMode === 'single' ? { color: '#ff9d57', borderColor: '#ff9d57' } : {}}
+                  onClick={() => { setExtractMode('single'); setCommand(''); }}
+                >Single Frame</button>
+                <button
+                  type='button'
+                  className={TAB_CLS(extractMode === 'interval')}
+                  style={extractMode === 'interval' ? { color: '#ff9d57', borderColor: '#ff9d57' } : {}}
+                  onClick={() => { setExtractMode('interval'); setCommand(''); }}
+                >Every N Seconds</button>
+                <button
+                  type='button'
+                  className={TAB_CLS(extractMode === 'evenly')}
+                  style={extractMode === 'evenly' ? { color: '#ff9d57', borderColor: '#ff9d57' } : {}}
+                  onClick={() => { setExtractMode('evenly'); setCommand(''); }}
+                >N Evenly Spaced</button>
+              </div>
             </div>
-          </BpPanel>
 
-          <BpPanel title='Input & Timing'>
-            <div className='space-y-3'>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Input Video File</label>
-                <input value={inputFile} onChange={(e) => setInputFile(e.target.value)} placeholder='input.mp4' className='bp-input w-full font-mono' />
+            {/* Input & Timing */}
+            <div style={{ borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)' }}>
+                <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+                <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>Input &amp; Timing</span>
               </div>
-              {extractMode === 'single' && (
+              <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div>
-                  <label className='block text-xs text-gray-500 mb-1'>Timestamp (HH:MM:SS or seconds)</label>
-                  <input value={timestamp} onChange={(e) => setTimestamp(e.target.value)} placeholder='00:00:05' className='bp-input w-full font-mono' />
+                  <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Input Video File</label>
+                  <input value={inputFile} onChange={(e) => setInputFile(e.target.value)} placeholder='input.mp4' style={{ ...inputStyle, width: '100%' }} />
                 </div>
-              )}
-              {extractMode === 'interval' && (
-                <div>
-                  <label className='block text-xs text-gray-500 mb-1'>Extract a frame every N seconds</label>
-                  <div className='flex items-center gap-3'>
-                    <input type='number' min='1' value={intervalSeconds} onChange={(e) => setIntervalSeconds(e.target.value)} placeholder='10' className='bp-input w-24 font-mono' />
-                    <span className='text-sm text-gray-400'>seconds</span>
-                  </div>
-                </div>
-              )}
-              {extractMode === 'evenly' && (
-                <div>
-                  <label className='block text-xs text-gray-500 mb-1'>Number of frames to extract</label>
-                  <div className='flex items-center gap-3'>
-                    <input type='number' min='1' value={frameCount} onChange={(e) => setFrameCount(e.target.value)} placeholder='10' className='bp-input w-24 font-mono' />
-                    <span className='text-sm text-gray-400'>frames</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </BpPanel>
-
-          <BpPanel title='Output Format'>
-            <div className='space-y-3'>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Image Format</label>
-                <select value={outputFormat} onChange={(e) => handleFormatChange(e.target.value as OutputFormat)} className={SELECT_CLS}>
-                  <option value='png'>PNG (lossless)</option><option value='jpg'>JPG (lossy)</option><option value='webp'>WebP (modern)</option>
-                </select>
-              </div>
-              {outputFormat === 'jpg' && (
-                <div>
-                  <label className='block text-xs text-gray-500 mb-1'>JPEG Quality (-q:v {jpgQuality} — lower = better)</label>
-                  <div className='flex items-center gap-4'>
-                    <span className='text-xs text-gray-500 w-12 text-right'>Best (1)</span>
-                    <input type='range' min='1' max='31' value={jpgQuality} onChange={(e) => setJpgQuality(parseInt(e.target.value))} className='flex-1 accent-blue-500' />
-                    <span className='text-xs text-gray-500 w-16'>Worst (31)</span>
-                    <span className='text-sm font-mono text-blue-400 w-6'>{jpgQuality}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </BpPanel>
-
-          <BpPanel title='Output Filename'>
-            {extractMode === 'single' ? (
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Output Filename</label>
-                <input value={outputFilename} onChange={(e) => setOutputFilename(e.target.value)} placeholder={`thumbnail.${outputFormat}`} className='bp-input w-full font-mono' />
-              </div>
-            ) : (
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Output Pattern (use %03d for numbering)</label>
-                <input value={outputPattern} onChange={(e) => setOutputPattern(e.target.value)} placeholder={`frame_%03d.${outputFormat}`} className='bp-input w-full font-mono mb-2' />
-                <div className='bp-code-view px-3 py-2'>
-                  <p className='text-xs text-gray-500 mb-1'>Preview:</p>
-                  <div className='flex flex-wrap gap-2'>
-                    {getPatternPreview().map((name) => (<span key={name} className='text-xs font-mono text-gray-300 bg-[#1a1a1a] rounded px-2 py-0.5'>{name}</span>))}
-                    <span className='text-xs text-gray-600'>…</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </BpPanel>
-
-          <BpPanel title='Scale'>
-            <div className='space-y-3'>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Output Scale</label>
-                <select value={scalePreset} onChange={(e) => setScalePreset(e.target.value as ScalePreset)} className={SELECT_CLS}>
-                  <option value='original'>Original (no scaling)</option><option value='1280x720'>1280x720 (720p)</option><option value='640x360'>640x360 (360p)</option><option value='320x180'>320x180 (thumbnail)</option><option value='custom'>Custom</option>
-                </select>
-              </div>
-              {scalePreset === 'custom' && (
-                <div className='grid grid-cols-2 gap-3'>
+                {extractMode === 'single' && (
                   <div>
-                    <label className='block text-xs text-gray-500 mb-1'>Width (px, -1 = auto)</label>
-                    <input type='number' value={customWidth} onChange={(e) => setCustomWidth(e.target.value)} placeholder='1280' className='bp-input w-full' />
+                    <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Timestamp (HH:MM:SS or seconds)</label>
+                    <input value={timestamp} onChange={(e) => setTimestamp(e.target.value)} placeholder='00:00:05' style={{ ...inputStyle, width: '100%' }} />
                   </div>
+                )}
+                {extractMode === 'interval' && (
                   <div>
-                    <label className='block text-xs text-gray-500 mb-1'>Height (px, -1 = auto)</label>
-                    <input type='number' value={customHeight} onChange={(e) => setCustomHeight(e.target.value)} placeholder='720' className='bp-input w-full' />
+                    <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Extract a frame every N seconds</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <input type='number' min='1' value={intervalSeconds} onChange={(e) => setIntervalSeconds(e.target.value)} placeholder='10' style={{ ...inputStyle, width: 80, flex: 'none' }} />
+                      <span style={{ fontSize: 12, color: 'var(--bp-ink-mute)' }}>seconds</span>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+                {extractMode === 'evenly' && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Number of frames to extract</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <input type='number' min='1' value={frameCount} onChange={(e) => setFrameCount(e.target.value)} placeholder='10' style={{ ...inputStyle, width: 80, flex: 'none' }} />
+                      <span style={{ fontSize: 12, color: 'var(--bp-ink-mute)' }}>frames</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </BpPanel>
 
-          <button type='button' className='bp-btn bp-btn-solid w-full' onClick={generateCommand}>
-            <Image className='w-4 h-4 mr-2 inline' />GENERATE COMMAND
-          </button>
+            {/* Output Format */}
+            <div style={{ borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)' }}>
+                <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+                <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>Output Format</span>
+              </div>
+              <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Image Format</label>
+                  <select value={outputFormat} onChange={(e) => handleFormatChange(e.target.value as OutputFormat)} style={selectStyle}>
+                    <option value='png'>PNG (lossless)</option>
+                    <option value='jpg'>JPG (lossy)</option>
+                    <option value='webp'>WebP (modern)</option>
+                  </select>
+                </div>
+                {outputFormat === 'jpg' && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>JPEG Quality (-q:v {jpgQuality} — lower = better)</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 10, color: 'var(--bp-ink-faint)', width: 44, textAlign: 'right' }}>Best (1)</span>
+                      <input type='range' min='1' max='31' value={jpgQuality} onChange={(e) => setJpgQuality(parseInt(e.target.value))} style={{ flex: 1, accentColor: '#ff9d57' }} />
+                      <span style={{ fontSize: 10, color: 'var(--bp-ink-faint)', width: 56 }}>Worst (31)</span>
+                      <span style={{ fontSize: 12, fontFamily: 'inherit', color: '#ff9d57', width: 20 }}>{jpgQuality}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
 
-          {command && (
+            {/* Output Filename */}
+            <div style={{ borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)' }}>
+                <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+                <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>Output Filename</span>
+              </div>
+              <div style={{ padding: '12px 14px' }}>
+                {extractMode === 'single' ? (
+                  <div>
+                    <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Output Filename</label>
+                    <input value={outputFilename} onChange={(e) => setOutputFilename(e.target.value)} placeholder={`thumbnail.${outputFormat}`} style={{ ...inputStyle, width: '100%' }} />
+                  </div>
+                ) : (
+                  <div>
+                    <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Output Pattern (use %03d for numbering)</label>
+                    <input value={outputPattern} onChange={(e) => setOutputPattern(e.target.value)} placeholder={`frame_%03d.${outputFormat}`} style={{ ...inputStyle, width: '100%', marginBottom: 8 }} />
+                    <div style={{ background: 'var(--bp-surface)', border: '1px solid var(--bp-border)', padding: '8px 12px' }}>
+                      <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', margin: '0 0 6px 0' }}>Preview:</p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {getPatternPreview().map((name) => (
+                          <span key={name} style={{ fontSize: 11, fontFamily: 'inherit', color: 'var(--bp-ink)', background: 'var(--bp-elevated)', border: '1px solid var(--bp-border)', padding: '2px 8px' }}>{name}</span>
+                        ))}
+                        <span style={{ fontSize: 11, color: 'var(--bp-ink-faint)' }}>…</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Scale */}
+            <div style={{ flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)' }}>
+                <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+                <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>Scale</span>
+              </div>
+              <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Output Scale</label>
+                  <select value={scalePreset} onChange={(e) => setScalePreset(e.target.value as ScalePreset)} style={selectStyle}>
+                    <option value='original'>Original (no scaling)</option>
+                    <option value='1280x720'>1280x720 (720p)</option>
+                    <option value='640x360'>640x360 (360p)</option>
+                    <option value='320x180'>320x180 (thumbnail)</option>
+                    <option value='custom'>Custom</option>
+                  </select>
+                </div>
+                {scalePreset === 'custom' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Width (px, -1 = auto)</label>
+                      <input type='number' value={customWidth} onChange={(e) => setCustomWidth(e.target.value)} placeholder='1280' style={{ ...inputStyle, width: '100%' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Height (px, -1 = auto)</label>
+                      <input type='number' value={customHeight} onChange={(e) => setCustomHeight(e.target.value)} placeholder='720' style={{ ...inputStyle, width: '100%' }} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+
+          {/* Action bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <button type='button' className='bp-btn bp-btn-solid' style={{ flex: 1 }} onClick={generateCommand}>
+              <Image className='w-4 h-4 mr-2 inline' />GENERATE COMMAND
+            </button>
+          </div>
+        </Panel>
+
+        {/* Right: Generated Command */}
+        <Panel title='Generated FFmpeg Command' style={{ borderTop: 0, borderRight: 0, borderBottom: 0 }}>
+          {command ? (
             <>
-              <BpPanel title='Generated FFmpeg Command'>
-                <div className='bp-panel-actions mb-3'><BpCopyBtn text={command} label='COPY' /></div>
-                <pre className='bp-code-pre px-4 py-3 font-mono text-sm text-gray-300 whitespace-pre-wrap break-all'>{command}</pre>
-              </BpPanel>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+                <BpCopyBtn text={command} label='COPY' />
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto' }}>
+                <pre style={{ margin: 0, padding: '14px 16px', fontFamily: 'inherit', fontSize: 12, color: 'var(--bp-ink)', whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.65 }}>{command}</pre>
+              </div>
             </>
-          )}
-
-          {!command && (
-            <div className='text-center text-gray-600 py-12'>
-              <Image className='w-10 h-10 mx-auto mb-3 opacity-40' />
-              <p className='text-sm'>Configure settings and click Generate Command</p>
+          ) : (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--bp-ink-faint)' }}>
+              <Image style={{ width: 36, height: 36, marginBottom: 12, opacity: 0.35 }} />
+              <p style={{ fontSize: 12, color: 'var(--bp-ink-mute)', margin: 0 }}>Configure settings and click Generate Command</p>
             </div>
           )}
-        </div>
+        </Panel>
       </div>
-    </BpToolStage>
+    </div>
   );
 }

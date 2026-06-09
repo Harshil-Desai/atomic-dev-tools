@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import { BpCopyBtn } from '@/components/blueprint';
 import { FileCode, AlertCircle } from 'lucide-react';
 
 const ATTR_RENAME: Record<string, string> = {
@@ -111,6 +111,38 @@ const EXAMPLE_COMPLEX = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="ht
   <text x="50" y="55" text-anchor="middle" font-size="14" font-family="Arial">Hello</text>
 </svg>`;
 
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#f0c674',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+const TRANSFORMATIONS: [string, string][] = [
+  ['class', 'className'], ['for', 'htmlFor'], ['stroke-width', 'strokeWidth'],
+  ['fill-opacity', 'fillOpacity'], ['clip-path', 'clipPath'], ['stop-color', 'stopColor'],
+  ['font-size', 'fontSize'], ['text-anchor', 'textAnchor'], ['style="..."', 'style={{ ... }}'],
+  ['xmlns / xmlns:xlink', '(removed)'], ['xlink:href', 'href'], ['onclick', 'onClick'],
+];
+
 export default function SVGToJSXPage() {
   const [input, setInput] = useState(EXAMPLE_SVG);
   const [output, setOutput] = useState('');
@@ -132,94 +164,107 @@ export default function SVGToJSXPage() {
     }
   };
 
+  const btnStyle = (active?: boolean): React.CSSProperties => ({
+    height: 24, padding: '0 10px', border: '1px solid var(--bp-border)',
+    background: active ? 'var(--bp-accent)' : 'transparent',
+    color: active ? '#000' : 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 10, cursor: 'pointer',
+  });
+
   return (
-    <BpToolStage cat='text'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>SVG → JSX / TSX</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Convert raw SVG markup into a clean React component with properly transformed attributes</p>
+    <div
+      className='h-full flex flex-col overflow-hidden relative'
+      data-cat='text'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2, letterSpacing: '0.01em' }}>SVG → JSX / TSX</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Convert raw SVG markup into a clean React component with properly transformed attributes</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-5xl mx-auto space-y-4'>
+      {/* Options bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '6px 14px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button type='button' style={btnStyle(language === 'tsx')} onClick={() => setLanguage('tsx')}>TSX</button>
+          <button type='button' style={btnStyle(language === 'jsx')} onClick={() => setLanguage('jsx')}>JSX</button>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)' }}>Component</span>
+          <input value={componentName} onChange={(e) => setComponentName(e.target.value)}
+            style={{ background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 11, padding: '3px 8px', outline: 'none', width: 110 }}
+            placeholder='MyIcon' />
+        </div>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--bp-ink-mute)', cursor: 'pointer' }}>
+          <input type='checkbox' checked={spreadProps} onChange={(e) => setSpreadProps(e.target.checked)} style={{ accentColor: 'var(--bp-accent)' }} />
+          Spread props
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--bp-ink-mute)', cursor: 'pointer' }}>
+          <input type='checkbox' checked={removeComments} onChange={(e) => setRemoveComments(e.target.checked)} style={{ accentColor: 'var(--bp-accent)' }} />
+          Remove comments
+        </label>
+        <div style={{ display: 'flex', gap: 4, marginLeft: 'auto' }}>
+          <span style={{ fontSize: 10, color: 'var(--bp-ink-faint)', alignSelf: 'center' }}>Examples:</span>
+          <button type='button' style={btnStyle()} onClick={() => setInput(EXAMPLE_SVG)}>Simple icon</button>
+          <button type='button' style={btnStyle()} onClick={() => setInput(EXAMPLE_COMPLEX)}>Gradient</button>
+        </div>
+      </div>
 
-          <BpPanel title='Options'>
-            <div className='flex flex-wrap gap-6 items-end mb-3'>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Output Language</label>
-                <div className='flex gap-2'>
-                  <button type='button' className={`bp-btn ${language === 'tsx' ? 'bp-btn-solid' : ''}`} onClick={() => setLanguage('tsx')}>TSX</button>
-                  <button type='button' className={`bp-btn ${language === 'jsx' ? 'bp-btn-solid' : ''}`} onClick={() => setLanguage('jsx')}>JSX</button>
-                </div>
-              </div>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Component Name</label>
-                <input value={componentName} onChange={(e) => setComponentName(e.target.value)} className='bp-input w-36 font-mono' placeholder='MyIcon' />
-              </div>
-              <div className='flex gap-4'>
-                <label className='flex items-center gap-2 cursor-pointer'>
-                  <input type='checkbox' checked={spreadProps} onChange={(e) => setSpreadProps(e.target.checked)} className='w-4 h-4 rounded' />
-                  <span className='text-sm text-gray-300'>Spread props</span>
-                </label>
-                <label className='flex items-center gap-2 cursor-pointer'>
-                  <input type='checkbox' checked={removeComments} onChange={(e) => setRemoveComments(e.target.checked)} className='w-4 h-4 rounded' />
-                  <span className='text-sm text-gray-300'>Remove comments</span>
-                </label>
-              </div>
-            </div>
-            <div>
-              <p className='text-xs text-gray-500 mb-2'>Examples</p>
-              <div className='flex gap-2'>
-                <button type='button' onClick={() => setInput(EXAMPLE_SVG)} className='bp-btn'>Simple icon</button>
-                <button type='button' onClick={() => setInput(EXAMPLE_COMPLEX)} className='bp-btn'>Gradient + styles</button>
-              </div>
-            </div>
-          </BpPanel>
+      {/* Main 2-col layout */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
 
-          <div className='bp-layout-2col'>
-            <BpPanel title='SVG Input'>
-              <textarea className='bp-textarea font-mono text-xs' value={input} onChange={(e) => setInput(e.target.value)} placeholder='Paste SVG markup here…' rows={18} />
-              <button type='button' className='bp-btn bp-btn-solid w-full mt-3' onClick={convert} disabled={!input.trim()}>
-                <FileCode className='w-4 h-4 mr-2 inline' />CONVERT TO {language.toUpperCase()}
-              </button>
-            </BpPanel>
-
-            <BpPanel title={`${language.toUpperCase()} Output`}>
-              {output && (
-                <div className='bp-panel-actions mb-3'>
-                  <BpCopyBtn text={output} label='COPY' />
-                </div>
-              )}
-              {error && (
-                <div className='flex items-start gap-2 text-red-400 text-sm mb-3'>
-                  <AlertCircle className='w-4 h-4 shrink-0 mt-0.5' />
-                  <span>{error}</span>
-                </div>
-              )}
-              <pre className='bp-code-pre min-h-64 overflow-auto whitespace-pre text-xs'>
-                {output || <span className='text-gray-600'>Output will appear here…</span>}
-              </pre>
-            </BpPanel>
+        {/* Left: SVG Input */}
+        <Panel title='SVG Input' style={{ borderRight: 0 }}>
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder='Paste SVG markup here…'
+            spellCheck={false}
+            style={{ flex: 1, width: '100%', background: 'var(--bp-bg)', border: 0, color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '12px 14px', resize: 'none', outline: 'none', boxSizing: 'border-box', lineHeight: 1.65 }}
+          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <button type='button' onClick={convert} disabled={!input.trim()}
+              style={{ height: 28, padding: '0 14px', border: '1px solid var(--bp-accent)', background: 'rgba(240,198,116,0.1)', color: 'var(--bp-accent)', fontFamily: 'inherit', fontSize: 10, cursor: input.trim() ? 'pointer' : 'not-allowed', opacity: input.trim() ? 1 : 0.4, letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <FileCode style={{ width: 12, height: 12 }} />
+              CONVERT TO {language.toUpperCase()}
+            </button>
           </div>
+        </Panel>
 
-          <BpPanel title='Transformations Applied'>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs'>
-              {[
-                ['class', 'className'], ['for', 'htmlFor'], ['stroke-width', 'strokeWidth'],
-                ['fill-opacity', 'fillOpacity'], ['clip-path', 'clipPath'], ['stop-color', 'stopColor'],
-                ['font-size', 'fontSize'], ['text-anchor', 'textAnchor'], ['style="..."', 'style={{ ... }}'],
-                ['xmlns / xmlns:xlink', '(removed)'], ['xlink:href', 'href'], ['onclick', 'onClick'],
-              ].map(([from, to]) => (
-                <div key={from} className='flex gap-2'>
-                  <code className='text-red-400 font-mono w-36 shrink-0'>{from}</code>
-                  <span className='text-gray-500'>→</span>
-                  <code className='text-green-400 font-mono'>{to}</code>
+        {/* Right: Output */}
+        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <Panel title={`${language.toUpperCase()} Output`} style={{ flex: 1, overflow: 'hidden' }}>
+            <div style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
+              {error && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, padding: '10px 14px', borderBottom: '1px solid rgba(248,113,113,0.2)' }}>
+                  <AlertCircle style={{ width: 13, height: 13, color: '#f87171', flexShrink: 0, marginTop: 1 }} />
+                  <span style={{ fontSize: 11, color: '#fca5a5' }}>{error}</span>
+                </div>
+              )}
+              <pre style={{ margin: 0, padding: '12px 14px', fontSize: 11, lineHeight: 1.65, color: output ? 'var(--bp-ink)' : 'var(--bp-ink-faint)', whiteSpace: 'pre', overflow: 'auto', minHeight: 200 }}>
+                {output || 'Output will appear here…'}
+              </pre>
+            </div>
+            {output && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+                <BpCopyBtn text={output} label='COPY' />
+              </div>
+            )}
+          </Panel>
+
+          {/* Transformations reference */}
+          <Panel title='Attribute Transformations Applied' meta={`${TRANSFORMATIONS.length} rules`} style={{ flexShrink: 0, maxHeight: 180 }}>
+            <div style={{ overflowY: 'auto', padding: '8px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+              {TRANSFORMATIONS.map(([from, to]) => (
+                <div key={from} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10 }}>
+                  <code style={{ color: '#f87171', width: 130, flexShrink: 0 }}>{from}</code>
+                  <span style={{ color: 'var(--bp-ink-faint)' }}>→</span>
+                  <code style={{ color: '#4ade80' }}>{to}</code>
                 </div>
               ))}
             </div>
-          </BpPanel>
-
+          </Panel>
         </div>
       </div>
-    </BpToolStage>
+    </div>
   );
 }

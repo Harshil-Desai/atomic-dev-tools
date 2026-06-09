@@ -2,9 +2,34 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { FileJson, AlertCircle, CheckCircle, Trash2, Minimize2 } from 'lucide-react';
-import { BpToolStage, BpPanel, BpCopyBtn, BpStatus } from '@/components/blueprint';
+import { BpCopyBtn } from '@/components/blueprint';
 
 type ValidationStatus = 'idle' | 'valid' | 'invalid';
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#4ad29a',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export default function JsonFormatterPage() {
   const [input, setInput] = useState('');
@@ -58,75 +83,150 @@ export default function JsonFormatterPage() {
   const errorLine = errorLineMatch ? errorLineMatch[1] : null;
 
   return (
-    <BpToolStage cat='data'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <div className='flex items-center gap-3 mb-1'>
-          <FileJson className='w-5 h-5 text-gray-400' />
-          <h1 className='text-xl sm:text-2xl font-semibold text-white'>JSON Formatter & Validator</h1>
+    <div
+      className='h-full flex flex-col overflow-hidden relative'
+      data-cat='data'
+      style={{ ...CSS_VARS, background: 'var(--bp-bg)', color: 'var(--bp-ink)', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 2 }}>
+          <FileJson style={{ width: 16, height: 16, color: 'var(--bp-accent)', flexShrink: 0 }} />
+          <h1 style={{ fontSize: 13, fontWeight: 600, color: 'var(--bp-ink)', margin: 0, letterSpacing: '0.01em' }}>JSON Formatter</h1>
         </div>
-        <p className='text-xs sm:text-sm text-gray-400'>Format, minify, and validate JSON with error highlighting</p>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Validate, format and minify JSON documents</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-4xl mx-auto space-y-4'>
+      {/* Actions bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-elevated)', flexShrink: 0, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)' }}>Indent:</span>
+          <select
+            value={indentSize}
+            onChange={(e) => setIndentSize(parseInt(e.target.value) as 2 | 4)}
+            style={{
+              background: 'var(--bp-bg)',
+              border: '1px solid var(--bp-border-str)',
+              color: 'var(--bp-ink)',
+              fontFamily: 'inherit',
+              fontSize: 11,
+              padding: '3px 8px',
+              outline: 'none',
+              boxSizing: 'border-box',
+              cursor: 'pointer',
+            }}
+          >
+            <option value={2}>2 spaces</option>
+            <option value={4}>4 spaces</option>
+          </select>
+        </div>
 
-          <BpPanel title='JSON Input' meta={`${charCount.toLocaleString()} chars · ${lineCount.toLocaleString()} lines`}>
-            <div className='flex flex-wrap items-center gap-2 mb-3'>
-              {validationStatus === 'valid' && <BpStatus state='ok'>VALID JSON</BpStatus>}
-              {validationStatus === 'invalid' && <BpStatus state='fail'>INVALID{errorLine ? ` (line ${errorLine})` : ''}</BpStatus>}
-              <button className='bp-btn ml-auto' onClick={handleClear} type='button'>
-                <Trash2 className='w-3.5 h-3.5 mr-1 inline' />CLEAR
-              </button>
+        {validationStatus === 'valid' && (
+          <span className='bp-status-ok' style={{ fontSize: 10 }}>VALID JSON</span>
+        )}
+        {validationStatus === 'invalid' && (
+          <span className='bp-status-fail' style={{ fontSize: 10 }}>INVALID{errorLine ? ` (line ${errorLine})` : ''}</span>
+        )}
+
+        <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', flexWrap: 'wrap' }}>
+          <button className='bp-btn' onClick={handleClear} type='button'>
+            <Trash2 style={{ width: 12, height: 12, marginRight: 4, display: 'inline', verticalAlign: 'middle' }} />CLEAR
+          </button>
+          <button className='bp-btn' onClick={handleValidateOnly} disabled={!input.trim()} type='button'>
+            <CheckCircle style={{ width: 12, height: 12, marginRight: 4, display: 'inline', verticalAlign: 'middle' }} />VALIDATE
+          </button>
+          <button className='bp-btn' onClick={handleMinify} disabled={!input.trim()} type='button'>
+            <Minimize2 style={{ width: 12, height: 12, marginRight: 4, display: 'inline', verticalAlign: 'middle' }} />MINIFY
+          </button>
+          <button className='bp-btn bp-btn-solid' onClick={handleFormat} disabled={!input.trim()} type='button'>
+            <FileJson style={{ width: 12, height: 12, marginRight: 4, display: 'inline', verticalAlign: 'middle' }} />FORMAT
+          </button>
+        </div>
+      </div>
+
+      {/* Main content: 2-column layout */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+        {/* Input panel */}
+        <Panel
+          title='JSON Input'
+          meta={`${charCount.toLocaleString()} chars · ${lineCount.toLocaleString()} lines`}
+          style={{ borderRight: 0, borderTop: 0, borderLeft: 0, borderBottom: 0 }}
+        >
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder='Paste your JSON here...'
+              spellCheck={false}
+              style={{
+                flex: 1,
+                width: '100%',
+                background: 'var(--bp-bg)',
+                border: 0,
+                color: 'var(--bp-ink)',
+                fontFamily: 'inherit',
+                fontSize: 12,
+                padding: '12px 14px',
+                resize: 'none',
+                outline: 'none',
+                boxSizing: 'border-box',
+                lineHeight: 1.65,
+                minHeight: 300,
+              }}
+            />
+          </div>
+          {validationStatus === 'invalid' && validationError && (
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 12px', borderTop: '1px solid rgba(239,68,68,0.3)', background: 'rgba(127,29,29,0.15)', flexShrink: 0 }}>
+              <AlertCircle style={{ width: 12, height: 12, flexShrink: 0, marginTop: 1, color: '#f87171' }} />
+              <span style={{ fontSize: 11, color: '#f87171', fontFamily: 'inherit' }}>{validationError}</span>
             </div>
-            <textarea className='bp-textarea font-mono text-sm' placeholder='Paste your JSON here...' value={input} onChange={(e) => setInput(e.target.value)} rows={14} />
-            {validationStatus === 'invalid' && validationError && (
-              <div className='flex items-start gap-2 text-xs text-red-400 bg-red-950/30 border border-red-900 p-2.5 rounded-md mt-2'>
-                <AlertCircle className='w-3.5 h-3.5 flex-shrink-0 mt-0.5' />
-                <span className='font-mono'>{validationError}</span>
+          )}
+        </Panel>
+
+        {/* Output panel */}
+        <Panel
+          title='Output'
+          meta={output ? `${output.length.toLocaleString()} chars · ${output.split('\n').length.toLocaleString()} lines` : undefined}
+          style={{ borderTop: 0, borderBottom: 0, borderRight: 0 }}
+        >
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            {output ? (
+              <textarea
+                value={output}
+                readOnly
+                spellCheck={false}
+                style={{
+                  flex: 1,
+                  width: '100%',
+                  background: 'var(--bp-bg)',
+                  border: 0,
+                  color: 'var(--bp-ink)',
+                  fontFamily: 'inherit',
+                  fontSize: 12,
+                  padding: '12px 14px',
+                  resize: 'none',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  lineHeight: 1.65,
+                  minHeight: 300,
+                }}
+              />
+            ) : (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--bp-ink-faint)', gap: 10 }}>
+                <FileJson style={{ width: 32, height: 32, opacity: 0.3 }} />
+                <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)' }}>
+                  {input.trim() ? 'Click Format, Minify, or Validate' : 'Paste JSON in the left panel'}
+                </span>
               </div>
             )}
-          </BpPanel>
-
-          <BpPanel title='Actions'>
-            <div className='flex flex-wrap items-center gap-2'>
-              <div className='flex items-center gap-2'>
-                <label className='text-xs text-gray-500'>Indent:</label>
-                <select className='bp-input h-8 px-2 text-xs' value={indentSize} onChange={(e) => setIndentSize(parseInt(e.target.value) as 2 | 4)}>
-                  <option value={2}>2 spaces</option>
-                  <option value={4}>4 spaces</option>
-                </select>
-              </div>
-              <div className='flex flex-wrap gap-2 ml-auto'>
-                <button className='bp-btn' onClick={handleValidateOnly} disabled={!input.trim()} type='button'>
-                  <CheckCircle className='w-3.5 h-3.5 mr-1 inline' />VALIDATE
-                </button>
-                <button className='bp-btn' onClick={handleMinify} disabled={!input.trim()} type='button'>
-                  <Minimize2 className='w-3.5 h-3.5 mr-1 inline' />MINIFY
-                </button>
-                <button className='bp-btn bp-btn-solid' onClick={handleFormat} disabled={!input.trim()} type='button'>
-                  <FileJson className='w-3.5 h-3.5 mr-1 inline' />FORMAT
-                </button>
-              </div>
-            </div>
-          </BpPanel>
-
+          </div>
           {output && (
-            <BpPanel title='Output' meta={`${output.length.toLocaleString()} chars · ${output.split('\n').length.toLocaleString()} lines`}>
-              <div className='bp-panel-actions mb-3'>
-                <BpCopyBtn text={output} label='COPY' />
-              </div>
-              <textarea className='bp-textarea font-mono text-sm' value={output} readOnly rows={14} />
-            </BpPanel>
-          )}
-
-          {!output && !input.trim() && (
-            <div className='text-center text-gray-600 py-12'>
-              <FileJson className='w-10 h-10 mx-auto mb-3 opacity-40' />
-              <p className='text-sm'>Paste JSON above and click Format, Minify, or Validate</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+              <BpCopyBtn text={output} label='COPY' />
             </div>
           )}
-        </div>
+        </Panel>
       </div>
-    </BpToolStage>
+    </div>
   );
 }

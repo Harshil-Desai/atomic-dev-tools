@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import React, { useState } from 'react';
+import { BpCopyBtn } from '@/components/blueprint';
 import { Braces, AlertCircle } from 'lucide-react';
 
 // ─── types ────────────────────────────────────────────────────────────────────
@@ -152,12 +152,43 @@ function generateRust(root: TypeNode): string {
   }).join('\n\n');
 }
 
-// ─── component ────────────────────────────────────────────────────────────────
+// ─── examples ─────────────────────────────────────────────────────────────────
 
 const EXAMPLES = [
   { label: 'User object', json: `{\n  "id": 1,\n  "name": "Alice",\n  "email": "alice@example.com",\n  "age": 30,\n  "active": true,\n  "avatar": null,\n  "address": {\n    "street": "123 Main St",\n    "city": "Springfield",\n    "zip": "12345"\n  },\n  "tags": ["admin", "user"]\n}` },
   { label: 'API response', json: `{\n  "status": "ok",\n  "page": 1,\n  "total": 100,\n  "data": [\n    { "id": 1, "title": "Post one", "published": true },\n    { "id": 2, "title": "Post two", "published": false }\n  ]\n}` },
 ];
+
+// ─── CSS vars ─────────────────────────────────────────────────────────────────
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#c792ea',
+} as React.CSSProperties;
+
+// ─── local Panel component ────────────────────────────────────────────────────
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ─── component ────────────────────────────────────────────────────────────────
 
 export default function JsonToTypePage() {
   const [input, setInput] = useState('');
@@ -192,76 +223,133 @@ export default function JsonToTypePage() {
   ];
 
   return (
-    <BpToolStage cat='backend'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>JSON → Type Struct</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Convert JSON payloads to TypeScript interfaces, Go structs, or Rust structs</p>
+    <div
+      className='h-full flex flex-col overflow-hidden'
+      data-cat='backend'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>JSON → Types</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Generate TypeScript, Go and Rust struct definitions from JSON</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-5xl mx-auto space-y-4'>
-
-          <BpPanel title='Settings'>
-            <div className='flex flex-wrap gap-4 items-end mb-4'>
-              <div className='flex-1 min-w-40'>
-                <label className='block text-xs text-gray-500 mb-2'>Target Language</label>
-                <div className='flex gap-2'>
-                  {langs.map((l) => (
-                    <button key={l.value} type='button' onClick={() => { setLang(l.value); if (output) convert(input, l.value, rootName); }}
-                      className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${lang === l.value ? 'bg-blue-600 text-white' : 'bp-btn'}`}>
-                      {l.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className='block text-xs text-gray-500 mb-2'>Root Type Name</label>
-                <input value={rootName} onChange={(e) => setRootName(e.target.value)} placeholder='Root'
-                  className='bp-input font-mono w-32' />
-              </div>
-            </div>
-            <div>
-              <p className='text-xs text-gray-500 mb-2'>Quick examples</p>
-              <div className='flex gap-2'>
-                {EXAMPLES.map((ex) => (
-                  <button key={ex.label} type='button' onClick={() => setInput(ex.json)}
-                    className='text-xs px-3 py-1.5 rounded border border-[hsla(0,0%,20%,1)] bg-[#121212] hover:bg-[#222] text-gray-300 transition-colors'>
-                    {ex.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </BpPanel>
-
-          <div className='bp-layout-2col'>
-            <BpPanel title='JSON Input'>
-              <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder='Paste JSON here…'
-                rows={18} className='bp-textarea font-mono text-xs mb-3' />
-              <button type='button' className='bp-btn bp-btn-solid w-full' onClick={handleConvert} disabled={!input.trim()}>
-                <Braces className='w-4 h-4 mr-2 inline' />GENERATE TYPES
+      {/* Settings bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '8px 16px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0, flexWrap: 'wrap' }}>
+        {/* Language selector */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Language</span>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {langs.map((l) => (
+              <button
+                key={l.value}
+                type='button'
+                onClick={() => { setLang(l.value); if (output) convert(input, l.value, rootName); }}
+                style={{
+                  padding: '3px 10px',
+                  fontSize: 11,
+                  fontFamily: 'inherit',
+                  fontWeight: 600,
+                  letterSpacing: '0.05em',
+                  border: '1px solid',
+                  borderColor: lang === l.value ? 'var(--bp-accent)' : 'var(--bp-border-str)',
+                  background: lang === l.value ? 'color-mix(in srgb, var(--bp-accent) 15%, transparent)' : 'transparent',
+                  color: lang === l.value ? 'var(--bp-accent)' : 'var(--bp-ink-mute)',
+                  cursor: 'pointer',
+                }}
+              >
+                {l.label}
               </button>
-            </BpPanel>
-
-            <BpPanel title={`${langs.find((l) => l.value === lang)?.label} Output`}>
-              {output && (
-                <div className='bp-panel-actions mb-3'>
-                  <BpCopyBtn text={output} label='COPY' />
-                </div>
-              )}
-              {error && (
-                <div className='flex items-start gap-2 text-red-400 text-sm mb-3'>
-                  <AlertCircle className='w-4 h-4 shrink-0 mt-0.5' />
-                  <span>{error}</span>
-                </div>
-              )}
-              <pre className='bp-code-pre min-h-64 p-4 font-mono text-xs text-gray-300 overflow-auto whitespace-pre'>
-                {output || <span className='text-gray-600'>Output will appear here…</span>}
-              </pre>
-            </BpPanel>
+            ))}
           </div>
+        </div>
 
+        {/* Root name */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Root Name</span>
+          <input
+            value={rootName}
+            onChange={(e) => setRootName(e.target.value)}
+            placeholder='Root'
+            style={{ background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '3px 8px', outline: 'none', boxSizing: 'border-box', width: 96 }}
+          />
+        </div>
+
+        {/* Quick examples */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Examples</span>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {EXAMPLES.map((ex) => (
+              <button
+                key={ex.label}
+                type='button'
+                onClick={() => setInput(ex.json)}
+                style={{
+                  padding: '3px 10px',
+                  fontSize: 11,
+                  fontFamily: 'inherit',
+                  border: '1px solid var(--bp-border-str)',
+                  background: 'transparent',
+                  color: 'var(--bp-ink-mute)',
+                  cursor: 'pointer',
+                }}
+              >
+                {ex.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
-    </BpToolStage>
+
+      {/* Main content — 2-column split */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+        {/* Left: JSON Input */}
+        <Panel title='JSON Input' style={{ borderRight: 0, borderLeft: 0, borderBottom: 0, borderTop: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder='Paste JSON here…'
+              style={{ flex: 1, width: '100%', background: 'var(--bp-bg)', border: 0, color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '12px 14px', resize: 'none', outline: 'none', boxSizing: 'border-box', lineHeight: 1.65, minHeight: 200 }}
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <button
+              type='button'
+              className='bp-btn bp-btn-solid'
+              onClick={handleConvert}
+              disabled={!input.trim()}
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+            >
+              <Braces className='w-4 h-4' />
+              GENERATE TYPES
+            </button>
+          </div>
+        </Panel>
+
+        {/* Right: Output */}
+        <Panel
+          title={`${langs.find((l) => l.value === lang)?.label ?? ''} Output`}
+          style={{ borderLeft: '1px solid var(--bp-border)', borderRight: 0, borderBottom: 0, borderTop: 0 }}
+        >
+          {output && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '4px 10px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+              <BpCopyBtn text={output} label='COPY' />
+            </div>
+          )}
+          {error && (
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 14px', color: '#f87171', fontSize: 12, flexShrink: 0 }}>
+              <AlertCircle style={{ width: 14, height: 14, flexShrink: 0, marginTop: 1 }} />
+              <span>{error}</span>
+            </div>
+          )}
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            <pre style={{ margin: 0, padding: '12px 14px', fontFamily: 'inherit', fontSize: 12, color: 'var(--bp-ink)', lineHeight: 1.65, whiteSpace: 'pre' }}>
+              {output || <span style={{ color: 'var(--bp-ink-faint)' }}>Output will appear here…</span>}
+            </pre>
+          </div>
+        </Panel>
+      </div>
+    </div>
   );
 }

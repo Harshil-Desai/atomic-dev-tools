@@ -1,11 +1,36 @@
 'use client';
 
 import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import { BpCopyBtn } from '@/components/blueprint';
 import { GitCompare } from 'lucide-react';
 
 type DiffView = 'side-by-side' | 'unified';
 interface DiffLine { type: 'added' | 'removed' | 'unchanged'; content: string; lineNumber?: number; }
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#f0c674',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export default function FormatAwareDiffPage() {
   const [original, setOriginal] = useState('');
@@ -71,8 +96,16 @@ export default function FormatAwareDiffPage() {
     return diffResult.modifiedLines.map((line) => line.type === 'added' ? `+ ${line.content}` : line.type === 'removed' ? `- ${line.content}` : `  ${line.content}`).join('\n');
   };
 
-  const lineBg = (type: string) => type === 'added' ? 'bg-green-900/30' : type === 'removed' ? 'bg-red-900/30' : '';
-  const lineColor = (type: string) => type === 'added' ? 'text-green-400' : type === 'removed' ? 'text-red-400' : 'text-gray-300';
+  const lineBgStyle = (type: string): React.CSSProperties => {
+    if (type === 'added') return { background: 'rgba(34,197,94,0.08)' };
+    if (type === 'removed') return { background: 'rgba(239,68,68,0.08)' };
+    return {};
+  };
+  const lineColorStyle = (type: string): React.CSSProperties => {
+    if (type === 'added') return { color: '#4ade80' };
+    if (type === 'removed') return { color: '#f87171' };
+    return { color: 'var(--bp-ink)' };
+  };
 
   const unifiedLines = diffResult ? (() => {
     const lines: Array<{ type: string; content: string; lineNum?: number }> = [];
@@ -89,89 +122,212 @@ export default function FormatAwareDiffPage() {
   })() : [];
 
   return (
-    <BpToolStage cat='text'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Format-Aware Diff</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Compare two code blocks with normalized whitespace and formatting</p>
+    <div
+      data-cat='text'
+      style={{
+        ...CSS_VARS,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative',
+        background: 'var(--bp-bg)',
+        color: 'var(--bp-ink)',
+        fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+      }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#fff', letterSpacing: '-0.01em' }}>Format-Aware Diff</h1>
+        <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--bp-ink-mute)' }}>Side-by-side diff with added and removed line highlighting</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-7xl mx-auto space-y-4'>
+      {/* Main content */}
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
-          <div className='bp-layout-2col'>
-            <BpPanel title='Original Code'>
-              <textarea className='bp-textarea font-mono text-sm' placeholder='Enter original code here...' value={original} onChange={(e) => setOriginal(e.target.value)} rows={12} />
-            </BpPanel>
-            <BpPanel title='Modified Code'>
-              <textarea className='bp-textarea font-mono text-sm' placeholder='Enter modified code here...' value={modified} onChange={(e) => setModified(e.target.value)} rows={12} />
-            </BpPanel>
+        {/* Input row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', flexShrink: 0, borderBottom: '1px solid var(--bp-border)' }}>
+          <Panel title='Original Code' style={{ borderRight: 0, borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
+            <textarea
+              value={original}
+              onChange={(e) => setOriginal(e.target.value)}
+              placeholder='Enter original code here...'
+              spellCheck={false}
+              style={{
+                flex: 1,
+                width: '100%',
+                background: 'var(--bp-bg)',
+                border: 0,
+                color: 'var(--bp-ink)',
+                fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+                fontSize: 12,
+                padding: '12px 14px',
+                resize: 'none',
+                outline: 'none',
+                boxSizing: 'border-box',
+                lineHeight: 1.65,
+                minHeight: 180,
+              }}
+            />
+          </Panel>
+          <Panel title='Modified Code' style={{ borderTop: 0, borderRight: 0, borderBottom: 0 }}>
+            <textarea
+              value={modified}
+              onChange={(e) => setModified(e.target.value)}
+              placeholder='Enter modified code here...'
+              spellCheck={false}
+              style={{
+                flex: 1,
+                width: '100%',
+                background: 'var(--bp-bg)',
+                border: 0,
+                color: 'var(--bp-ink)',
+                fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+                fontSize: 12,
+                padding: '12px 14px',
+                resize: 'none',
+                outline: 'none',
+                boxSizing: 'border-box',
+                lineHeight: 1.65,
+                minHeight: 180,
+              }}
+            />
+          </Panel>
+        </div>
+
+        {/* Controls bar */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0, flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {(['side-by-side', 'unified'] as DiffView[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => setViewMode(m)}
+                type='button'
+                className='bp-btn'
+                style={viewMode === m ? { background: 'var(--bp-accent)', color: '#000', borderColor: 'var(--bp-accent)' } : {}}
+              >
+                {m === 'side-by-side' ? 'SIDE BY SIDE' : 'UNIFIED'}
+              </button>
+            ))}
           </div>
+          <button
+            className='bp-btn bp-btn-solid'
+            onClick={handleCompare}
+            disabled={!original.trim() || !modified.trim()}
+            type='button'
+          >
+            <GitCompare style={{ width: 14, height: 14, marginRight: 6, display: 'inline', verticalAlign: 'middle' }} />
+            COMPARE
+          </button>
+        </div>
 
-          <div className='flex items-center justify-between'>
-            <div className='flex gap-2'>
-              {(['side-by-side', 'unified'] as DiffView[]).map((m) => (
-                <button key={m} onClick={() => setViewMode(m)} type='button'
-                  className={`px-3 py-1.5 text-sm rounded border transition-colors ${viewMode === m ? 'bg-blue-600 text-white border-blue-600' : 'border-[hsla(0,0%,20%,1)] text-gray-400 hover:text-gray-200'}`}>
-                  {m === 'side-by-side' ? 'Side by Side' : 'Unified'}
-                </button>
-              ))}
+        {/* Summary bar */}
+        {summary && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '7px 16px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-elevated)', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 10, height: 10, background: 'rgba(34,197,94,0.3)', border: '1px solid rgba(34,197,94,0.4)' }} />
+              <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)' }}>{summary.added} lines added</span>
             </div>
-            <button className='bp-btn bp-btn-solid' onClick={handleCompare} disabled={!original.trim() || !modified.trim()} type='button'>
-              <GitCompare className='w-4 h-4 mr-2 inline' />COMPARE
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 10, height: 10, background: 'rgba(239,68,68,0.3)', border: '1px solid rgba(239,68,68,0.4)' }} />
+              <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)' }}>{summary.removed} lines removed</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 10, height: 10, background: 'var(--bp-border-str)' }} />
+              <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)' }}>{summary.unchanged} lines unchanged</span>
+            </div>
           </div>
+        )}
 
-          {summary && (
-            <BpPanel title='Summary'>
-              <div className='flex items-center gap-6 text-sm'>
-                <div className='flex items-center gap-2'><div className='w-3 h-3 bg-green-900/50 rounded' /><span className='text-gray-400'>{summary.added} lines added</span></div>
-                <div className='flex items-center gap-2'><div className='w-3 h-3 bg-red-900/50 rounded' /><span className='text-gray-400'>{summary.removed} lines removed</span></div>
-                <div className='flex items-center gap-2'><div className='w-3 h-3 bg-gray-700 rounded' /><span className='text-gray-400'>{summary.unchanged} lines unchanged</span></div>
-              </div>
-            </BpPanel>
-          )}
-
-          {diffResult && viewMode === 'side-by-side' && (
-            <div className='bp-layout-2col'>
-              <BpPanel title='Original'>
-                <div className='bp-code-view max-h-96 overflow-auto'>
-                  {diffResult.originalLines.map((line, idx) => (
-                    <div key={idx} className={`${lineBg(line.type)} ${lineColor(line.type)} flex gap-2 px-2 py-0.5 font-mono text-xs`}>
-                      <span className='w-8 text-gray-600 shrink-0'>{line.lineNumber || ''}</span>
-                      <span>{line.content}</span>
-                    </div>
-                  ))}
-                </div>
-              </BpPanel>
-              <BpPanel title='Modified'>
-                <div className='bp-panel-actions mb-2'><BpCopyBtn text={getDiffCopyText()} label='COPY DIFF' /></div>
-                <div className='bp-code-view max-h-96 overflow-auto'>
-                  {diffResult.modifiedLines.map((line, idx) => (
-                    <div key={idx} className={`${lineBg(line.type)} ${lineColor(line.type)} flex gap-2 px-2 py-0.5 font-mono text-xs`}>
-                      <span className='w-8 text-gray-600 shrink-0'>{line.lineNumber || ''}</span>
-                      <span>{line.content}</span>
-                    </div>
-                  ))}
-                </div>
-              </BpPanel>
-            </div>
-          )}
-
-          {diffResult && viewMode === 'unified' && (
-            <BpPanel title='Unified Diff'>
-              <div className='bp-panel-actions mb-2'><BpCopyBtn text={getDiffCopyText()} label='COPY DIFF' /></div>
-              <div className='bp-code-view max-h-96 overflow-auto'>
-                {unifiedLines.map((line, idx) => (
-                  <div key={idx} className={`${lineBg(line.type)} ${lineColor(line.type)} flex gap-2 px-2 py-0.5 font-mono text-xs`}>
-                    <span className='w-12 text-gray-600 shrink-0'>{line.type === 'added' ? `+${line.lineNum}` : line.type === 'removed' ? `-${line.lineNum}` : line.lineNum}</span>
-                    <span>{line.type === 'removed' ? '- ' : line.type === 'added' ? '+ ' : '  '}{line.content}</span>
+        {/* Diff output — side by side */}
+        {diffResult && viewMode === 'side-by-side' && (
+          <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+            <Panel title='Original' style={{ borderRight: 0, borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
+              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                {diffResult.originalLines.map((line, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      ...lineBgStyle(line.type),
+                      ...lineColorStyle(line.type),
+                      display: 'flex',
+                      gap: 8,
+                      padding: '2px 10px',
+                      fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+                      fontSize: 11,
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    <span style={{ width: 28, color: 'var(--bp-ink-faint)', flexShrink: 0, textAlign: 'right', userSelect: 'none' }}>{line.lineNumber || ''}</span>
+                    <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{line.content}</span>
                   </div>
                 ))}
               </div>
-            </BpPanel>
-          )}
-        </div>
+            </Panel>
+            <Panel title='Modified' style={{ borderTop: 0, borderRight: 0, borderBottom: 0 }}>
+              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                {diffResult.modifiedLines.map((line, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      ...lineBgStyle(line.type),
+                      ...lineColorStyle(line.type),
+                      display: 'flex',
+                      gap: 8,
+                      padding: '2px 10px',
+                      fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+                      fontSize: 11,
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    <span style={{ width: 28, color: 'var(--bp-ink-faint)', flexShrink: 0, textAlign: 'right', userSelect: 'none' }}>{line.lineNumber || ''}</span>
+                    <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{line.content}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+                <BpCopyBtn text={getDiffCopyText()} label='COPY DIFF' />
+              </div>
+            </Panel>
+          </div>
+        )}
+
+        {/* Diff output — unified */}
+        {diffResult && viewMode === 'unified' && (
+          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <Panel title='Unified Diff' style={{ flex: 1, borderTop: 0, borderLeft: 0, borderRight: 0, borderBottom: 0 }}>
+              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                {unifiedLines.map((line, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      ...lineBgStyle(line.type),
+                      ...lineColorStyle(line.type),
+                      display: 'flex',
+                      gap: 8,
+                      padding: '2px 10px',
+                      fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+                      fontSize: 11,
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    <span style={{ width: 36, color: 'var(--bp-ink-faint)', flexShrink: 0, userSelect: 'none' }}>
+                      {line.type === 'added' ? `+${line.lineNum}` : line.type === 'removed' ? `-${line.lineNum}` : line.lineNum}
+                    </span>
+                    <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                      {line.type === 'removed' ? '- ' : line.type === 'added' ? '+ ' : '  '}{line.content}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+                <BpCopyBtn text={getDiffCopyText()} label='COPY DIFF' />
+              </div>
+            </Panel>
+          </div>
+        )}
+
       </div>
-    </BpToolStage>
+    </div>
   );
 }

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Lock, RefreshCw, Eye, EyeOff } from 'lucide-react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import React, { useState, useEffect, useCallback } from 'react';
+import { RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { BpCopyBtn } from '@/components/blueprint';
 
 const UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const LOWER = 'abcdefghijklmnopqrstuvwxyz';
@@ -15,10 +15,10 @@ const CONSONANTS = 'bcdfghjklmnpqrstvwxyz';
 function entropyBits(charsetSize: number, length: number): number { return length * Math.log2(charsetSize); }
 
 function entropyLabel(bits: number): { label: string; color: string; pct: number } {
-  if (bits < 40) return { label: 'Weak', color: 'bg-red-500', pct: 15 };
-  if (bits < 60) return { label: 'Fair', color: 'bg-yellow-500', pct: 40 };
-  if (bits < 80) return { label: 'Strong', color: 'bg-blue-500', pct: 70 };
-  return { label: 'Very Strong', color: 'bg-green-500', pct: 100 };
+  if (bits < 40) return { label: 'Weak', color: '#ef4444', pct: 15 };
+  if (bits < 60) return { label: 'Fair', color: '#eab308', pct: 40 };
+  if (bits < 80) return { label: 'Strong', color: '#3b82f6', pct: 70 };
+  return { label: 'Very Strong', color: '#22c55e', pct: 100 };
 }
 
 function generateSecure(length: number, charset: string): string {
@@ -32,6 +32,31 @@ function generatePronounceable(length: number): string {
   const arr = new Uint8Array(length);
   crypto.getRandomValues(arr);
   return Array.from(arr, (b, i) => { const pool = i % 2 === 0 ? CONSONANTS : VOWELS; return pool[b % pool.length]; }).join('');
+}
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#ff7a85',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
 }
 
 export default function PasswordGeneratorPage() {
@@ -74,37 +99,72 @@ export default function PasswordGeneratorPage() {
   const { label, color, pct } = entropyLabel(bits);
 
   const Toggle = ({ checked, onChange, label: lbl }: { checked: boolean; onChange: (v: boolean) => void; label: string }) => (
-    <label className='flex items-center gap-2 cursor-pointer select-none'>
-      <div onClick={() => onChange(!checked)} className={`w-9 h-5 rounded-full relative transition-colors cursor-pointer ${checked ? 'bg-white' : 'bg-[#333333]'}`}>
-        <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-black transition-transform ${checked ? 'translate-x-4' : ''}`} />
+    <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none' }}>
+      <div
+        onClick={() => onChange(!checked)}
+        style={{
+          width: 36, height: 20, borderRadius: 10, position: 'relative', cursor: 'pointer', flexShrink: 0,
+          background: checked ? 'var(--bp-accent)' : 'var(--bp-border-str)',
+          transition: 'background 0.2s',
+        }}
+      >
+        <div style={{
+          position: 'absolute', top: 2, left: 2, width: 16, height: 16, borderRadius: '50%',
+          background: checked ? '#fff' : 'var(--bp-ink-mute)',
+          transform: checked ? 'translateX(16px)' : 'translateX(0)',
+          transition: 'transform 0.2s, background 0.2s',
+        }} />
       </div>
-      <span className='text-sm text-gray-300'>{lbl}</span>
+      <span style={{ fontSize: 12, color: 'var(--bp-ink)' }}>{lbl}</span>
     </label>
   );
 
+  const entropyBadgeStyle: React.CSSProperties = {
+    fontSize: 10,
+    fontWeight: 600,
+    padding: '2px 8px',
+    borderRadius: 2,
+    background: label === 'Weak' ? 'rgba(239,68,68,0.15)' : label === 'Fair' ? 'rgba(234,179,8,0.15)' : label === 'Strong' ? 'rgba(59,130,246,0.15)' : 'rgba(34,197,94,0.15)',
+    color: label === 'Weak' ? '#ef4444' : label === 'Fair' ? '#eab308' : label === 'Strong' ? '#3b82f6' : '#22c55e',
+  };
+
   return (
-    <BpToolStage cat='security'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Password Generator</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Generate cryptographically secure passwords using <code className='text-xs bg-[#1C1C1C] px-1 rounded'>crypto.getRandomValues</code></p>
+    <div
+      className='h-full flex flex-col overflow-hidden'
+      data-cat='security'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Password Generator</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Generate cryptographically secure passwords with entropy scoring</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-2xl mx-auto space-y-4'>
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '320px 1fr', overflow: 'hidden' }}>
 
-          <BpPanel title='Settings'>
-            <div className='mb-4'>
-              <div className='flex justify-between mb-2'>
-                <span className='text-sm font-medium text-gray-300'>Length</span>
-                <span className='text-sm font-mono text-gray-400'>{length} chars</span>
+        {/* Settings Panel */}
+        <Panel title='Settings' style={{ borderRight: 0, borderTop: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '14px 14px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+            {/* Length slider */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontSize: 11, color: 'var(--bp-ink)', fontWeight: 500 }}>Length</span>
+                <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)', fontFamily: 'inherit' }}>{length} chars</span>
               </div>
-              <input type='range' min={8} max={128} value={length} onChange={(e) => setLength(Number(e.target.value))} className='w-full accent-white cursor-pointer' />
-              <div className='flex justify-between text-xs text-gray-500 mt-1'><span>8</span><span>128</span></div>
+              <input
+                type='range' min={8} max={128} value={length}
+                onChange={(e) => setLength(Number(e.target.value))}
+                style={{ width: '100%', accentColor: 'var(--bp-accent)', cursor: 'pointer' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--bp-ink-faint)', marginTop: 4 }}>
+                <span>8</span><span>128</span>
+              </div>
             </div>
 
-            <div className='mb-4'>
-              <p className='text-sm font-medium text-gray-300 mb-3'>Character sets</p>
-              <div className='grid grid-cols-2 gap-3'>
+            {/* Character sets */}
+            <div>
+              <p style={{ fontSize: 11, color: 'var(--bp-ink)', fontWeight: 500, margin: 0, marginBottom: 10 }}>Character sets</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <Toggle checked={useUpper} onChange={setUseUpper} label='Uppercase (A-Z)' />
                 <Toggle checked={useLower} onChange={setUseLower} label='Lowercase (a-z)' />
                 <Toggle checked={useDigits} onChange={setUseDigits} label='Digits (0-9)' />
@@ -112,55 +172,78 @@ export default function PasswordGeneratorPage() {
               </div>
             </div>
 
-            <div className='space-y-3 mb-4'>
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <Toggle checked={excludeAmbiguous} onChange={setExcludeAmbiguous} label='Exclude ambiguous chars (I, l, O, 0, 1)' />
               <Toggle checked={pronounceable} onChange={setPronounceable} label='Pronounceable (alternating consonants/vowels)' />
             </div>
 
-            <div className='mb-4'>
-              <label className='block text-xs text-gray-500 mb-1'>Custom exclude characters</label>
-              <input value={customExclude} onChange={(e) => setCustomExclude(e.target.value)} placeholder='e.g. @ # $' className='bp-input w-full font-mono' />
+            {/* Custom exclude */}
+            <div>
+              <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 6 }}>Custom exclude characters</label>
+              <input
+                value={customExclude}
+                onChange={(e) => setCustomExclude(e.target.value)}
+                placeholder='e.g. @ # $'
+                style={{ width: '100%', background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
+              />
             </div>
 
-            <div className='flex items-center gap-3'>
-              <span className='text-sm font-medium text-gray-300'>Generate</span>
-              <select value={count} onChange={(e) => setCount(Number(e.target.value))} className='bp-input'>
+            {/* Count */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 11, color: 'var(--bp-ink)', fontWeight: 500 }}>Generate</span>
+              <select
+                value={count}
+                onChange={(e) => setCount(Number(e.target.value))}
+                style={{ background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 11, padding: '5px 8px', outline: 'none' }}
+              >
                 {[1, 5, 10].map((n) => <option key={n} value={n}>{n} password{n > 1 ? 's' : ''}</option>)}
               </select>
             </div>
-          </BpPanel>
 
-          <BpPanel title='Entropy'>
-            <div className='flex justify-between items-center mb-2'>
-              <span className='text-sm font-medium text-gray-300'>Strength</span>
-              <span className={`text-xs font-semibold px-2 py-0.5 rounded ${label === 'Weak' ? 'bg-red-900/40 text-red-400' : label === 'Fair' ? 'bg-yellow-900/40 text-yellow-400' : label === 'Strong' ? 'bg-blue-900/40 text-blue-400' : 'bg-green-900/40 text-green-400'}`}>{label} — {bits.toFixed(1)} bits</span>
-            </div>
-            <div className='h-2 bg-[#333333] rounded-full overflow-hidden'>
-              <div className={`h-full ${color} transition-all duration-300 rounded-full`} style={{ width: `${pct}%` }} />
-            </div>
-            {!pronounceable && charset.length === 0 && <p className='text-xs text-red-400 mt-2'>Select at least one character set.</p>}
-          </BpPanel>
+          </div>
 
-          <BpPanel title={`Generated password${passwords.length > 1 ? 's' : ''}`}>
-            <div className='bp-panel-actions mb-3'>
-              <button type='button' className='bp-btn' onClick={generate}><RefreshCw className='w-3.5 h-3.5 mr-1 inline' />REGENERATE</button>
-              <button type='button' className='bp-btn ml-2' onClick={() => setShowPassword(!showPassword)}>
-                {showPassword ? <EyeOff className='w-4 h-4 mr-1 inline' /> : <Eye className='w-4 h-4 mr-1 inline' />}
-                {showPassword ? 'HIDE' : 'SHOW'}
-              </button>
+          {/* Entropy bar */}
+          <div style={{ borderTop: '1px dashed var(--bp-border-str)', padding: '10px 14px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <span style={{ fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Entropy</span>
+              <span style={entropyBadgeStyle}>{label} — {bits.toFixed(1)} bits</span>
             </div>
-            <div className='space-y-2'>
-              {passwords.map((pw, i) => (
-                <div key={i} className='flex items-center gap-2'>
-                  <input readOnly value={showPassword ? pw : '•'.repeat(pw.length)} className='bp-input flex-1 font-mono text-sm bg-[#121212]' />
-                  <BpCopyBtn text={pw} label='COPY' />
-                </div>
-              ))}
+            <div style={{ height: 4, background: 'var(--bp-border-str)', borderRadius: 2, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 2, transition: 'width 0.3s' }} />
             </div>
-          </BpPanel>
+            {!pronounceable && charset.length === 0 && (
+              <p style={{ fontSize: 10, color: '#ef4444', margin: 0, marginTop: 6 }}>Select at least one character set.</p>
+            )}
+          </div>
+        </Panel>
 
-        </div>
+        {/* Output Panel */}
+        <Panel title={`Generated password${passwords.length > 1 ? 's' : ''}`} style={{ borderTop: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderBottom: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <button type='button' className='bp-btn' onClick={generate}>
+              <RefreshCw className='w-3.5 h-3.5 mr-1 inline' />REGENERATE
+            </button>
+            <button type='button' className='bp-btn' onClick={() => setShowPassword(!showPassword)}>
+              {showPassword ? <EyeOff className='w-4 h-4 mr-1 inline' /> : <Eye className='w-4 h-4 mr-1 inline' />}
+              {showPassword ? 'HIDE' : 'SHOW'}
+            </button>
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {passwords.map((pw, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input
+                  readOnly
+                  value={showPassword ? pw : '•'.repeat(pw.length)}
+                  style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 13, padding: '8px 10px', outline: 'none', boxSizing: 'border-box', letterSpacing: showPassword ? '0.05em' : '0.1em' }}
+                />
+                <BpCopyBtn text={pw} label='COPY' />
+              </div>
+            ))}
+          </div>
+        </Panel>
+
       </div>
-    </BpToolStage>
+    </div>
   );
 }

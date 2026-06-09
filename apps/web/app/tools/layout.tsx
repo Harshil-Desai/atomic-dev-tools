@@ -53,7 +53,7 @@ export default function ToolsLayout({ children }: { children: React.ReactNode })
           <Link href='/tools' className='tool-ghost-btn'>pick another</Link>
         </div>
       )}
-      <div className='flex-1 min-h-0'>
+      <div className='flex-1 min-h-0 flex flex-col overflow-hidden'>
         {children}
       </div>
       {!isGrid && (

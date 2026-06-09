@@ -1,10 +1,35 @@
 'use client';
 
-import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import React, { useState } from 'react';
+import { BpCopyBtn } from '@/components/blueprint';
 import { Fingerprint, Download } from 'lucide-react';
 
 type UuidVersion = 'v4' | 'v7';
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#61dafb',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export default function UuidGeneratorPage() {
   const [version, setVersion] = useState<UuidVersion>('v4');
@@ -54,77 +79,98 @@ export default function UuidGeneratorPage() {
   };
 
   return (
-    <BpToolStage cat='time'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>UUID Generator</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Generate UUIDs (v4 random or v7 timestamp-based)</p>
+    <div className='h-full flex flex-col overflow-hidden' data-cat='time' style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}>
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>UUID Generator</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Generate RFC-compliant v4 and v7 UUIDs in bulk</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-6xl mx-auto space-y-4'>
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '320px 1fr', overflow: 'hidden' }}>
+        {/* Left: Configuration */}
+        <Panel title='Configuration' style={{ borderRight: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '12px 14px', gap: 16 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 6 }}>UUID Version</label>
+              <select value={version} onChange={(e) => setVersion(e.target.value as UuidVersion)} style={{ width: '100%', background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 11, padding: '5px 8px', outline: 'none' }}>
+                <option value='v4'>UUID v4 (Random)</option>
+                <option value='v7'>UUID v7 (Timestamp-based)</option>
+              </select>
+            </div>
 
-          <BpPanel title='Configuration'>
-            <div className='flex flex-wrap gap-4 items-end mb-4'>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>UUID Version</label>
-                <select value={version} onChange={(e) => setVersion(e.target.value as UuidVersion)} className='bp-input'>
-                  <option value='v4'>UUID v4 (Random)</option>
-                  <option value='v7'>UUID v7 (Timestamp-based)</option>
-                </select>
-              </div>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Count (1–1000)</label>
-                <input type='number' min='1' max='1000' value={count}
-                  onChange={(e) => setCount(Math.min(Math.max(1, parseInt(e.target.value) || 1), 1000))}
-                  className='bp-input w-24 font-mono' />
+            <div>
+              <label style={{ display: 'block', fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 6 }}>Count (1–1000)</label>
+              <input
+                type='number'
+                min='1'
+                max='1000'
+                value={count}
+                onChange={(e) => setCount(Math.min(Math.max(1, parseInt(e.target.value) || 1), 1000))}
+                style={{ width: 96, background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 8 }}>Formatting</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {([['uppercase', uppercase, setUppercase, 'Uppercase'], ['withHyphens', withHyphens, setWithHyphens, 'With Hyphens'], ['withBraces', withBraces, setWithBraces, 'With Braces {}']] as [string, boolean, (v: boolean) => void, string][]).map(([key, val, set, label]) => (
+                  <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                    <input
+                      type='checkbox'
+                      checked={val}
+                      onChange={(e) => set(e.target.checked)}
+                      style={{ width: 14, height: 14, accentColor: 'var(--bp-accent)' }}
+                    />
+                    <span style={{ fontSize: 12, color: 'var(--bp-ink)' }}>{label}</span>
+                  </label>
+                ))}
               </div>
             </div>
-            <div className='flex flex-wrap gap-4 mb-4'>
-              {[['uppercase', uppercase, setUppercase, 'Uppercase'], ['withHyphens', withHyphens, setWithHyphens, 'With Hyphens'], ['withBraces', withBraces, setWithBraces, 'With Braces {}']].map(([, val, set, label]) => (
-                <label key={label as string} className='flex items-center gap-2 cursor-pointer'>
-                  <input type='checkbox' checked={val as boolean} onChange={(e) => (set as (v: boolean) => void)(e.target.checked)} className='w-4 h-4 rounded' />
-                  <span className='text-sm text-gray-300'>{label as string}</span>
-                </label>
-              ))}
-            </div>
-            <button type='button' className='bp-btn bp-btn-solid' onClick={generateUuids}>
-              <Fingerprint className='w-4 h-4 mr-2 inline' />GENERATE UUIDs
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <button type='button' className='bp-btn bp-btn-solid' onClick={generateUuids} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Fingerprint style={{ width: 14, height: 14 }} />
+              GENERATE UUIDs
             </button>
-          </BpPanel>
+          </div>
+        </Panel>
 
-          {uuids.length > 0 && (
-            <BpPanel title={`Generated UUIDs`} meta={`${uuids.length} UUIDs`}>
-              <div className='bp-panel-actions mb-3 flex flex-wrap gap-2'>
+        {/* Right: Output */}
+        <Panel title='Generated UUIDs' meta={uuids.length > 0 ? `${uuids.length} UUIDs` : undefined}>
+          {uuids.length > 0 ? (
+            <>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, padding: '6px 10px', borderBottom: '1px dashed var(--bp-border-str)', background: 'var(--bp-surface)', flexShrink: 0 }}>
                 <BpCopyBtn text={uuids.join('\n')} label='COPY ALL' />
                 <BpCopyBtn text={JSON.stringify(uuids, null, 2)} label='COPY AS ARRAY' />
                 <BpCopyBtn text={uuids.join(',')} label='COPY AS CSV' />
-                <button type='button' className='bp-btn' onClick={downloadAsTxt}>
-                  <Download className='w-4 h-4 mr-1 inline' />DOWNLOAD .TXT
+                <button type='button' className='bp-btn' onClick={downloadAsTxt} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <Download style={{ width: 12, height: 12 }} />
+                  DOWNLOAD .TXT
                 </button>
               </div>
-              <div className='bp-code-view p-3 max-h-[600px] overflow-auto'>
-                <div className='space-y-1'>
-                  {uuids.map((uuid, index) => (
-                    <div key={index} className='flex items-center justify-between group hover:bg-gray-900 px-2 py-1 rounded'>
-                      <code className='text-sm font-mono text-gray-300'>{uuid}</code>
-                      <div className='opacity-0 group-hover:opacity-100 transition-opacity shrink-0'>
-                        <BpCopyBtn text={uuid} label='COPY' />
-                      </div>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '6px 4px' }}>
+                {uuids.map((uuid, index) => (
+                  <div
+                    key={index}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '3px 10px', borderRadius: 2 }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bp-elevated)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <code style={{ fontSize: 12, fontFamily: 'inherit', color: 'var(--bp-ink)', letterSpacing: '0.03em' }}>{uuid}</code>
+                    <div style={{ flexShrink: 0, marginLeft: 8 }}>
+                      <BpCopyBtn text={uuid} label='COPY' />
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
-            </BpPanel>
-          )}
-
-          {uuids.length === 0 && (
-            <div className='text-center text-gray-600 py-12'>
-              <Fingerprint className='w-12 h-12 mx-auto mb-4 opacity-40' />
-              <p className='text-sm'>Configure settings and click "Generate UUIDs" to get started</p>
+            </>
+          ) : (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+              <Fingerprint style={{ width: 40, height: 40, opacity: 0.3, color: 'var(--bp-ink-faint)' }} />
+              <p style={{ fontSize: 12, color: 'var(--bp-ink-mute)', margin: 0 }}>Configure settings and click "Generate UUIDs" to get started</p>
             </div>
           )}
-        </div>
+        </Panel>
       </div>
-    </BpToolStage>
+    </div>
   );
 }

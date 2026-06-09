@@ -1,8 +1,20 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
-import { FileText, Eye, Code } from 'lucide-react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import { useState, useMemo } from 'react';
+import { Eye, Code } from 'lucide-react';
+import { BpCopyBtn } from '@/components/blueprint';
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#f0c674',
+} as React.CSSProperties;
 
 const DEFAULT_MARKDOWN = `# Welcome to Markdown Previewer
 
@@ -147,6 +159,19 @@ const PREVIEW_STYLES = `
   .md-preview img { max-width: 100%; border-radius: 6px; margin: 0.5em 0; }
 `;
 
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 export default function MarkdownPreviewPage() {
   const [markdown, setMarkdown] = useState(DEFAULT_MARKDOWN);
   const [view, setView] = useState<'split' | 'editor' | 'preview'>('split');
@@ -159,19 +184,56 @@ export default function MarkdownPreviewPage() {
   const showPreview = view === 'split' || view === 'preview';
 
   return (
-    <BpToolStage cat='text'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
+    <div
+      data-cat='text'
+      style={{
+        ...CSS_VARS,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative',
+        background: 'var(--bp-bg)',
+        color: 'var(--bp-ink)',
+        fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+      }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div>
-            <h1 className='text-xl sm:text-2xl font-bold text-white mb-1'>Markdown Previewer</h1>
-            <p className='text-xs sm:text-sm text-gray-400'>Write Markdown, see the rendered HTML preview instantly</p>
+            <h1 style={{ fontSize: 15, fontWeight: 700, color: '#fff', margin: 0, letterSpacing: '0.01em' }}>Markdown Preview</h1>
+            <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: '2px 0 0' }}>Write markdown and see it rendered live</p>
           </div>
-          <div className='flex items-center gap-2 flex-wrap'>
-            <div className='flex rounded border border-[hsla(0,0%,20%,1)] overflow-hidden'>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            {/* View toggle */}
+            <div style={{ display: 'flex', border: '1px solid var(--bp-border-str)', overflow: 'hidden' }}>
               {(['split', 'editor', 'preview'] as const).map(v => (
-                <button key={v} onClick={() => setView(v)} type='button'
-                  className={`px-3 py-1.5 text-xs font-medium capitalize transition-colors ${view === v ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'}`}>
-                  {v === 'editor' ? <><Code className='w-3 h-3 inline mr-1' />Editor</> : v === 'preview' ? <><Eye className='w-3 h-3 inline mr-1' />Preview</> : 'Split'}
+                <button
+                  key={v}
+                  type='button'
+                  onClick={() => setView(v)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    padding: '4px 10px',
+                    fontSize: 10,
+                    fontWeight: 600,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    fontFamily: 'inherit',
+                    cursor: 'pointer',
+                    border: 0,
+                    borderRight: v !== 'preview' ? '1px solid var(--bp-border-str)' : 0,
+                    background: view === v ? 'var(--bp-accent)' : 'transparent',
+                    color: view === v ? '#0a0e14' : 'var(--bp-ink-mute)',
+                    transition: 'background 0.15s, color 0.15s',
+                  }}
+                >
+                  {v === 'editor' && <Code style={{ width: 10, height: 10 }} />}
+                  {v === 'preview' && <Eye style={{ width: 10, height: 10 }} />}
+                  {v}
                 </button>
               ))}
             </div>
@@ -181,33 +243,81 @@ export default function MarkdownPreviewPage() {
         </div>
       </div>
 
-      <div className='flex-1 overflow-hidden p-4 sm:p-5 md:p-6'>
-        <div className={`h-full flex gap-4 ${view === 'split' ? 'flex-col md:flex-row' : 'flex-col'}`}>
-          {showEditor && (
-            <div className={`flex flex-col ${view === 'split' ? 'flex-1 min-h-0' : 'flex-1'}`}>
-              <BpPanel title='Markdown' meta={`${charCount} chars · ${wordCount} words`} className='flex-1 flex flex-col min-h-0'>
-                <textarea
-                  value={markdown}
-                  onChange={e => setMarkdown(e.target.value)}
-                  className='bp-textarea font-mono text-sm flex-1 min-h-[300px]'
-                  spellCheck={false}
-                  placeholder='Write your markdown here...'
+      {/* Main content */}
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden', padding: 0 }}>
+        {view === 'split' ? (
+          <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+            {/* Editor panel */}
+            <Panel title='Markdown' meta={`${charCount} chars · ${wordCount} words`} style={{ borderRight: 0, borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
+              <textarea
+                value={markdown}
+                onChange={e => setMarkdown(e.target.value)}
+                placeholder='Write your markdown here...'
+                spellCheck={false}
+                style={{
+                  flex: 1,
+                  width: '100%',
+                  background: 'var(--bp-bg)',
+                  border: 0,
+                  color: 'var(--bp-ink)',
+                  fontFamily: 'inherit',
+                  fontSize: 12,
+                  padding: '12px 14px',
+                  resize: 'none',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  lineHeight: 1.65,
+                  minHeight: 0,
+                }}
+              />
+            </Panel>
+            {/* Preview panel */}
+            <Panel title='Preview' meta='HTML output' style={{ borderTop: 0, borderLeft: '1px solid var(--bp-border)', borderRight: 0, borderBottom: 0 }}>
+              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                <style dangerouslySetInnerHTML={{ __html: PREVIEW_STYLES }} />
+                <div
+                  className='md-preview'
+                  dangerouslySetInnerHTML={{ __html: renderedHtml || '<p style="color:#555;font-style:italic">Nothing to preview yet...</p>' }}
                 />
-              </BpPanel>
+              </div>
+            </Panel>
+          </div>
+        ) : showEditor ? (
+          <Panel title='Markdown' meta={`${charCount} chars · ${wordCount} words`} style={{ flex: 1, border: 0 }}>
+            <textarea
+              value={markdown}
+              onChange={e => setMarkdown(e.target.value)}
+              placeholder='Write your markdown here...'
+              spellCheck={false}
+              style={{
+                flex: 1,
+                width: '100%',
+                background: 'var(--bp-bg)',
+                border: 0,
+                color: 'var(--bp-ink)',
+                fontFamily: 'inherit',
+                fontSize: 12,
+                padding: '12px 14px',
+                resize: 'none',
+                outline: 'none',
+                boxSizing: 'border-box',
+                lineHeight: 1.65,
+                minHeight: 0,
+              }}
+            />
+          </Panel>
+        ) : (
+          <Panel title='Preview' meta='HTML output' style={{ flex: 1, border: 0 }}>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+              <style dangerouslySetInnerHTML={{ __html: PREVIEW_STYLES }} />
+              <div
+                className='md-preview'
+                dangerouslySetInnerHTML={{ __html: renderedHtml || '<p style="color:#555;font-style:italic">Nothing to preview yet...</p>' }}
+              />
             </div>
-          )}
-          {showPreview && (
-            <div className={`flex flex-col ${view === 'split' ? 'flex-1 min-h-0' : 'flex-1'}`}>
-              <BpPanel title='Preview' meta='HTML output' className='flex-1 flex flex-col min-h-0'>
-                <div className='flex-1 overflow-auto rounded min-h-[300px]'>
-                  <style dangerouslySetInnerHTML={{ __html: PREVIEW_STYLES }} />
-                  <div className='md-preview' dangerouslySetInnerHTML={{ __html: renderedHtml || '<p style="color:#555;font-style:italic">Nothing to preview yet...</p>' }} />
-                </div>
-              </BpPanel>
-            </div>
-          )}
-        </div>
+          </Panel>
+        )}
       </div>
-    </BpToolStage>
+    </div>
   );
 }

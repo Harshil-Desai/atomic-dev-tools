@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import React, { useState } from 'react';
+import { BpCopyBtn } from '@/components/blueprint';
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -89,6 +89,20 @@ const PRESETS = [
   { label: '4755 (rwsr-xr-x)', octal: '4755', desc: 'Setuid executable' },
 ];
 
+// ─── css vars ─────────────────────────────────────────────────────────────────
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#b48cff',
+} as React.CSSProperties;
+
 // ─── sub-components ───────────────────────────────────────────────────────────
 
 function PermRow({ label, perm, onChange, special, specialLabel, specialValue, onSpecialChange }: {
@@ -125,6 +139,21 @@ function PermRow({ label, perm, onChange, special, specialLabel, specialValue, o
   );
 }
 
+// ─── panel component ──────────────────────────────────────────────────────────
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 // ─── component ────────────────────────────────────────────────────────────────
 
 const DEFAULT_PERMS: Permissions = {
@@ -156,27 +185,36 @@ export default function ChmodCalculatorPage() {
   const chmodSymCmd = `chmod ${symbolic} ${filename}`;
 
   return (
-    <BpToolStage cat='infra'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Chmod / Permission Calculator</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Visual Unix permission builder — toggle bits to generate octal and symbolic representations</p>
+    <div
+      className='h-full flex flex-col overflow-hidden'
+      data-cat='systems'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      {/* header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Chmod Calculator</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Build and decode Unix file permission strings interactively</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-2xl mx-auto space-y-4'>
+      {/* content */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
 
-          <BpPanel title='Permission Builder'>
-            <div className='space-y-5'>
+        {/* left column */}
+        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: '1px solid var(--bp-border)' }}>
+
+          {/* permission builder */}
+          <Panel title='Permission Builder' style={{ borderLeft: 0, borderTop: 0, borderRight: 0, flex: '0 0 auto' }}>
+            <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div className='flex items-center gap-3 mb-1'>
-                <span className='text-xs text-gray-500 w-12'></span>
+                <span className='text-xs w-12' style={{ color: 'var(--bp-ink-faint)' }}></span>
                 <div className='flex gap-1'>
                   {['Read', 'Write', 'Exec'].map((l) => (
-                    <span key={l} className='w-10 text-center text-xs text-gray-500'>{l}</span>
+                    <span key={l} className='w-10 text-center text-xs' style={{ color: 'var(--bp-ink-mute)' }}>{l}</span>
                   ))}
                 </div>
-                <span className='text-xs text-gray-500 ml-2 w-8'>Oct</span>
-                <span className='text-xs text-gray-500 w-10'>Sym</span>
-                <span className='text-xs text-gray-500 ml-auto'>Special</span>
+                <span className='text-xs ml-2 w-8' style={{ color: 'var(--bp-ink-mute)' }}>Oct</span>
+                <span className='text-xs w-10' style={{ color: 'var(--bp-ink-mute)' }}>Sym</span>
+                <span className='text-xs ml-auto' style={{ color: 'var(--bp-ink-mute)' }}>Special</span>
               </div>
               <PermRow label='Owner' perm={perms.owner} onChange={(p) => setPerms({ ...perms, owner: p })}
                 special={perms.setuid} specialLabel='SetUID' specialValue={perms.setuid} onSpecialChange={(v) => setPerms({ ...perms, setuid: v })} />
@@ -185,80 +223,112 @@ export default function ChmodCalculatorPage() {
               <PermRow label='Other' perm={perms.other} onChange={(p) => setPerms({ ...perms, other: p })}
                 special={perms.sticky} specialLabel='Sticky' specialValue={perms.sticky} onSpecialChange={(v) => setPerms({ ...perms, sticky: v })} />
             </div>
-          </BpPanel>
+          </Panel>
 
-          <BpPanel title='Result'>
-            <div className='grid grid-cols-2 gap-3 mb-3'>
-              <div className='bg-[#121212] rounded-lg p-4 text-center'>
-                <p className='text-xs text-gray-500 mb-1'>Octal</p>
-                <p className='font-mono text-3xl font-bold text-white'>{octal}</p>
+          {/* import from octal */}
+          <Panel title='Import from Octal' style={{ borderLeft: 0, borderTop: 0, borderRight: 0, flex: '0 0 auto' }}>
+            <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  value={octalInput}
+                  onChange={(e) => handleOctalInput(e.target.value)}
+                  placeholder='e.g. 755 or 1755'
+                  maxLength={4}
+                  style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
+                />
+                <button type='button' className='bp-btn' onClick={() => handleOctalInput(octal)}>Sync current</button>
               </div>
-              <div className='bg-[#121212] rounded-lg p-4 text-center'>
-                <p className='text-xs text-gray-500 mb-1'>Symbolic</p>
-                <p className='font-mono text-2xl font-bold text-white tracking-wider'>{symbolic}</p>
+              <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Enter 3 or 4 digit octal to set the checkboxes above</p>
+            </div>
+          </Panel>
+
+          {/* common presets */}
+          <Panel title='Common Presets' style={{ borderLeft: 0, borderTop: 0, borderRight: 0, flex: 1, minHeight: 0 }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {PRESETS.map((p) => (
+                  <button key={p.octal} type='button' onClick={() => handlePreset(p.octal)}
+                    style={{ textAlign: 'left', padding: '8px 12px', background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', cursor: 'pointer', transition: 'background 0.15s' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bp-elevated)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--bp-bg)')}
+                  >
+                    <p style={{ fontFamily: 'inherit', fontSize: 11, color: '#93c5fd', margin: 0, marginBottom: 2 }}>{p.label}</p>
+                    <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', margin: 0 }}>{p.desc}</p>
+                  </button>
+                ))}
               </div>
             </div>
-            <p className='text-xs text-gray-400 italic'>{describePermission(perms)}</p>
-          </BpPanel>
+          </Panel>
 
-          <BpPanel title='chmod Commands'>
-            <div className='flex items-center gap-3 mb-3'>
-              <label className='text-xs text-gray-500 shrink-0'>Filename</label>
-              <input value={filename} onChange={(e) => setFilename(e.target.value || '<file>')} placeholder='filename'
-                className='bp-input flex-1 text-xs font-mono' />
-            </div>
-            <div className='space-y-2'>
-              {[{ label: 'Octal', value: chmodCmd }, { label: 'Symbolic', value: chmodSymCmd }].map(({ label, value }) => (
-                <div key={label} className='flex items-center gap-2'>
-                  <span className='text-xs text-gray-500 w-16 shrink-0'>{label}</span>
-                  <code className='flex-1 bp-code-view px-3 py-1.5 font-mono text-sm text-green-400'>{value}</code>
-                  <BpCopyBtn text={value} label='COPY' />
+        </div>
+
+        {/* right column */}
+        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+          {/* result */}
+          <Panel title='Result' style={{ borderLeft: 0, borderTop: 0, borderRight: 0, flex: '0 0 auto' }}>
+            <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div style={{ background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', padding: '14px 12px', textAlign: 'center' }}>
+                  <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', margin: 0, marginBottom: 6, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Octal</p>
+                  <p style={{ fontFamily: 'inherit', fontSize: 28, fontWeight: 700, color: '#fff', margin: 0 }}>{octal}</p>
                 </div>
-              ))}
-            </div>
-          </BpPanel>
-
-          <BpPanel title='Import from Octal'>
-            <div className='flex gap-2 mb-2'>
-              <input value={octalInput} onChange={(e) => handleOctalInput(e.target.value)} placeholder='e.g. 755 or 1755'
-                className='bp-input font-mono flex-1' maxLength={4} />
-              <button type='button' className='bp-btn' onClick={() => handleOctalInput(octal)}>Sync current</button>
-            </div>
-            <p className='text-xs text-gray-500'>Enter 3 or 4 digit octal to set the checkboxes above</p>
-          </BpPanel>
-
-          <BpPanel title='Common Presets'>
-            <div className='grid grid-cols-2 gap-2'>
-              {PRESETS.map((p) => (
-                <button key={p.octal} type='button' onClick={() => handlePreset(p.octal)}
-                  className='text-left rounded px-3 py-2 bg-[#121212] hover:bg-[#222] border border-[hsla(0,0%,20%,1)] transition-colors'>
-                  <p className='font-mono text-xs text-blue-400 mb-0.5'>{p.label}</p>
-                  <p className='text-xs text-gray-500'>{p.desc}</p>
-                </button>
-              ))}
-            </div>
-          </BpPanel>
-
-          <BpPanel title='Bit Reference'>
-            <div className='grid grid-cols-3 gap-2 text-xs'>
-              {[
-                ['4 (r)', 'Read', 'text-green-400'],
-                ['2 (w)', 'Write', 'text-yellow-400'],
-                ['1 (x)', 'Execute', 'text-blue-400'],
-                ['4000', 'SetUID — run as file owner', 'text-purple-400'],
-                ['2000', 'SetGID — run as group', 'text-pink-400'],
-                ['1000', 'Sticky — only owner can delete', 'text-orange-400'],
-              ].map(([bit, desc, color]) => (
-                <div key={bit} className='flex gap-2'>
-                  <code className={`font-mono w-14 shrink-0 ${color}`}>{bit}</code>
-                  <span className='text-gray-400'>{desc}</span>
+                <div style={{ background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', padding: '14px 12px', textAlign: 'center' }}>
+                  <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', margin: 0, marginBottom: 6, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Symbolic</p>
+                  <p style={{ fontFamily: 'inherit', fontSize: 20, fontWeight: 700, color: '#fff', margin: 0, letterSpacing: '0.1em' }}>{symbolic}</p>
                 </div>
-              ))}
+              </div>
+              <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', fontStyle: 'italic', margin: 0 }}>{describePermission(perms)}</p>
             </div>
-          </BpPanel>
+          </Panel>
+
+          {/* chmod commands */}
+          <Panel title='chmod Commands' style={{ borderLeft: 0, borderTop: 0, borderRight: 0, flex: '0 0 auto' }}>
+            <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)', flexShrink: 0 }}>Filename</span>
+                <input
+                  value={filename}
+                  onChange={(e) => setFilename(e.target.value || '<file>')}
+                  placeholder='filename'
+                  style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {[{ label: 'Octal', value: chmodCmd }, { label: 'Symbolic', value: chmodSymCmd }].map(({ label, value }) => (
+                  <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)', width: 60, flexShrink: 0 }}>{label}</span>
+                    <code style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', fontFamily: 'inherit', fontSize: 12, padding: '6px 10px', color: '#86efac', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</code>
+                    <BpCopyBtn text={value} label='COPY' />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Panel>
+
+          {/* bit reference */}
+          <Panel title='Bit Reference' style={{ borderLeft: 0, borderTop: 0, borderRight: 0, flex: 1, minHeight: 0 }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                {[
+                  ['4 (r)', 'Read', '#86efac'],
+                  ['2 (w)', 'Write', '#fde68a'],
+                  ['1 (x)', 'Execute', '#93c5fd'],
+                  ['4000', 'SetUID — run as file owner', '#d8b4fe'],
+                  ['2000', 'SetGID — run as group', '#f9a8d4'],
+                  ['1000', 'Sticky — only owner can delete', '#fdba74'],
+                ].map(([bit, desc, color]) => (
+                  <div key={bit} style={{ display: 'flex', gap: 8 }}>
+                    <code style={{ fontFamily: 'inherit', fontSize: 11, width: 40, flexShrink: 0, color: color as string }}>{bit}</code>
+                    <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)' }}>{desc}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Panel>
 
         </div>
       </div>
-    </BpToolStage>
+    </div>
   );
 }

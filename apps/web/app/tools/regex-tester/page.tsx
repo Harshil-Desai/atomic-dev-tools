@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Search, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import { BpCopyBtn } from '@/components/blueprint';
 
 type Flag = 'g' | 'i' | 'm' | 's';
 
@@ -35,6 +35,18 @@ const QUICK_PATTERNS: QuickPattern[] = [
   { label: 'Integer', pattern: '-?\\b\\d+\\b', flags: 'g', description: 'Matches integers (optional negative)' },
 ];
 
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#f0c674',
+} as React.CSSProperties;
+
 function buildRegex(pattern: string, flags: Set<Flag>): { regex: RegExp | null; error: string | null } {
   if (!pattern) return { regex: null, error: null };
   try {
@@ -64,7 +76,11 @@ function getMatches(regex: RegExp | null, testString: string): MatchResult[] {
 
 function HighlightedText({ text, regex }: { text: string; regex: RegExp | null }) {
   if (!regex || !text) {
-    return <span className='whitespace-pre-wrap break-all text-sm font-mono text-gray-300'>{text || <span className='text-gray-600 italic'>No test string entered</span>}</span>;
+    return (
+      <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontSize: 12, fontFamily: 'inherit', color: 'var(--bp-ink)' }}>
+        {text || <span style={{ color: 'var(--bp-ink-faint)', fontStyle: 'italic' }}>No test string entered</span>}
+      </span>
+    );
   }
   const parts: Array<{ text: string; highlighted: boolean }> = [];
   let lastIndex = 0;
@@ -79,13 +95,26 @@ function HighlightedText({ text, regex }: { text: string; regex: RegExp | null }
   }
   if (lastIndex < text.length) parts.push({ text: text.slice(lastIndex), highlighted: false });
   return (
-    <span className='whitespace-pre-wrap break-all text-sm font-mono text-gray-300'>
+    <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontSize: 12, fontFamily: 'inherit', color: 'var(--bp-ink)' }}>
       {parts.map((part, i) => part.highlighted ? (
-        <mark key={i} className='bg-green-500/20 text-green-400 rounded-sm px-0.5'>{part.text}</mark>
+        <mark key={i} style={{ background: 'rgba(34,197,94,0.2)', color: '#4ade80', borderRadius: 2, padding: '0 2px' }}>{part.text}</mark>
       ) : (
         <span key={i}>{part.text}</span>
       ))}
     </span>
+  );
+}
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
   );
 }
 
@@ -122,20 +151,25 @@ export default function RegexTesterPage() {
   const flagStr = Array.from(flags).join('');
 
   return (
-    <BpToolStage cat='text'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Regex Tester</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Test and debug regular expressions with live match highlighting</p>
+    <div
+      className='h-full flex flex-col overflow-hidden'
+      data-cat='text'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Regex Tester</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Test regular expressions with live match highlighting and groups</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-6xl mx-auto space-y-4'>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
 
-          <BpPanel title='Regular Expression'>
-            <div className='flex items-center gap-2 mb-3'>
-              <span className='text-gray-500 font-mono text-lg select-none'>/</span>
+        {/* Pattern input panel */}
+        <Panel title='Regular Expression' style={{ borderLeft: 0, borderRight: 0, borderTop: 0 }}>
+          <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ color: 'var(--bp-ink-mute)', fontFamily: 'inherit', fontSize: 16, userSelect: 'none' }}>/</span>
               <input
-                className='bp-input flex-1 font-mono'
+                style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
                 value={pattern}
                 onChange={e => setPattern(e.target.value)}
                 placeholder='Enter pattern...'
@@ -143,128 +177,162 @@ export default function RegexTesterPage() {
                 autoCapitalize='none'
                 autoCorrect='off'
               />
-              <span className='text-gray-500 font-mono text-lg select-none'>/</span>
-              <span className='font-mono text-blue-400 min-w-[2rem]'>{flagStr}</span>
+              <span style={{ color: 'var(--bp-ink-mute)', fontFamily: 'inherit', fontSize: 16, userSelect: 'none' }}>/</span>
+              <span style={{ fontFamily: 'inherit', color: '#60a5fa', minWidth: '2rem', fontSize: 13 }}>{flagStr}</span>
               <BpCopyBtn text={`/${pattern}/${flagStr}`} label='COPY' />
             </div>
-            <div className='flex flex-wrap gap-2'>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {flagDefs.map(({ flag, label, title }) => (
-                <label key={flag} title={title} className='flex items-center gap-2 px-3 py-1.5 rounded border border-[hsla(0,0%,20%,1)] bg-[#121212] cursor-pointer hover:border-gray-600 transition-colors'>
-                  <input type='checkbox' checked={flags.has(flag)} onChange={() => toggleFlag(flag)} className='w-4 h-4 rounded' />
-                  <span className='text-sm font-mono text-gray-300'>{label}</span>
-                  <span className='text-xs text-gray-500 hidden sm:inline'>{title.split(' — ')[0]}</span>
+                <label
+                  key={flag}
+                  title={title}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 10px', border: '1px solid var(--bp-border)', background: 'var(--bp-bg)', cursor: 'pointer' }}
+                >
+                  <input
+                    type='checkbox'
+                    checked={flags.has(flag)}
+                    onChange={() => toggleFlag(flag)}
+                    style={{ width: 14, height: 14 }}
+                  />
+                  <span style={{ fontSize: 12, fontFamily: 'inherit', color: 'var(--bp-ink)' }}>{label}</span>
+                  <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)' }}>{title.split(' — ')[0]}</span>
                 </label>
               ))}
             </div>
             {error && (
-              <div className='flex items-start gap-2 p-3 mt-3 rounded border border-red-500/40 bg-red-950/20'>
-                <AlertCircle className='w-4 h-4 text-red-400 flex-shrink-0 mt-0.5' />
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: 10, border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(127,29,29,0.2)' }}>
+                <AlertCircle style={{ width: 14, height: 14, color: '#f87171', flexShrink: 0, marginTop: 1 }} />
                 <div>
-                  <p className='text-xs font-semibold text-red-400 mb-0.5'>Invalid pattern</p>
-                  <p className='text-xs text-red-300 font-mono'>{error}</p>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: '#f87171', margin: 0, marginBottom: 2 }}>Invalid pattern</p>
+                  <p style={{ fontSize: 11, color: '#fca5a5', fontFamily: 'inherit', margin: 0 }}>{error}</p>
                 </div>
               </div>
             )}
-          </BpPanel>
+          </div>
+        </Panel>
 
-          <BpPanel title='Test String' meta={matchCountLabel || undefined}>
-            <textarea className='bp-textarea font-mono text-sm' value={testString} onChange={e => setTestString(e.target.value)} placeholder='Enter test string...' rows={6} spellCheck={false} />
-          </BpPanel>
+        {/* Test string + highlighting — side by side when both active */}
+        <div style={{ display: 'grid', gridTemplateColumns: (testString || pattern) && !error ? '1fr 1fr' : '1fr', borderBottom: '1px solid var(--bp-border)' }}>
+          <Panel title='Test String' meta={matchCountLabel || undefined} style={{ borderLeft: 0, borderRight: (testString || pattern) && !error ? undefined : 0, borderTop: 0, borderBottom: 0 }}>
+            <textarea
+              style={{ flex: 1, width: '100%', background: 'var(--bp-bg)', border: 0, color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '12px 14px', resize: 'none', outline: 'none', boxSizing: 'border-box', lineHeight: 1.65, minHeight: 160 }}
+              value={testString}
+              onChange={e => setTestString(e.target.value)}
+              placeholder='Enter test string...'
+              rows={6}
+              spellCheck={false}
+            />
+          </Panel>
 
           {(testString || pattern) && !error && (
-            <BpPanel title='Match Highlighting'>
-              <div className='bp-code-view p-4 min-h-[60px]'>
+            <Panel title='Match Highlighting' style={{ borderLeft: 0, borderRight: 0, borderTop: 0, borderBottom: 0 }}>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', minHeight: 160 }}>
                 <HighlightedText text={testString} regex={regex} />
               </div>
-            </BpPanel>
+            </Panel>
           )}
+        </div>
 
-          {matches.length > 0 && !error && (
-            <BpPanel title='Match Details' meta={`${matches.length} match${matches.length !== 1 ? 'es' : ''}`}>
-              <div className='overflow-x-auto'>
-                <table className='w-full text-sm'>
-                  <thead>
-                    <tr className='border-b border-[hsla(0,0%,20%,1)]'>
-                      <th className='text-left py-2 px-3 text-xs text-gray-500 font-medium'>#</th>
-                      <th className='text-left py-2 px-3 text-xs text-gray-500 font-medium'>Match</th>
-                      <th className='text-left py-2 px-3 text-xs text-gray-500 font-medium'>Index</th>
-                      {hasGroups && <th className='text-left py-2 px-3 text-xs text-gray-500 font-medium'>Groups</th>}
-                      {hasNamedGroups && <th className='text-left py-2 px-3 text-xs text-gray-500 font-medium'>Named Groups</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {matches.map((m, i) => (
-                      <tr key={i} className='border-b border-[hsla(0,0%,12%,1)] hover:bg-gray-900/50 transition-colors'>
-                        <td className='py-2 px-3 text-xs text-gray-500 font-mono'>{i + 1}</td>
-                        <td className='py-2 px-3'>
-                          <code className='text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded text-xs font-mono break-all'>
-                            {m.value === '' ? <span className='text-gray-600 italic'>(empty)</span> : m.value}
-                          </code>
+        {/* Match details table */}
+        {matches.length > 0 && !error && (
+          <Panel title='Match Details' meta={`${matches.length} match${matches.length !== 1 ? 'es' : ''}`} style={{ borderLeft: 0, borderRight: 0, borderTop: 0 }}>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--bp-border)' }}>
+                    <th style={{ textAlign: 'left', padding: '6px 12px', fontSize: 9, color: 'var(--bp-ink-mute)', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase' }}>#</th>
+                    <th style={{ textAlign: 'left', padding: '6px 12px', fontSize: 9, color: 'var(--bp-ink-mute)', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Match</th>
+                    <th style={{ textAlign: 'left', padding: '6px 12px', fontSize: 9, color: 'var(--bp-ink-mute)', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Index</th>
+                    {hasGroups && <th style={{ textAlign: 'left', padding: '6px 12px', fontSize: 9, color: 'var(--bp-ink-mute)', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Groups</th>}
+                    {hasNamedGroups && <th style={{ textAlign: 'left', padding: '6px 12px', fontSize: 9, color: 'var(--bp-ink-mute)', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Named Groups</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {matches.map((m, i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid var(--bp-border)' }}>
+                      <td style={{ padding: '6px 12px', fontSize: 11, color: 'var(--bp-ink-mute)', fontFamily: 'inherit' }}>{i + 1}</td>
+                      <td style={{ padding: '6px 12px' }}>
+                        <code style={{ color: '#4ade80', background: 'rgba(34,197,94,0.1)', padding: '2px 6px', fontSize: 11, fontFamily: 'inherit', wordBreak: 'break-all' }}>
+                          {m.value === '' ? <span style={{ color: 'var(--bp-ink-faint)', fontStyle: 'italic' }}>(empty)</span> : m.value}
+                        </code>
+                      </td>
+                      <td style={{ padding: '6px 12px', fontFamily: 'inherit', fontSize: 11, color: '#60a5fa' }}>{m.index}</td>
+                      {hasGroups && (
+                        <td style={{ padding: '6px 12px' }}>
+                          {m.groups.length === 0 ? <span style={{ color: 'var(--bp-ink-faint)', fontSize: 11 }}>—</span> : (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                              {m.groups.map((g, gi) => (
+                                <code key={gi} style={{ fontSize: 11, fontFamily: 'inherit', color: '#facc15', background: 'rgba(234,179,8,0.1)', padding: '2px 4px' }}>
+                                  {g === undefined ? <span style={{ color: 'var(--bp-ink-faint)', fontStyle: 'italic' }}>undefined</span> : g}
+                                </code>
+                              ))}
+                            </div>
+                          )}
                         </td>
-                        <td className='py-2 px-3 font-mono text-xs text-blue-400'>{m.index}</td>
-                        {hasGroups && (
-                          <td className='py-2 px-3'>
-                            {m.groups.length === 0 ? <span className='text-gray-600 text-xs'>—</span> : (
-                              <div className='flex flex-wrap gap-1'>
-                                {m.groups.map((g, gi) => (
-                                  <code key={gi} className='text-xs font-mono text-yellow-400 bg-yellow-500/10 px-1 py-0.5 rounded'>
-                                    {g === undefined ? <span className='text-gray-600 italic'>undefined</span> : g}
-                                  </code>
-                                ))}
-                              </div>
-                            )}
-                          </td>
-                        )}
-                        {hasNamedGroups && (
-                          <td className='py-2 px-3'>
-                            {Object.keys(m.namedGroups).length === 0 ? <span className='text-gray-600 text-xs'>—</span> : (
-                              <div className='flex flex-wrap gap-1'>
-                                {Object.entries(m.namedGroups).map(([k, v]) => (
-                                  <span key={k} className='text-xs font-mono'>
-                                    <span className='text-purple-400'>{k}</span>
-                                    <span className='text-gray-600'>: </span>
-                                    <code className='text-yellow-400 bg-yellow-500/10 px-1 py-0.5 rounded'>{String(v)}</code>
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </BpPanel>
-          )}
+                      )}
+                      {hasNamedGroups && (
+                        <td style={{ padding: '6px 12px' }}>
+                          {Object.keys(m.namedGroups).length === 0 ? <span style={{ color: 'var(--bp-ink-faint)', fontSize: 11 }}>—</span> : (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                              {Object.entries(m.namedGroups).map(([k, v]) => (
+                                <span key={k} style={{ fontSize: 11, fontFamily: 'inherit' }}>
+                                  <span style={{ color: '#c084fc' }}>{k}</span>
+                                  <span style={{ color: 'var(--bp-ink-faint)' }}>: </span>
+                                  <code style={{ color: '#facc15', background: 'rgba(234,179,8,0.1)', padding: '2px 4px' }}>{String(v)}</code>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Panel>
+        )}
 
-          <BpPanel title='Quick Reference Patterns'>
-            <button onClick={() => setAccordionOpen(o => !o)} className='w-full flex items-center justify-between text-left mb-2' type='button'>
-              <span className='text-xs text-gray-400'>{accordionOpen ? 'Hide patterns' : 'Show common patterns'}</span>
-              {accordionOpen ? <ChevronDown className='w-4 h-4 text-gray-500' /> : <ChevronRight className='w-4 h-4 text-gray-500' />}
+        {/* Quick reference patterns */}
+        <Panel title='Quick Reference Patterns' style={{ borderLeft: 0, borderRight: 0, borderTop: 0 }}>
+          <div style={{ padding: '10px 14px' }}>
+            <button
+              onClick={() => setAccordionOpen(o => !o)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: accordionOpen ? 10 : 0, color: 'var(--bp-ink-mute)', fontFamily: 'inherit' }}
+              type='button'
+            >
+              <span style={{ fontSize: 11 }}>{accordionOpen ? 'Hide patterns' : 'Show common patterns'}</span>
+              {accordionOpen
+                ? <ChevronDown style={{ width: 14, height: 14 }} />
+                : <ChevronRight style={{ width: 14, height: 14 }} />
+              }
             </button>
             {accordionOpen && (
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2'>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
                 {QUICK_PATTERNS.map(qp => (
-                  <button key={qp.label} onClick={() => insertPattern(qp)} type='button'
-                    className='flex flex-col items-start gap-1 p-3 rounded border border-[hsla(0,0%,20%,1)] bg-[#121212] hover:border-gray-600 hover:bg-gray-900 transition-colors text-left'>
-                    <span className='text-xs font-semibold text-blue-400'>{qp.label}</span>
-                    <span className='text-xs text-gray-500'>{qp.description}</span>
+                  <button
+                    key={qp.label}
+                    onClick={() => insertPattern(qp)}
+                    type='button'
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4, padding: '8px 10px', border: '1px solid var(--bp-border)', background: 'var(--bp-bg)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}
+                  >
+                    <span style={{ fontSize: 11, fontWeight: 600, color: '#60a5fa' }}>{qp.label}</span>
+                    <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)' }}>{qp.description}</span>
                   </button>
                 ))}
               </div>
             )}
-          </BpPanel>
+          </div>
+        </Panel>
 
-          {!pattern && !testString && (
-            <div className='text-center text-gray-600 py-12'>
-              <Search className='w-10 h-10 mx-auto mb-3 opacity-40' />
-              <p className='text-sm'>Enter a regex pattern and test string to get started</p>
-              <p className='text-xs mt-1 text-gray-600'>Use the quick reference above to insert common patterns</p>
-            </div>
-          )}
-        </div>
+        {!pattern && !testString && (
+          <div style={{ textAlign: 'center', color: 'var(--bp-ink-faint)', padding: '48px 20px' }}>
+            <Search style={{ width: 36, height: 36, margin: '0 auto 12px', opacity: 0.4 }} />
+            <p style={{ fontSize: 13, margin: '0 0 4px' }}>Enter a regex pattern and test string to get started</p>
+            <p style={{ fontSize: 11, margin: 0 }}>Use the quick reference above to insert common patterns</p>
+          </div>
+        )}
       </div>
-    </BpToolStage>
+    </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { Binary, Trash2, AlertTriangle } from 'lucide-react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import { BpCopyBtn } from '@/components/blueprint';
 
 type Base = 'decimal' | 'binary' | 'octal' | 'hex';
 type Sign = 'unsigned' | 'signed';
@@ -17,6 +17,31 @@ const BASE_CONFIGS: Record<Base, BaseConfig> = {
 };
 
 const BIT_WIDTHS = [8, 16, 32] as const;
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#4ad29a',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 function toSigned(value: number, bits: number): number {
   const max = 2 ** (bits - 1);
@@ -65,103 +90,171 @@ export default function NumberBaseConverterPage() {
   };
 
   return (
-    <BpToolStage cat='data'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <div className='flex items-center gap-3 mb-1'>
-          <Binary className='w-5 h-5 text-gray-400' />
-          <h1 className='text-xl sm:text-2xl font-semibold text-white'>Number Base Converter</h1>
+    <div
+      className='h-full flex flex-col overflow-hidden relative'
+      data-cat='data'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 2 }}>
+          <Binary style={{ width: 16, height: 16, color: 'var(--bp-accent)', flexShrink: 0 }} />
+          <h1 style={{ fontSize: 13, fontWeight: 600, color: 'var(--bp-ink)', letterSpacing: '0.02em', margin: 0 }}>Number Base Converter</h1>
         </div>
-        <p className='text-xs sm:text-sm text-gray-400'>Convert numbers between Decimal, Binary, Octal, and Hex</p>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0, paddingLeft: 26 }}>Convert between decimal, binary, octal and hexadecimal</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-4xl mx-auto space-y-4'>
+      {/* Main content */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-          <BpPanel title='Options'>
-            <div className='flex flex-wrap items-center gap-3'>
-              <div className='flex rounded-md overflow-hidden border border-[hsla(0,0%,20%,1)]'>
-                {(['unsigned', 'signed'] as Sign[]).map((s) => (
-                  <button key={s} onClick={() => setSign(s)}
-                    className={`px-3 py-1.5 text-sm font-medium transition-colors ${sign === s ? 'bg-blue-600 text-white' : 'bg-[#1C1C1C] text-gray-400 hover:text-gray-200'}`}>
-                    {s === 'unsigned' ? 'Unsigned' : "Signed (Two's Complement)"}
-                  </button>
-                ))}
-              </div>
-              <button className='bp-btn ml-auto' onClick={handleClearAll} type='button'>
-                <Trash2 className='w-3.5 h-3.5 mr-1 inline' />CLEAR ALL
-              </button>
+        {/* Options panel */}
+        <Panel title='Options'>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, padding: '10px 12px' }}>
+            <div style={{ display: 'flex', overflow: 'hidden', border: '1px solid var(--bp-border-str)' }}>
+              {(['unsigned', 'signed'] as Sign[]).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSign(s)}
+                  style={{
+                    padding: '5px 12px',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    letterSpacing: '0.05em',
+                    cursor: 'pointer',
+                    border: 0,
+                    background: sign === s ? 'var(--bp-accent)' : 'var(--bp-elevated)',
+                    color: sign === s ? '#0a0e14' : 'var(--bp-ink-mute)',
+                    transition: 'background 0.15s, color 0.15s',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {s === 'unsigned' ? 'UNSIGNED' : "SIGNED (TWO'S COMPLEMENT)"}
+                </button>
+              ))}
             </div>
-          </BpPanel>
-
-          {overflow && (
-            <div className='flex items-center gap-2 text-sm text-amber-400 bg-amber-950/40 border border-amber-800 px-3 py-2 rounded-md'>
-              <AlertTriangle className='w-4 h-4 flex-shrink-0' />
-              <span>Overflow — number exceeds Number.MAX_SAFE_INTEGER. Results may be inaccurate.</span>
-            </div>
-          )}
-
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-            {(Object.entries(BASE_CONFIGS) as [Base, BaseConfig][]).map(([base, config]) => (
-              <BpPanel key={base} title={config.label} meta={config.prefix || undefined}>
-                <div className='flex gap-2 mb-2'>
-                  <input
-                    className='bp-input flex-1 font-mono text-base tracking-wider'
-                    value={values[base]}
-                    onChange={(e) => handleChange(base, e.target.value)}
-                    placeholder={config.placeholder}
-                    spellCheck={false}
-                    autoComplete='off'
-                  />
-                  <BpCopyBtn text={values[base]} label='COPY' />
-                </div>
-                {base === 'binary' && values.binary && (
-                  <p className='text-xs text-gray-500 font-mono break-all leading-relaxed'>{chunkBinary(values.binary)}</p>
-                )}
-              </BpPanel>
-            ))}
+            <button className='bp-btn' onClick={handleClearAll} type='button' style={{ marginLeft: 'auto' }}>
+              <Trash2 style={{ width: 12, height: 12, marginRight: 4, display: 'inline' }} />CLEAR ALL
+            </button>
           </div>
+        </Panel>
 
-          {hasValue && (
-            <BpPanel title='Bit Width Representation'>
-              <div className='space-y-4'>
-                {BIT_WIDTHS.map((bits) => {
-                  const { fits, value, signedValue } = getBitRepresentation(bits);
-                  return (
-                    <div key={bits} className='space-y-1'>
-                      <div className='flex items-center gap-2'>
-                        <span className='text-xs font-medium text-gray-400 w-8'>{bits}-bit</span>
-                        {!fits ? (
-                          <span className='text-xs text-amber-500 flex items-center gap-1'>
-                            <AlertTriangle className='w-3 h-3' />Does not fit in {bits} bits
-                          </span>
-                        ) : (
-                          <span className='text-xs text-gray-500'>
-                            {sign === 'signed' && signedValue !== null && signedValue !== decimalNum ? `Signed value: ${signedValue}` : `Fits in ${bits} bits`}
-                          </span>
-                        )}
-                      </div>
-                      {fits && (
-                        <div className='flex flex-wrap gap-1'>
-                          {value.match(/.{1,4}/g)?.map((chunk, i) => (
-                            <span key={i} className='font-mono text-xs bg-[#121212] border border-[hsla(0,0%,15%,1)] px-1.5 py-0.5 rounded text-gray-300 tracking-widest'>{chunk}</span>
-                          ))}
-                        </div>
+        {/* Overflow warning */}
+        {overflow && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#fbbf24', background: 'rgba(120,53,15,0.25)', border: '1px solid #92400e', padding: '8px 12px' }}>
+            <AlertTriangle style={{ width: 14, height: 14, flexShrink: 0 }} />
+            <span>Overflow — number exceeds Number.MAX_SAFE_INTEGER. Results may be inaccurate.</span>
+          </div>
+        )}
+
+        {/* Base input panels grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
+          {(Object.entries(BASE_CONFIGS) as [Base, BaseConfig][]).map(([base, config], idx) => {
+            const isRight = idx % 2 === 1;
+            const isBottom = idx >= 2;
+            return (
+              <Panel
+                key={base}
+                title={config.label}
+                meta={config.prefix || undefined}
+                style={{
+                  borderRight: isRight ? '1px solid var(--bp-border)' : 0,
+                  borderLeft: isRight ? 0 : '1px solid var(--bp-border)',
+                  borderTop: isBottom ? 0 : '1px solid var(--bp-border)',
+                  borderBottom: '1px solid var(--bp-border)',
+                }}
+              >
+                <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input
+                      value={values[base]}
+                      onChange={(e) => handleChange(base, e.target.value)}
+                      placeholder={config.placeholder}
+                      spellCheck={false}
+                      autoComplete='off'
+                      style={{
+                        flex: 1,
+                        background: 'var(--bp-bg)',
+                        border: '1px solid var(--bp-border-str)',
+                        color: 'var(--bp-ink)',
+                        fontFamily: 'inherit',
+                        fontSize: 13,
+                        padding: '7px 10px',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                        letterSpacing: '0.08em',
+                      }}
+                    />
+                    <BpCopyBtn text={values[base]} label='COPY' />
+                  </div>
+                  {base === 'binary' && values.binary && (
+                    <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', fontFamily: 'inherit', wordBreak: 'break-all', lineHeight: 1.7, margin: 0 }}>
+                      {chunkBinary(values.binary)}
+                    </p>
+                  )}
+                </div>
+              </Panel>
+            );
+          })}
+        </div>
+
+        {/* Bit width representation */}
+        {hasValue && (
+          <Panel title='Bit Width Representation'>
+            <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {BIT_WIDTHS.map((bits) => {
+                const { fits, value, signedValue } = getBitRepresentation(bits);
+                return (
+                  <div key={bits} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--bp-ink-mute)', minWidth: 36 }}>{bits}-bit</span>
+                      {!fits ? (
+                        <span style={{ fontSize: 10, color: '#fbbf24', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <AlertTriangle style={{ width: 11, height: 11 }} />Does not fit in {bits} bits
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: 10, color: 'var(--bp-ink-faint)' }}>
+                          {sign === 'signed' && signedValue !== null && signedValue !== decimalNum
+                            ? `Signed value: ${signedValue}`
+                            : `Fits in ${bits} bits`}
+                        </span>
                       )}
                     </div>
-                  );
-                })}
-              </div>
-            </BpPanel>
-          )}
-
-          {!hasValue && !overflow && (
-            <div className='text-center text-gray-600 py-12'>
-              <Binary className='w-10 h-10 mx-auto mb-3 opacity-40' />
-              <p className='text-sm'>Type a number in any field to convert all bases simultaneously</p>
+                    {fits && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {value.match(/.{1,4}/g)?.map((chunk, i) => (
+                          <span
+                            key={i}
+                            style={{
+                              fontFamily: 'inherit',
+                              fontSize: 11,
+                              background: 'var(--bp-bg)',
+                              border: '1px solid var(--bp-border-str)',
+                              padding: '2px 6px',
+                              color: 'var(--bp-ink)',
+                              letterSpacing: '0.12em',
+                            }}
+                          >
+                            {chunk}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          )}
-        </div>
+          </Panel>
+        )}
+
+        {/* Empty state */}
+        {!hasValue && !overflow && (
+          <div style={{ textAlign: 'center', color: 'var(--bp-ink-faint)', padding: '48px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            <Binary style={{ width: 36, height: 36, opacity: 0.3 }} />
+            <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Type a number in any field to convert all bases simultaneously</p>
+          </div>
+        )}
+
       </div>
-    </BpToolStage>
+    </div>
   );
 }

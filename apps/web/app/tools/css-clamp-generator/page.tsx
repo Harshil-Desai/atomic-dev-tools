@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import { BpCopyBtn } from '@/components/blueprint';
 
 interface ClampResult { clampValue: string; slope: number; intercept: number; slopeVw: number; preferredCalc: string; }
 
@@ -36,17 +36,17 @@ function PreviewCurve({ minSize, maxSize, minVp, maxVp }: { minSize: number; max
   for (let vp = vpMin; vp <= vpMax; vp += 20) points.push(`${toX(vp)},${toY(clampedSize(vp))}`);
   const x1 = toX(minVp), x2 = toX(maxVp), y1 = toY(minSize), y2 = toY(maxSize);
   return (
-    <svg width={W} height={H} className='w-full rounded'>
-      <rect width={W} height={H} fill='#121212' rx='6' />
-      {[minVp, maxVp].map((vp) => <line key={vp} x1={toX(vp)} y1={pad / 2} x2={toX(vp)} y2={H - pad / 2} stroke='hsla(0,0%,30%,1)' strokeWidth='1' strokeDasharray='3,3' />)}
-      <line x1={pad} y1={toY(minSize)} x2={toX(minVp)} y2={toY(minSize)} stroke='hsla(142,70%,45%,0.4)' strokeWidth='1.5' />
-      <line x1={toX(maxVp)} y1={toY(maxSize)} x2={W - pad} y2={toY(maxSize)} stroke='hsla(142,70%,45%,0.4)' strokeWidth='1.5' />
-      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke='hsla(217,91%,60%,0.8)' strokeWidth='2' />
-      <polyline points={points.join(' ')} fill='none' stroke='hsla(142,70%,45%,1)' strokeWidth='2' />
-      <circle cx={x1} cy={y1} r='4' fill='hsla(217,91%,60%,1)' />
-      <circle cx={x2} cy={y2} r='4' fill='hsla(217,91%,60%,1)' />
-      <text x={toX(minVp)} y={H - 4} textAnchor='middle' fontSize='9' fill='hsla(0,0%,50%,1)'>{minVp}px</text>
-      <text x={toX(maxVp)} y={H - 4} textAnchor='middle' fontSize='9' fill='hsla(0,0%,50%,1)'>{maxVp}px</text>
+    <svg width={W} height={H} style={{ width: '100%', borderRadius: 3 }}>
+      <rect width={W} height={H} fill='#0a0e14' rx='2' />
+      {[minVp, maxVp].map((vp) => <line key={vp} x1={toX(vp)} y1={pad / 2} x2={toX(vp)} y2={H - pad / 2} stroke='rgba(255,255,255,0.1)' strokeWidth='1' strokeDasharray='3,3' />)}
+      <line x1={pad} y1={toY(minSize)} x2={toX(minVp)} y2={toY(minSize)} stroke='rgba(240,198,116,0.3)' strokeWidth='1.5' />
+      <line x1={toX(maxVp)} y1={toY(maxSize)} x2={W - pad} y2={toY(maxSize)} stroke='rgba(240,198,116,0.3)' strokeWidth='1.5' />
+      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke='rgba(91,176,255,0.6)' strokeWidth='2' />
+      <polyline points={points.join(' ')} fill='none' stroke='#f0c674' strokeWidth='2' />
+      <circle cx={x1} cy={y1} r='4' fill='#5fb0ff' />
+      <circle cx={x2} cy={y2} r='4' fill='#5fb0ff' />
+      <text x={toX(minVp)} y={H - 4} textAnchor='middle' fontSize='9' fill='rgba(255,255,255,0.4)'>{minVp}px</text>
+      <text x={toX(maxVp)} y={H - 4} textAnchor='middle' fontSize='9' fill='rgba(255,255,255,0.4)'>{maxVp}px</text>
     </svg>
   );
 }
@@ -62,6 +62,31 @@ const PRESETS = [
 
 const CSS_PROPERTIES = ['font-size', 'line-height', 'letter-spacing', 'margin', 'padding', 'gap', 'border-radius', 'width', 'height', 'max-width'];
 
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#f0c674',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 export default function CSSClampGeneratorPage() {
   const [minSize, setMinSize] = useState(16);
   const [maxSize, setMaxSize] = useState(24);
@@ -72,153 +97,212 @@ export default function CSSClampGeneratorPage() {
   const [cssProp, setCssProp] = useState('font-size');
 
   const result = generateClamp(minSize, maxSize, minVp, maxVp, unit, rootSize);
+  const validationError = minVp >= maxVp ? 'Min viewport must be less than max viewport' : minSize >= maxSize ? 'Min size must be less than max size' : null;
 
   const applyPreset = (p: typeof PRESETS[0]) => { setMinSize(p.minSize); setMaxSize(p.maxSize); setMinVp(p.minVp); setMaxVp(p.maxVp); setUnit(p.unit); };
 
-  const NumInput = ({ label, value, onChange, min, max, step = 1 }: { label: string; value: number; onChange: (n: number) => void; min: number; max: number; step?: number; }) => (
-    <div>
-      <label className='block text-xs text-gray-500 mb-1'>{label}</label>
-      <div className='flex gap-1 items-center'>
-        <input type='number' value={value} onChange={(e) => { const n = parseFloat(e.target.value); if (!isNaN(n)) onChange(n); }} min={min} max={max} step={step} className='bp-input w-24 font-mono' />
-        <span className='text-xs text-gray-500'>{unit === 'rem' && label.includes('Size') ? 'px→rem' : label.includes('Viewport') ? 'px' : unit}</span>
-      </div>
-    </div>
-  );
+  const numInputStyle: React.CSSProperties = {
+    width: 80, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: 'var(--bp-ink)',
+    fontFamily: 'inherit', fontSize: 12, padding: '4px 8px', outline: 'none', boxSizing: 'border-box',
+  };
 
-  const validationError = minVp >= maxVp ? 'Min viewport must be less than max viewport' : minSize >= maxSize ? 'Min size must be less than max size' : null;
+  const labelStyle: React.CSSProperties = { fontSize: 10, color: 'var(--bp-ink-mute)', display: 'block', marginBottom: 4, letterSpacing: '0.08em', textTransform: 'uppercase' };
 
   return (
-    <BpToolStage cat='text'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>CSS clamp() Generator</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Generate fluid typography and spacing that scales smoothly between two viewport sizes</p>
+    <div
+      className='h-full flex flex-col overflow-hidden relative'
+      data-cat='text'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2, letterSpacing: '0.01em' }}>CSS clamp() Generator</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Generate fluid typography and spacing that scales between two viewport sizes</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-3xl mx-auto space-y-4'>
+      {/* Main 2-col layout */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
 
-          <BpPanel title='Presets'>
-            <div className='grid grid-cols-2 sm:grid-cols-3 gap-2'>
+        {/* Left: Controls */}
+        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: '1px solid var(--bp-border)' }}>
+          <Panel title='Presets' style={{ flexShrink: 0 }}>
+            <div style={{ padding: '10px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
               {PRESETS.map((p) => (
-                <button key={p.label} type='button' onClick={() => applyPreset(p)} className='bp-btn text-left flex flex-col gap-0.5'>
-                  <span className='text-xs text-gray-300 font-medium'>{p.label}</span>
-                  <span className='text-xs text-gray-500 font-mono'>{p.minSize}–{p.maxSize}px</span>
+                <button key={p.label} type='button' onClick={() => applyPreset(p)}
+                  style={{ background: 'var(--bp-surface)', border: '1px solid var(--bp-border)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 10, padding: '5px 8px', cursor: 'pointer', textAlign: 'left' }}>
+                  <div style={{ color: '#fff', fontWeight: 600, marginBottom: 2 }}>{p.label}</div>
+                  <div style={{ color: 'var(--bp-ink-mute)' }}>{p.minSize}–{p.maxSize}px</div>
                 </button>
               ))}
             </div>
-          </BpPanel>
+          </Panel>
 
-          <BpPanel title='Parameters'>
-            <div className='flex gap-4 items-end flex-wrap mb-4'>
+          <Panel title='Parameters' style={{ flex: 1, overflow: 'hidden' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Unit selector */}
               <div>
-                <label className='block text-xs text-gray-500 mb-1'>Output Unit</label>
-                <div className='flex gap-2'>
-                  <button type='button' className={`bp-btn ${unit === 'rem' ? 'bp-btn-solid' : ''}`} onClick={() => setUnit('rem')}>rem</button>
-                  <button type='button' className={`bp-btn ${unit === 'px' ? 'bp-btn-solid' : ''}`} onClick={() => setUnit('px')}>px</button>
+                <span style={labelStyle}>Output Unit</span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {(['rem', 'px'] as const).map((u) => (
+                    <button key={u} type='button' onClick={() => setUnit(u)}
+                      style={{ height: 26, padding: '0 12px', border: '1px solid var(--bp-border)', background: unit === u ? 'var(--bp-accent)' : 'transparent', color: unit === u ? '#000' : 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 11, cursor: 'pointer' }}>
+                      {u}
+                    </button>
+                  ))}
+                  {unit === 'rem' && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 8 }}>
+                      <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)' }}>Root</span>
+                      <input type='number' value={rootSize} onChange={(e) => setRootSize(parseFloat(e.target.value) || 16)} min={10} max={24} style={{ ...numInputStyle, width: 56 }} />
+                      <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)' }}>px</span>
+                    </div>
+                  )}
                 </div>
               </div>
-              {unit === 'rem' && (
-                <div>
-                  <label className='block text-xs text-gray-500 mb-1'>Root font size</label>
-                  <div className='flex items-center gap-1'>
-                    <input type='number' value={rootSize} onChange={(e) => setRootSize(parseFloat(e.target.value) || 16)} min={10} max={24} className='bp-input w-16 font-mono' />
-                    <span className='text-xs text-gray-500'>px</span>
+
+              {/* Size range */}
+              <div>
+                <span style={{ ...labelStyle, color: 'var(--bp-accent)' }}>Size Range (px)</span>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label style={labelStyle}>Min Size</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <input type='number' value={minSize} onChange={(e) => { const n = parseFloat(e.target.value); if (!isNaN(n)) setMinSize(n); }} min={1} max={maxSize - 1} style={numInputStyle} />
+                      <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)' }}>{unit === 'rem' ? 'px→rem' : 'px'}</span>
+                    </div>
                   </div>
+                  <div>
+                    <label style={labelStyle}>Max Size</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <input type='number' value={maxSize} onChange={(e) => { const n = parseFloat(e.target.value); if (!isNaN(n)) setMaxSize(n); }} min={minSize + 1} max={500} style={numInputStyle} />
+                      <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)' }}>{unit === 'rem' ? 'px→rem' : 'px'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Viewport range */}
+              <div>
+                <span style={{ ...labelStyle, color: 'var(--bp-accent)' }}>Viewport Range (px)</span>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label style={labelStyle}>Min Viewport</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <input type='number' value={minVp} onChange={(e) => { const n = parseFloat(e.target.value); if (!isNaN(n)) setMinVp(n); }} min={200} max={maxVp - 1} step={10} style={numInputStyle} />
+                      <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)' }}>px</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Max Viewport</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <input type='number' value={maxVp} onChange={(e) => { const n = parseFloat(e.target.value); if (!isNaN(n)) setMaxVp(n); }} min={minVp + 1} max={3840} step={10} style={numInputStyle} />
+                      <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)' }}>px</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {validationError && (
+                <div style={{ fontSize: 11, color: '#f87171', padding: '6px 10px', border: '1px solid rgba(248,113,113,0.3)', background: 'rgba(248,113,113,0.08)' }}>
+                  {validationError}
                 </div>
               )}
             </div>
-            <div className='mb-4'>
-              <p className='text-xs text-gray-500 uppercase tracking-wide mb-3'>Size Range (px)</p>
-              <div className='grid grid-cols-2 gap-4'>
-                <NumInput label='Min Size' value={minSize} onChange={setMinSize} min={1} max={maxSize - 1} />
-                <NumInput label='Max Size' value={maxSize} onChange={setMaxSize} min={minSize + 1} max={500} />
-              </div>
-            </div>
-            <div>
-              <p className='text-xs text-gray-500 uppercase tracking-wide mb-3'>Viewport Range (px)</p>
-              <div className='grid grid-cols-2 gap-4'>
-                <NumInput label='Min Viewport' value={minVp} onChange={setMinVp} min={200} max={maxVp - 1} step={10} />
-                <NumInput label='Max Viewport' value={maxVp} onChange={setMaxVp} min={minVp + 1} max={3840} step={10} />
-              </div>
-            </div>
-            {validationError && <p className='text-sm text-red-400 mt-3'>{validationError}</p>}
-          </BpPanel>
-
-          {result && !validationError && (
-            <>
-              <BpPanel title='Fluid Scale Preview'>
-                <PreviewCurve minSize={minSize} maxSize={maxSize} minVp={minVp} maxVp={maxVp} />
-                <div className='flex justify-between text-xs text-gray-500 px-1 mt-2'>
-                  <span>Flat at {minSize}px below {minVp}px viewport</span>
-                  <span>Flat at {maxSize}px above {maxVp}px viewport</span>
-                </div>
-              </BpPanel>
-
-              <BpPanel title='Generated clamp()'>
-                <div className='flex items-center gap-2'>
-                  <code className='flex-1 bp-code-view font-mono text-sm text-green-400 px-4 py-3 break-all'>{result.clampValue}</code>
-                  <BpCopyBtn text={result.clampValue} label='COPY' />
-                </div>
-              </BpPanel>
-
-              <BpPanel title='CSS Declaration'>
-                <div className='flex items-center justify-between mb-3'>
-                  <label className='text-xs text-gray-500'>CSS Property</label>
-                  <select value={cssProp} onChange={(e) => setCssProp(e.target.value)} className='bp-input h-7 px-2 text-xs'>
-                    {CSS_PROPERTIES.map((p) => <option key={p}>{p}</option>)}
-                  </select>
-                </div>
-                <div className='space-y-2'>
-                  {[
-                    { label: 'CSS', value: `${cssProp}: ${result.clampValue};` },
-                    { label: 'SCSS var', value: `$fluid-${cssProp}: ${result.clampValue};` },
-                    { label: 'CSS custom property', value: `--fluid-${cssProp}: ${result.clampValue};` },
-                  ].map(({ label, value }) => (
-                    <div key={label} className='flex items-center gap-2'>
-                      <span className='text-xs text-gray-500 w-28 shrink-0'>{label}</span>
-                      <code className='flex-1 bp-code-view font-mono text-xs px-3 py-1.5 break-all'>{value}</code>
-                      <BpCopyBtn text={value} label='COPY' />
-                    </div>
-                  ))}
-                </div>
-              </BpPanel>
-
-              <BpPanel title='Math Breakdown'>
-                <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
-                  {[
-                    { label: 'Slope', value: result.slope.toFixed(4), desc: `(${maxSize} - ${minSize}) ÷ (${maxVp} - ${minVp})` },
-                    { label: 'Intercept', value: `${result.intercept.toFixed(4)}px`, desc: `${minSize} − slope × ${minVp}` },
-                    { label: 'Slope as vw', value: `${result.slopeVw.toFixed(4)}vw`, desc: 'slope × 100' },
-                  ].map(({ label, value, desc }) => (
-                    <div key={label} className='bg-[#121212] rounded-lg p-3'>
-                      <p className='text-xs text-gray-500 mb-1'>{label}</p>
-                      <p className='font-mono text-sm font-bold text-white'>{value}</p>
-                      <p className='text-xs text-gray-600 mt-1 font-mono'>{desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </BpPanel>
-
-              <BpPanel title='Size at Common Viewports'>
-                <div className='grid grid-cols-3 sm:grid-cols-6 gap-2'>
-                  {[320, 375, 480, 768, 1024, 1280, 1440, 1920].map((vp) => {
-                    const size = Math.min(maxSize, Math.max(minSize, minSize + result.slope * (vp - minVp)));
-                    const inRange = vp >= minVp && vp <= maxVp;
-                    return (
-                      <div key={vp} className='bg-[#121212] rounded p-2 text-center'>
-                        <p className='text-xs text-gray-500'>{vp}px</p>
-                        <p className={`font-mono text-sm font-bold ${inRange ? 'text-white' : 'text-gray-500'}`}>{size.toFixed(1)}px</p>
-                        {unit === 'rem' && <p className='font-mono text-xs text-gray-600'>{(size / rootSize).toFixed(3)}rem</p>}
-                      </div>
-                    );
-                  })}
-                </div>
-              </BpPanel>
-            </>
-          )}
-
+          </Panel>
         </div>
+
+        {/* Right: Output */}
+        <Panel title='Output'>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {result && !validationError ? (
+              <>
+                {/* Preview curve */}
+                <div>
+                  <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>Fluid Scale Preview</div>
+                  <PreviewCurve minSize={minSize} maxSize={maxSize} minVp={minVp} maxVp={maxVp} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--bp-ink-faint)', marginTop: 4 }}>
+                    <span>Flat at {minSize}px below {minVp}px</span>
+                    <span>Flat at {maxSize}px above {maxVp}px</span>
+                  </div>
+                </div>
+
+                {/* Generated clamp */}
+                <div>
+                  <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>Generated clamp()</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <code style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: 'var(--bp-accent)', fontSize: 11, padding: '8px 10px', wordBreak: 'break-all', lineHeight: 1.5 }}>{result.clampValue}</code>
+                    <BpCopyBtn text={result.clampValue} label='COPY' />
+                  </div>
+                </div>
+
+                {/* CSS declaration */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>CSS Declaration</div>
+                    <select value={cssProp} onChange={(e) => setCssProp(e.target.value)}
+                      style={{ background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 10, padding: '2px 6px', outline: 'none' }}>
+                      {CSS_PROPERTIES.map((p) => <option key={p}>{p}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {[
+                      { label: 'CSS', value: `${cssProp}: ${result.clampValue};` },
+                      { label: 'SCSS var', value: `$fluid-${cssProp}: ${result.clampValue};` },
+                      { label: 'CSS var', value: `--fluid-${cssProp}: ${result.clampValue};` },
+                    ].map(({ label, value }) => (
+                      <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 9, color: 'var(--bp-ink-faint)', width: 52, flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+                        <code style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: 'var(--bp-ink)', fontSize: 10, padding: '5px 8px', wordBreak: 'break-all', lineHeight: 1.5 }}>{value}</code>
+                        <BpCopyBtn text={value} label='COPY' />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Math breakdown */}
+                <div>
+                  <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>Math Breakdown</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+                    {[
+                      { label: 'Slope', value: result.slope.toFixed(4), desc: `(${maxSize}-${minSize})÷(${maxVp}-${minVp})` },
+                      { label: 'Intercept', value: `${result.intercept.toFixed(4)}px`, desc: `${minSize}−slope×${minVp}` },
+                      { label: 'Slope vw', value: `${result.slopeVw.toFixed(4)}vw`, desc: 'slope × 100' },
+                    ].map(({ label, value, desc }) => (
+                      <div key={label} style={{ background: 'var(--bp-surface)', border: '1px solid var(--bp-border)', padding: '8px 10px' }}>
+                        <div style={{ fontSize: 9, color: 'var(--bp-ink-faint)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>{label}</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 2 }}>{value}</div>
+                        <div style={{ fontSize: 9, color: 'var(--bp-ink-faint)' }}>{desc}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Size at common viewports */}
+                <div>
+                  <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>Size at Common Viewports</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+                    {[320, 375, 480, 768, 1024, 1280, 1440, 1920].map((vp) => {
+                      const size = Math.min(maxSize, Math.max(minSize, minSize + result.slope * (vp - minVp)));
+                      const inRange = vp >= minVp && vp <= maxVp;
+                      return (
+                        <div key={vp} style={{ background: 'var(--bp-surface)', border: '1px solid var(--bp-border)', padding: '6px 8px', textAlign: 'center' }}>
+                          <div style={{ fontSize: 9, color: 'var(--bp-ink-faint)' }}>{vp}px</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: inRange ? '#fff' : 'var(--bp-ink-mute)' }}>{size.toFixed(1)}px</div>
+                          {unit === 'rem' && <div style={{ fontSize: 9, color: 'var(--bp-ink-faint)' }}>{(size / rootSize).toFixed(3)}rem</div>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: 'var(--bp-ink-faint)', fontSize: 11, flexDirection: 'column', gap: 8 }}>
+                <span style={{ fontSize: 22, opacity: 0.3 }}>f(x)</span>
+                <span>{validationError ?? 'Configure parameters to generate clamp()'}</span>
+              </div>
+            )}
+          </div>
+        </Panel>
       </div>
-    </BpToolStage>
+    </div>
   );
 }

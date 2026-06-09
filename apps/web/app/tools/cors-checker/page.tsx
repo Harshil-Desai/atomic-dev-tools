@@ -130,6 +130,31 @@ const STATE_COLORS = {
   info: '#5fb0ff',
 };
 
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#5fb0ff',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 export default function CorsCheckerPage() {
   const [origin, setOrigin] = useState('');
   const [target, setTarget] = useState('');
@@ -204,29 +229,31 @@ export default function CorsCheckerPage() {
 
   return (
     <div
-      className='bp-tool-root h-full flex flex-col overflow-hidden'
+      className='h-full flex flex-col overflow-hidden relative'
       data-cat='api'
       style={{
-        backgroundImage: `
-          linear-gradient(var(--bp-line-major) 1px, transparent 1px),
-          linear-gradient(90deg, var(--bp-line-major) 1px, transparent 1px),
-          linear-gradient(var(--bp-line-minor) 1px, transparent 1px),
-          linear-gradient(90deg, var(--bp-line-minor) 1px, transparent 1px)
-        `,
-        backgroundSize: '64px 64px, 64px 64px, 8px 8px, 8px 8px',
-        backgroundPosition: '-1px -1px',
+        ...CSS_VARS,
+        background: 'var(--bp-bg)',
+        fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+        color: 'var(--bp-ink)',
       }}
     >
-      {/* Topbar */}
-      <div className='tool-topbar flex-shrink-0'>
-        <Shield className='w-3.5 h-3.5 flex-shrink-0' style={{ color: 'var(--bp-ink-mute)' }} />
-        <span className='tool-sep'>/</span>
-        <span className='tool-name'>CORS Checker</span>
-        <div className='tool-spacer' />
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <Shield size={14} style={{ color: 'var(--bp-ink-mute)', flexShrink: 0 }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <h1 style={{ fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--bp-ink)', margin: 0, fontWeight: 600 }}>
+            CORS Checker
+          </h1>
+          <p style={{ fontSize: 10, color: 'var(--bp-ink-faint)', margin: 0, letterSpacing: '0.08em' }}>
+            Simulate preflight requests and diagnose CORS issues
+          </p>
+        </div>
+        <div style={{ flex: 1 }} />
         {result && (
           <span
             style={{
-              fontSize: '10px',
+              fontSize: 10,
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
               color: analysis?.blocked ? '#ff7a85' : '#4ad29a',
@@ -239,270 +266,267 @@ export default function CorsCheckerPage() {
       </div>
 
       {/* Body */}
-      <div className='flex-1 overflow-hidden flex min-h-0'>
-        {/* Left — inputs */}
-        <div
-          className='flex flex-col flex-shrink-0 overflow-y-auto'
-          style={{
-            width: '320px',
-            borderRight: '1px solid var(--bp-border)',
-            padding: '20px',
-            gap: '16px',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          {/* ORIGIN */}
-          <div>
-            <div style={{ fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: '6px', fontFamily: 'inherit' }}>
-              Origin
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '300px 1fr', overflow: 'hidden' }}>
+        {/* Left — inputs panel */}
+        <Panel title="Request Config" style={{ borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '16px 14px', gap: 16 }}>
+            {/* ORIGIN */}
+            <div>
+              <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: 6, fontFamily: 'inherit' }}>
+                Origin
+              </div>
+              <input
+                value={origin}
+                onChange={e => setOrigin(e.target.value)}
+                placeholder='https://app.example.com'
+                spellCheck={false}
+                style={{
+                  width: '100%',
+                  background: 'var(--bp-bg)',
+                  border: '1px solid var(--bp-border-str)',
+                  color: 'var(--bp-ink)',
+                  fontFamily: 'inherit',
+                  fontSize: 12,
+                  padding: '7px 10px',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
             </div>
-            <input
-              className='w-full'
-              style={{
-                background: 'transparent',
-                border: 'none',
-                borderBottom: '1px solid var(--bp-border)',
-                color: 'var(--bp-ink)',
-                fontFamily: 'inherit',
-                fontSize: '12px',
-                padding: '4px 0',
-                outline: 'none',
-                width: '100%',
-              }}
-              value={origin}
-              onChange={e => setOrigin(e.target.value)}
-              placeholder='https://app.example.com'
-              spellCheck={false}
-            />
-          </div>
 
-          {/* TARGET */}
-          <div>
-            <div style={{ fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: '6px', fontFamily: 'inherit' }}>
-              Target
+            {/* TARGET */}
+            <div>
+              <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: 6, fontFamily: 'inherit' }}>
+                Target URL
+              </div>
+              <input
+                value={target}
+                onChange={e => setTarget(e.target.value)}
+                placeholder='https://api.example.com/sessions'
+                spellCheck={false}
+                style={{
+                  width: '100%',
+                  background: 'var(--bp-bg)',
+                  border: '1px solid var(--bp-border-str)',
+                  color: 'var(--bp-ink)',
+                  fontFamily: 'inherit',
+                  fontSize: 12,
+                  padding: '7px 10px',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
             </div>
-            <input
-              className='w-full'
-              style={{
-                background: 'transparent',
-                border: 'none',
-                borderBottom: '1px solid var(--bp-border)',
-                color: 'var(--bp-ink)',
-                fontFamily: 'inherit',
-                fontSize: '12px',
-                padding: '4px 0',
-                outline: 'none',
-                width: '100%',
-              }}
-              value={target}
-              onChange={e => setTarget(e.target.value)}
-              placeholder='https://api.example.com/sessions'
-              spellCheck={false}
-            />
-          </div>
 
-          {/* METHOD */}
-          <div>
-            <div style={{ fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: '8px', fontFamily: 'inherit' }}>
-              Method
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-              {METHODS.map(m => (
-                <button
-                  key={m}
-                  onClick={() => setMethod(m)}
-                  style={{
-                    padding: '3px 8px',
-                    fontSize: '10px',
-                    letterSpacing: '0.1em',
-                    fontFamily: 'inherit',
-                    cursor: 'pointer',
-                    border: `1px solid ${method === m ? 'var(--bp-accent)' : 'var(--bp-border-str)'}`,
-                    background: method === m ? 'color-mix(in srgb, var(--bp-accent) 15%, transparent)' : 'transparent',
-                    color: method === m ? 'var(--bp-accent)' : 'var(--bp-ink-mute)',
-                    transition: 'all 100ms',
-                  }}
-                >
-                  {m}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* HEADERS */}
-          <div>
-            <div style={{ fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: '8px', fontFamily: 'inherit' }}>
-              Headers
-            </div>
-            {headerTags.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
-                {headerTags.map(tag => (
-                  <span
-                    key={tag}
+            {/* METHOD */}
+            <div>
+              <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: 8, fontFamily: 'inherit' }}>
+                Method
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {METHODS.map(m => (
+                  <button
+                    key={m}
+                    onClick={() => setMethod(m)}
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      padding: '2px 6px',
-                      fontSize: '10px',
+                      padding: '3px 8px',
+                      fontSize: 10,
+                      letterSpacing: '0.1em',
                       fontFamily: 'inherit',
-                      border: '1px solid var(--bp-border-str)',
-                      color: 'var(--bp-ink-mute)',
-                      background: 'var(--bp-surface)',
-                      maxWidth: '100%',
-                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      border: `1px solid ${method === m ? 'var(--bp-accent)' : 'var(--bp-border-str)'}`,
+                      background: method === m ? 'color-mix(in srgb, var(--bp-accent) 15%, transparent)' : 'transparent',
+                      color: method === m ? 'var(--bp-accent)' : 'var(--bp-ink-mute)',
+                      transition: 'all 100ms',
                     }}
                   >
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '220px' }}>{tag}</span>
-                    <button onClick={() => removeTag(tag)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--bp-ink-faint)', display: 'flex', alignItems: 'center' }}>
-                      <X size={10} />
-                    </button>
-                  </span>
+                    {m}
+                  </button>
                 ))}
               </div>
-            )}
-            <input
-              style={{
-                background: 'transparent',
-                border: 'none',
-                borderBottom: '1px solid var(--bp-border)',
-                color: 'var(--bp-ink)',
-                fontFamily: 'inherit',
-                fontSize: '12px',
-                padding: '4px 0',
-                outline: 'none',
-                width: '100%',
-              }}
-              value={headerInput}
-              onChange={e => setHeaderInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addHeaderTag(); } }}
-              placeholder='Authorization: Bearer token'
-              spellCheck={false}
-            />
-            <div style={{ fontSize: '10px', color: 'var(--bp-ink-faint)', marginTop: '4px', fontFamily: 'inherit' }}>
-              Press Enter to add
             </div>
-          </div>
 
-          <div style={{ flex: 1 }} />
-
-          {/* CHECK button */}
-          <button
-            onClick={check}
-            disabled={loading || !target.trim()}
-            style={{
-              padding: '8px 16px',
-              fontSize: '11px',
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              fontFamily: 'inherit',
-              cursor: loading || !target.trim() ? 'default' : 'pointer',
-              border: '1px solid var(--bp-accent)',
-              background: 'color-mix(in srgb, var(--bp-accent) 12%, transparent)',
-              color: loading || !target.trim() ? 'var(--bp-ink-faint)' : 'var(--bp-accent)',
-              borderColor: loading || !target.trim() ? 'var(--bp-border-str)' : 'var(--bp-accent)',
-              transition: 'all 120ms',
-              width: '100%',
-            }}
-          >
-            {loading ? 'CHECKING…' : 'CHECK CORS'}
-          </button>
-        </div>
-
-        {/* Right — results */}
-        <div className='flex-1 flex flex-col min-w-0 min-h-0 overflow-y-auto' style={{ padding: '20px' }}>
-          {!result && !fetchError && !loading && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--bp-ink-faint)', gap: '12px' }}>
-              <Shield size={32} style={{ opacity: 0.3 }} />
-              <span style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'inherit' }}>
-                Enter a target URL and click Check CORS
-              </span>
-            </div>
-          )}
-
-          {loading && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--bp-ink-faint)' }}>
-              <span style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'inherit' }}>CHECKING…</span>
-            </div>
-          )}
-
-          {fetchError && (
-            <div
-              style={{
-                padding: '12px 16px',
-                border: '1px solid rgba(255,122,133,0.3)',
-                background: 'rgba(255,122,133,0.06)',
-                color: '#ff7a85',
-                fontSize: '12px',
-                fontFamily: 'inherit',
-                marginBottom: '16px',
-              }}
-            >
-              <div style={{ fontSize: '10px', letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: '4px', opacity: 0.7 }}>Network Error</div>
-              {fetchError}
-            </div>
-          )}
-
-          {analysis && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              {analysis.items.map(item => (
-                <div
-                  key={item.id}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '36px 1fr',
-                    gap: '12px',
-                    padding: '12px 0',
-                    borderBottom: '1px solid var(--bp-border)',
-                  }}
-                >
-                  {/* Number */}
-                  <div style={{ fontSize: '10px', fontFamily: 'inherit', color: STATE_COLORS[item.state], letterSpacing: '0.08em', paddingTop: '1px', opacity: 0.8 }}>
-                    #{item.num}
-                  </div>
-                  {/* Content */}
-                  <div>
-                    <div style={{ fontSize: '12px', color: STATE_COLORS[item.state], fontFamily: 'inherit', marginBottom: '4px', letterSpacing: '0.02em' }}>
-                      {item.title}
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'var(--bp-ink)', fontFamily: 'inherit', marginBottom: '4px', letterSpacing: '0.01em' }}>
-                      {item.value}
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'var(--bp-ink-mute)', fontFamily: 'inherit', lineHeight: 1.5 }}>
-                      {item.detail}
-                    </div>
-                  </div>
+            {/* HEADERS */}
+            <div>
+              <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: 8, fontFamily: 'inherit' }}>
+                Request Headers
+              </div>
+              {headerTags.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
+                  {headerTags.map(tag => (
+                    <span
+                      key={tag}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '2px 6px',
+                        fontSize: 10,
+                        fontFamily: 'inherit',
+                        border: '1px solid var(--bp-border-str)',
+                        color: 'var(--bp-ink-mute)',
+                        background: 'var(--bp-elevated)',
+                        maxWidth: '100%',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 200 }}>{tag}</span>
+                      <button
+                        onClick={() => removeTag(tag)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--bp-ink-faint)', display: 'flex', alignItems: 'center' }}
+                      >
+                        <X size={10} />
+                      </button>
+                    </span>
+                  ))}
                 </div>
-              ))}
-
-              {/* Verdict */}
-              <div style={{ marginTop: '20px', padding: '12px 0' }}>
-                <div
-                  style={{
-                    fontSize: '11px',
-                    letterSpacing: '0.18em',
-                    textTransform: 'uppercase',
-                    fontFamily: 'inherit',
-                    color: analysis.blocked ? '#ff7a85' : '#4ad29a',
-                  }}
-                >
-                  {analysis.blocked
-                    ? `REQUEST WOULD BE BLOCKED BY THE BROWSER`
-                    : `REQUEST WOULD BE ALLOWED BY THE BROWSER`}
-                </div>
-                {analysis.blockReason && (
-                  <div style={{ fontSize: '11px', color: 'var(--bp-ink-mute)', marginTop: '4px', fontFamily: 'inherit' }}>
-                    {analysis.blockReason}
-                  </div>
-                )}
-                <div style={{ fontSize: '10px', color: 'var(--bp-ink-faint)', marginTop: '8px', fontFamily: 'inherit' }}>
-                  HTTP {result!.status} — via {result!.requestMethod}
-                </div>
+              )}
+              <input
+                value={headerInput}
+                onChange={e => setHeaderInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addHeaderTag(); } }}
+                placeholder='Authorization: Bearer token'
+                spellCheck={false}
+                style={{
+                  width: '100%',
+                  background: 'var(--bp-bg)',
+                  border: '1px solid var(--bp-border-str)',
+                  color: 'var(--bp-ink)',
+                  fontFamily: 'inherit',
+                  fontSize: 12,
+                  padding: '7px 10px',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <div style={{ fontSize: 10, color: 'var(--bp-ink-faint)', marginTop: 4, fontFamily: 'inherit' }}>
+                Press Enter to add
               </div>
             </div>
-          )}
-        </div>
+
+            <div style={{ flex: 1 }} />
+          </div>
+
+          {/* Actions bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <button
+              onClick={check}
+              disabled={loading || !target.trim()}
+              style={{
+                flex: 1,
+                padding: '7px 16px',
+                fontSize: 10,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                fontFamily: 'inherit',
+                cursor: loading || !target.trim() ? 'default' : 'pointer',
+                border: `1px solid ${loading || !target.trim() ? 'var(--bp-border-str)' : 'var(--bp-accent)'}`,
+                background: loading || !target.trim() ? 'transparent' : 'color-mix(in srgb, var(--bp-accent) 12%, transparent)',
+                color: loading || !target.trim() ? 'var(--bp-ink-faint)' : 'var(--bp-accent)',
+                transition: 'all 120ms',
+              }}
+            >
+              {loading ? 'CHECKING…' : 'CHECK CORS'}
+            </button>
+          </div>
+        </Panel>
+
+        {/* Right — results panel */}
+        <Panel title="Analysis" meta={result ? `HTTP ${result.status} — ${result.requestMethod}` : undefined} style={{ borderTop: 0, borderRight: 0, borderBottom: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            {!result && !fetchError && !loading && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, color: 'var(--bp-ink-faint)', gap: 12, padding: 24 }}>
+                <Shield size={32} style={{ opacity: 0.2 }} />
+                <span style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'inherit' }}>
+                  Enter a target URL and click Check CORS
+                </span>
+              </div>
+            )}
+
+            {loading && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: 'var(--bp-ink-faint)' }}>
+                <span style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'inherit' }}>CHECKING…</span>
+              </div>
+            )}
+
+            {fetchError && (
+              <div style={{ padding: '14px 16px' }}>
+                <div
+                  style={{
+                    padding: '12px 14px',
+                    border: '1px solid rgba(255,122,133,0.3)',
+                    background: 'rgba(255,122,133,0.06)',
+                    color: '#ff7a85',
+                    fontSize: 12,
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  <div style={{ fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 4, opacity: 0.7 }}>Network Error</div>
+                  {fetchError}
+                </div>
+              </div>
+            )}
+
+            {analysis && (
+              <div style={{ display: 'flex', flexDirection: 'column', padding: '0 16px' }}>
+                {analysis.items.map(item => (
+                  <div
+                    key={item.id}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '36px 1fr',
+                      gap: 12,
+                      padding: '12px 0',
+                      borderBottom: '1px solid var(--bp-border)',
+                    }}
+                  >
+                    {/* Number */}
+                    <div style={{ fontSize: 10, fontFamily: 'inherit', color: STATE_COLORS[item.state], letterSpacing: '0.08em', paddingTop: 1, opacity: 0.8 }}>
+                      #{item.num}
+                    </div>
+                    {/* Content */}
+                    <div>
+                      <div style={{ fontSize: 12, color: STATE_COLORS[item.state], fontFamily: 'inherit', marginBottom: 4, letterSpacing: '0.02em' }}>
+                        {item.title}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--bp-ink)', fontFamily: 'inherit', marginBottom: 4, letterSpacing: '0.01em' }}>
+                        {item.value}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--bp-ink-mute)', fontFamily: 'inherit', lineHeight: 1.5 }}>
+                        {item.detail}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Verdict */}
+                <div style={{ padding: '16px 0', marginTop: 4 }}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      letterSpacing: '0.18em',
+                      textTransform: 'uppercase',
+                      fontFamily: 'inherit',
+                      color: analysis.blocked ? '#ff7a85' : '#4ad29a',
+                    }}
+                  >
+                    {analysis.blocked
+                      ? 'REQUEST WOULD BE BLOCKED BY THE BROWSER'
+                      : 'REQUEST WOULD BE ALLOWED BY THE BROWSER'}
+                  </div>
+                  {analysis.blockReason && (
+                    <div style={{ fontSize: 11, color: 'var(--bp-ink-mute)', marginTop: 4, fontFamily: 'inherit' }}>
+                      {analysis.blockReason}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 10, color: 'var(--bp-ink-faint)', marginTop: 8, fontFamily: 'inherit' }}>
+                    HTTP {result!.status} — via {result!.requestMethod}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </Panel>
       </div>
     </div>
   );

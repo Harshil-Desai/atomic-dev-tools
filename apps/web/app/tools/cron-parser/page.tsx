@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import { BpCopyBtn } from '@/components/blueprint';
 import { AlertCircle } from 'lucide-react';
 
 interface ParsedCron { second: string | null; minute: string; hour: string; day: string; month: string; weekday: string; }
@@ -97,6 +97,31 @@ const FIELD_COLORS: Record<string, string> = {
   Second: 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40',
 };
 
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#61dafb',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 export default function CronParserPage() {
   const [expression, setExpression] = useState('*/5 * * * *');
   const [error, setError] = useState<string | null>(null);
@@ -127,95 +152,106 @@ export default function CronParserPage() {
   useEffect(() => { analyze('*/5 * * * *'); }, []);
 
   return (
-    <BpToolStage cat='time'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Cron Expression Parser</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Parse, validate, and preview cron schedules with next execution times</p>
+    <div className='h-full flex flex-col overflow-hidden' data-cat='time' style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}>
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Cron Expression Parser</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Parse cron expressions and preview next scheduled run times</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-4xl mx-auto space-y-4'>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 16px' }}>
 
-          <BpPanel title='Cron Expression'>
-            <div className='flex gap-2 mb-2'>
-              <input value={expression} onChange={(e) => handleExprChange(e.target.value)} placeholder='e.g. */5 * * * * or @daily' className='bp-input font-mono flex-1' />
-              <BpCopyBtn text={expression} label='COPY' />
+          <Panel title='Cron Expression'>
+            <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  value={expression}
+                  onChange={(e) => handleExprChange(e.target.value)}
+                  placeholder='e.g. */5 * * * * or @daily'
+                  style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
+                />
+                <BpCopyBtn text={expression} label='COPY' />
+              </div>
+              <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Supports 5-field (min hr day month weekday), 6-field (sec min hr day month weekday), and shortcuts like @daily, @hourly</p>
             </div>
-            <p className='text-xs text-gray-500'>Supports 5-field (min hr day month weekday), 6-field (sec min hr day month weekday), and shortcuts like @daily, @hourly</p>
-          </BpPanel>
+          </Panel>
 
           {error && (
-            <div className='flex items-center gap-2 p-3 rounded border border-red-500/40 bg-red-950/20'>
-              <AlertCircle className='w-4 h-4 text-red-400 shrink-0' />
-              <span className='text-sm text-red-300'>{error}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(127,29,29,0.2)' }}>
+              <AlertCircle style={{ width: 16, height: 16, color: '#f87171', flexShrink: 0 }} />
+              <span style={{ fontSize: 13, color: '#fca5a5' }}>{error}</span>
             </div>
           )}
 
           {parsed && !error && (
             <>
-              <BpPanel title='Human-readable'>
-                <p className='text-lg font-semibold text-white'>{description}</p>
-              </BpPanel>
-
-              <BpPanel title='Field Breakdown'>
-                <div className='flex flex-wrap gap-2 mb-3'>
-                  {fields.map((f) => (
-                    <div key={f.label} className={`rounded px-3 py-2 ${f.color}`}>
-                      <p className='text-xs opacity-70 mb-0.5'>{f.label}</p>
-                      <p className='font-mono font-semibold text-sm'>{f.value}</p>
-                    </div>
-                  ))}
+              <Panel title='Human-readable'>
+                <div style={{ padding: '10px 12px' }}>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0 }}>{description}</p>
                 </div>
-                <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2'>
-                  {fields.map((f) => (
-                    <div key={f.label} className='text-xs'>
-                      <span className='text-gray-500'>{f.label}: </span>
-                      <span className='text-gray-300'>{f.value === '*' ? 'any' : f.value.startsWith('*/') ? `every ${f.value.slice(2)}` : f.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </BpPanel>
+              </Panel>
 
-              {nextTimes.length > 0 && (
-                <BpPanel title='Next 5 Executions'>
-                  <div className='space-y-2'>
-                    {nextTimes.map((t, i) => (
-                      <div key={i} className='flex items-center justify-between bg-[#121212] rounded px-3 py-2'>
-                        <span className='font-mono text-sm text-gray-300'>{t.toISOString()}</span>
-                        <span className='text-xs text-gray-500 ml-4 shrink-0'>{relativeTime(t)}</span>
+              <Panel title='Field Breakdown'>
+                <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {fields.map((f) => (
+                      <div key={f.label} className={`rounded px-3 py-2 ${f.color}`}>
+                        <p className='text-xs opacity-70 mb-0.5'>{f.label}</p>
+                        <p className='font-mono font-semibold text-sm'>{f.value}</p>
                       </div>
                     ))}
                   </div>
-                </BpPanel>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 6 }}>
+                    {fields.map((f) => (
+                      <div key={f.label} style={{ fontSize: 11 }}>
+                        <span style={{ color: 'var(--bp-ink-mute)' }}>{f.label}: </span>
+                        <span style={{ color: 'var(--bp-ink)' }}>{f.value === '*' ? 'any' : f.value.startsWith('*/') ? `every ${f.value.slice(2)}` : f.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Panel>
+
+              {nextTimes.length > 0 && (
+                <Panel title='Next 5 Executions'>
+                  <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {nextTimes.map((t, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bp-bg)', padding: '7px 10px', border: '1px solid var(--bp-border)' }}>
+                        <span style={{ fontFamily: 'inherit', fontSize: 12, color: 'var(--bp-ink)' }}>{t.toISOString()}</span>
+                        <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)', marginLeft: 16, flexShrink: 0 }}>{relativeTime(t)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </Panel>
               )}
             </>
           )}
 
-          <BpPanel title='Quick Examples'>
-            <div className='grid grid-cols-2 sm:grid-cols-3 gap-2'>
+          <Panel title='Quick Examples'>
+            <div style={{ padding: '10px 12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 6 }}>
               {EXAMPLES.map((ex) => (
                 <button key={ex.expr} type='button' onClick={() => handleExprChange(ex.expr)}
                   className='bp-btn text-left flex flex-col gap-0.5'>
-                  <span className='text-xs text-gray-400'>{ex.label}</span>
-                  <span className='font-mono text-xs text-blue-400'>{ex.expr}</span>
+                  <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)' }}>{ex.label}</span>
+                  <span style={{ fontFamily: 'inherit', fontSize: 11, color: 'var(--bp-accent)' }}>{ex.expr}</span>
                 </button>
               ))}
             </div>
-          </BpPanel>
+          </Panel>
 
-          <BpPanel title='Syntax Reference'>
-            <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs'>
+          <Panel title='Syntax Reference'>
+            <div style={{ padding: '10px 12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 6 }}>
               {[['*', 'Any value'], ['*/n', 'Every n units'], ['n', 'Exact value'], ['n-m', 'Range'], ['n,m', 'List'], ['n-m/s', 'Range with step']].map(([token, desc]) => (
-                <div key={token} className='flex gap-2'>
-                  <code className='text-blue-400 font-mono w-14 shrink-0'>{token}</code>
-                  <span className='text-gray-400'>{desc}</span>
+                <div key={token} style={{ display: 'flex', gap: 8, fontSize: 11 }}>
+                  <code style={{ color: 'var(--bp-accent)', fontFamily: 'inherit', width: 52, flexShrink: 0 }}>{token}</code>
+                  <span style={{ color: 'var(--bp-ink-mute)' }}>{desc}</span>
                 </div>
               ))}
             </div>
-          </BpPanel>
+          </Panel>
 
         </div>
       </div>
-    </BpToolStage>
+    </div>
   );
 }

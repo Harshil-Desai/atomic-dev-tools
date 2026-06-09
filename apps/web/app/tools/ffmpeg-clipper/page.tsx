@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import { BpCopyBtn } from '@/components/blueprint';
 import { Film, Scissors } from 'lucide-react';
 
 type OutputFormat = 'mp4' | 'avi' | 'mkv' | 'gif' | 'webm';
@@ -9,7 +9,30 @@ type VideoCodec = 'h264' | 'h265' | 'vp9' | 'copy';
 type AudioCodec = 'aac' | 'mp3' | 'opus' | 'copy' | 'none';
 type QualityPreset = 'low' | 'medium' | 'high' | 'custom';
 
-const SELECT_CLS = 'w-full h-9 px-3 rounded border border-[hsla(0,0%,20%,1)] bg-[#121212] text-gray-100 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500';
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#ff9d57',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export default function FfmpegClipperPage() {
   const [inputFile, setInputFile] = useState('input.mp4');
@@ -79,105 +102,215 @@ export default function FfmpegClipperPage() {
     setTimeout(generateCommand, 100);
   };
 
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    background: 'var(--bp-bg)',
+    border: '1px solid var(--bp-border-str)',
+    color: 'var(--bp-ink)',
+    fontFamily: 'inherit',
+    fontSize: 12,
+    padding: '7px 10px',
+    outline: 'none',
+    boxSizing: 'border-box',
+  };
+
+  const selectStyle: React.CSSProperties = {
+    width: '100%',
+    background: 'var(--bp-bg)',
+    border: '1px solid var(--bp-border)',
+    color: 'var(--bp-ink)',
+    fontFamily: 'inherit',
+    fontSize: 11,
+    padding: '5px 8px',
+    outline: 'none',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: 9,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--bp-ink-mute)',
+    marginBottom: 4,
+    display: 'block',
+  };
+
   return (
-    <BpToolStage cat='ffmpeg'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>FFmpeg Clipper & Converter</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Generate FFmpeg commands for clipping and converting videos</p>
+    <div
+      className='h-full flex flex-col overflow-hidden'
+      data-cat='ffmpeg'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>FFmpeg Clipper</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Trim video clips with precise start and end time controls</p>
       </div>
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-3xl mx-auto space-y-4'>
 
-          <BpPanel title='Preset Templates'>
-            <div className='flex flex-wrap gap-2'>
-              {[['quick-gif', 'Quick GIF'], ['social-media', 'Social Media'], ['high-quality', 'High Quality']].map(([key, label]) => (
-                <button key={key} type='button' className='bp-btn' onClick={() => applyPreset(key)}>{label}</button>
-              ))}
-            </div>
-          </BpPanel>
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+        {/* Left panel: configuration */}
+        <Panel title='Configuration' style={{ borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
 
-          <BpPanel title='Input & Timing'>
-            <div className='space-y-3'>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Input Filename</label>
-                <input value={inputFile} onChange={(e) => setInputFile(e.target.value)} placeholder='input.mp4' className='bp-input w-full font-mono' />
-              </div>
-              <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
-                <div>
-                  <label className='block text-xs text-gray-500 mb-1'>Start Time</label>
-                  <input value={startTime} onChange={(e) => setStartTime(e.target.value)} placeholder='00:00:10' className='bp-input w-full font-mono' />
-                </div>
-                <div>
-                  <label className='block text-xs text-gray-500 mb-1'>Duration</label>
-                  <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder='00:00:05' className='bp-input w-full font-mono' />
-                </div>
-                <div>
-                  <label className='block text-xs text-gray-500 mb-1'>End Time (optional)</label>
-                  <input value={endTime} onChange={(e) => setEndTime(e.target.value)} placeholder='00:00:15' className='bp-input w-full font-mono' />
-                </div>
+            {/* Preset Templates */}
+            <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--bp-border)' }}>
+              <span style={labelStyle}>Preset Templates</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {[['quick-gif', 'Quick GIF'], ['social-media', 'Social Media'], ['high-quality', 'High Quality']].map(([key, label]) => (
+                  <button key={key} type='button' className='bp-btn' onClick={() => applyPreset(key)}>{label}</button>
+                ))}
               </div>
             </div>
-          </BpPanel>
 
-          <BpPanel title='Output Options'>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Output Format</label>
-                <select value={outputFormat} onChange={(e) => setOutputFormat(e.target.value as OutputFormat)} className={SELECT_CLS}>
-                  <option value='mp4'>MP4</option><option value='avi'>AVI</option><option value='mkv'>MKV</option><option value='gif'>GIF</option><option value='webm'>WEBM</option>
-                </select>
-              </div>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Video Codec</label>
-                <select value={videoCodec} onChange={(e) => setVideoCodec(e.target.value as VideoCodec)} className={SELECT_CLS}>
-                  <option value='h264'>H.264</option><option value='h265'>H.265</option><option value='vp9'>VP9</option><option value='copy'>Copy (no re-encode)</option>
-                </select>
-              </div>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Audio Codec</label>
-                <select value={audioCodec} onChange={(e) => setAudioCodec(e.target.value as AudioCodec)} className={SELECT_CLS}>
-                  <option value='aac'>AAC</option><option value='mp3'>MP3</option><option value='opus'>Opus</option><option value='copy'>Copy (no re-encode)</option><option value='none'>None (remove audio)</option>
-                </select>
-              </div>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Quality Preset</label>
-                <select value={qualityPreset} onChange={(e) => setQualityPreset(e.target.value as QualityPreset)} className={SELECT_CLS}>
-                  <option value='low'>Low</option><option value='medium'>Medium</option><option value='high'>High</option><option value='custom'>Custom</option>
-                </select>
-                {qualityPreset === 'custom' && <input value={customBitrate} onChange={(e) => setCustomBitrate(e.target.value)} placeholder='2500k' className='bp-input w-full font-mono mt-2' />}
-              </div>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Scale</label>
-                <select value={scale} onChange={(e) => setScale(e.target.value)} className={SELECT_CLS}>
-                  <option value=''>Keep Original</option><option value='720p'>720p</option><option value='1080p'>1080p</option><option value='480p'>480p</option>
-                </select>
-              </div>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>FPS (empty = keep original)</label>
-                <input value={fps} onChange={(e) => setFps(e.target.value)} placeholder='30' className='bp-input w-full font-mono' />
+            {/* Input & Timing */}
+            <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--bp-border)' }}>
+              <span style={labelStyle}>Input & Timing</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div>
+                  <label style={labelStyle}>Input Filename</label>
+                  <input
+                    value={inputFile}
+                    onChange={(e) => setInputFile(e.target.value)}
+                    placeholder='input.mp4'
+                    style={inputStyle}
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                  <div>
+                    <label style={labelStyle}>Start Time</label>
+                    <input
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      placeholder='00:00:10'
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Duration</label>
+                    <input
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
+                      placeholder='00:00:05'
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>End Time</label>
+                    <input
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      placeholder='00:00:15'
+                      style={inputStyle}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-          </BpPanel>
 
-          <button type='button' className='bp-btn bp-btn-solid w-full' onClick={generateCommand}>
-            <Scissors className='w-4 h-4 mr-2 inline' />GENERATE COMMAND
-          </button>
+            {/* Output Options */}
+            <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--bp-border)' }}>
+              <span style={labelStyle}>Output Options</span>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <div>
+                  <label style={labelStyle}>Output Format</label>
+                  <select value={outputFormat} onChange={(e) => setOutputFormat(e.target.value as OutputFormat)} style={selectStyle}>
+                    <option value='mp4'>MP4</option>
+                    <option value='avi'>AVI</option>
+                    <option value='mkv'>MKV</option>
+                    <option value='gif'>GIF</option>
+                    <option value='webm'>WEBM</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Video Codec</label>
+                  <select value={videoCodec} onChange={(e) => setVideoCodec(e.target.value as VideoCodec)} style={selectStyle}>
+                    <option value='h264'>H.264</option>
+                    <option value='h265'>H.265</option>
+                    <option value='vp9'>VP9</option>
+                    <option value='copy'>Copy (no re-encode)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Audio Codec</label>
+                  <select value={audioCodec} onChange={(e) => setAudioCodec(e.target.value as AudioCodec)} style={selectStyle}>
+                    <option value='aac'>AAC</option>
+                    <option value='mp3'>MP3</option>
+                    <option value='opus'>Opus</option>
+                    <option value='copy'>Copy (no re-encode)</option>
+                    <option value='none'>None (remove audio)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Quality Preset</label>
+                  <select value={qualityPreset} onChange={(e) => setQualityPreset(e.target.value as QualityPreset)} style={selectStyle}>
+                    <option value='low'>Low</option>
+                    <option value='medium'>Medium</option>
+                    <option value='high'>High</option>
+                    <option value='custom'>Custom</option>
+                  </select>
+                  {qualityPreset === 'custom' && (
+                    <input
+                      value={customBitrate}
+                      onChange={(e) => setCustomBitrate(e.target.value)}
+                      placeholder='2500k'
+                      style={{ ...inputStyle, marginTop: 6 }}
+                    />
+                  )}
+                </div>
+                <div>
+                  <label style={labelStyle}>Scale</label>
+                  <select value={scale} onChange={(e) => setScale(e.target.value)} style={selectStyle}>
+                    <option value=''>Keep Original</option>
+                    <option value='720p'>720p</option>
+                    <option value='1080p'>1080p</option>
+                    <option value='480p'>480p</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>FPS (empty = keep original)</label>
+                  <input
+                    value={fps}
+                    onChange={(e) => setFps(e.target.value)}
+                    placeholder='30'
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            </div>
 
-          {command && (
-            <BpPanel title='Generated FFmpeg Command'>
-              <div className='bp-panel-actions mb-3'><BpCopyBtn text={command} label='COPY' /></div>
-              <code className='block bp-code-view px-4 py-3 font-mono text-sm text-gray-300 whitespace-pre-wrap break-all'>{command}</code>
-            </BpPanel>
+          </div>
+
+          {/* Action bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <button
+              type='button'
+              className='bp-btn bp-btn-solid'
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              onClick={generateCommand}
+            >
+              <Scissors style={{ width: 14, height: 14 }} />
+              GENERATE COMMAND
+            </button>
+          </div>
+        </Panel>
+
+        {/* Right panel: output */}
+        <Panel title='Generated FFmpeg Command' meta={command ? 'READY' : undefined} style={{ borderTop: 0, borderRight: 0, borderBottom: 0 }}>
+          {command ? (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+                <BpCopyBtn text={command} label='COPY' />
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto' }}>
+                <pre style={{ margin: 0, padding: '12px 14px', fontSize: 12, color: 'var(--bp-ink)', lineHeight: 1.65, whiteSpace: 'pre-wrap', wordBreak: 'break-all', background: 'var(--bp-bg)' }}>{command}</pre>
+              </div>
+            </>
+          ) : (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+              <Film style={{ width: 36, height: 36, opacity: 0.2, color: 'var(--bp-ink-mute)' }} />
+              <p style={{ fontSize: 11, color: 'var(--bp-ink-faint)', margin: 0 }}>Configure settings and click Generate Command</p>
+            </div>
           )}
-
-          {!command && (
-            <div className='text-center text-gray-600 py-12'>
-              <Film className='w-10 h-10 mx-auto mb-3 opacity-40' />
-              <p className='text-sm'>Configure settings and click Generate Command</p>
-            </div>
-          )}
-        </div>
+        </Panel>
       </div>
-    </BpToolStage>
+    </div>
   );
 }

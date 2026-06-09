@@ -1,13 +1,38 @@
 'use client';
 
-import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
-import { Type, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { BpCopyBtn } from '@/components/blueprint';
+import { AlertCircle, Type } from 'lucide-react';
 
 type EscapeType = 'url' | 'html' | 'javascript' | 'json' | 'base64' | 'unicode';
 
 const HTML_ENTITIES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;' };
 const HTML_ENTITIES_REVERSE: Record<string, string> = Object.fromEntries(Object.entries(HTML_ENTITIES).map(([k, v]) => [v, k]));
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#f0c674',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export default function TextEscapePage() {
   const [input, setInput] = useState('');
@@ -51,63 +76,131 @@ export default function TextEscapePage() {
   };
 
   return (
-    <BpToolStage cat='text'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Text Escape/Unescape</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Encode or decode text in various formats instantly</p>
+    <div
+      data-cat='text'
+      style={{
+        ...CSS_VARS,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative',
+        background: 'var(--bp-bg)',
+        color: 'var(--bp-ink)',
+        fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+      }}
+    >
+      {/* Compact header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--bp-ink)', letterSpacing: '0.02em' }}>Text Escape</h1>
+        <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--bp-ink-mute)' }}>Escape and unescape HTML, URL, JavaScript and more</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-6xl mx-auto space-y-4'>
-
-          <BpPanel title='Configuration'>
-            <div className='flex flex-wrap items-end gap-3'>
-              <div className='flex-1 min-w-40'>
-                <label className='block text-xs text-gray-500 mb-1'>Escape Type</label>
-                <select className='bp-input w-full' value={escapeType} onChange={(e) => setEscapeType(e.target.value as EscapeType)}>
-                  <option value='url'>URL Encoding</option>
-                  <option value='html'>HTML Entities</option>
-                  <option value='javascript'>JavaScript Strings</option>
-                  <option value='json'>JSON Strings</option>
-                  <option value='base64'>Base64</option>
-                  <option value='unicode'>Unicode Escape</option>
-                </select>
-              </div>
-              <div className='flex gap-2'>
-                <button className='bp-btn bp-btn-solid' onClick={() => run(ops[escapeType].escape)} disabled={!input.trim()} type='button'>ESCAPE</button>
-                <button className='bp-btn' onClick={() => run(ops[escapeType].unescape)} disabled={!input.trim()} type='button'>UNESCAPE</button>
-              </div>
-            </div>
-          </BpPanel>
-
-          <div className='bp-layout-2col'>
-            <BpPanel title='Input Text' meta={`${input.length} chars`}>
-              <textarea className='bp-textarea font-mono text-sm' placeholder='Enter text to escape or unescape...' value={input} onChange={(e) => setInput(e.target.value)} rows={10} />
-            </BpPanel>
-
-            <BpPanel title='Output Text' meta={`${output.length} chars`}>
-              <div className='bp-panel-actions mb-3'>
-                <BpCopyBtn text={output} label='COPY' />
-              </div>
-              <textarea className='bp-textarea font-mono text-sm' placeholder='Result will appear here...' value={output} readOnly rows={10} />
-            </BpPanel>
-          </div>
-
-          {error && (
-            <div className='flex items-start gap-3 p-3 rounded border border-red-500/40 bg-red-950/20'>
-              <AlertCircle className='w-5 h-5 text-red-400 flex-shrink-0 mt-0.5' />
-              <p className='text-sm text-red-300'>{error}</p>
-            </div>
-          )}
-
-          {!input.trim() && !error && (
-            <div className='text-center text-gray-600 py-12'>
-              <Type className='w-12 h-12 mx-auto mb-4 opacity-40' />
-              <p className='text-sm'>Enter text and choose an operation to get started</p>
-            </div>
-          )}
+      {/* Config bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-elevated)', flexShrink: 0, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', fontWeight: 600 }}>Type</span>
+          <select
+            value={escapeType}
+            onChange={(e) => setEscapeType(e.target.value as EscapeType)}
+            style={{
+              background: 'var(--bp-bg)',
+              border: '1px solid var(--bp-border-str)',
+              color: 'var(--bp-ink)',
+              fontFamily: 'inherit',
+              fontSize: 11,
+              padding: '5px 8px',
+              outline: 'none',
+              boxSizing: 'border-box',
+              cursor: 'pointer',
+            }}
+          >
+            <option value='url'>URL Encoding</option>
+            <option value='html'>HTML Entities</option>
+            <option value='javascript'>JavaScript Strings</option>
+            <option value='json'>JSON Strings</option>
+            <option value='base64'>Base64</option>
+            <option value='unicode'>Unicode Escape</option>
+          </select>
+        </div>
+        <div style={{ display: 'flex', gap: 6, marginLeft: 4 }}>
+          <button className='bp-btn bp-btn-solid' onClick={() => run(ops[escapeType].escape)} disabled={!input.trim()} type='button'>ESCAPE</button>
+          <button className='bp-btn' onClick={() => run(ops[escapeType].unescape)} disabled={!input.trim()} type='button'>UNESCAPE</button>
         </div>
       </div>
-    </BpToolStage>
+
+      {/* Main 2-column layout */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+        <Panel title='Input Text' meta={`${input.length} chars`} style={{ borderRight: 0, borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder='Enter text to escape or unescape...'
+              spellCheck={false}
+              style={{
+                flex: 1,
+                width: '100%',
+                background: 'var(--bp-bg)',
+                border: 0,
+                color: 'var(--bp-ink)',
+                fontFamily: 'inherit',
+                fontSize: 12,
+                padding: '12px 14px',
+                resize: 'none',
+                outline: 'none',
+                boxSizing: 'border-box',
+                lineHeight: 1.65,
+                minHeight: 200,
+              }}
+            />
+          </div>
+        </Panel>
+
+        <Panel title='Output Text' meta={`${output.length} chars`} style={{ borderTop: 0, borderLeft: '1px solid var(--bp-border)', borderRight: 0, borderBottom: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <textarea
+              value={output}
+              readOnly
+              placeholder='Result will appear here...'
+              spellCheck={false}
+              style={{
+                flex: 1,
+                width: '100%',
+                background: 'var(--bp-bg)',
+                border: 0,
+                color: 'var(--bp-ink)',
+                fontFamily: 'inherit',
+                fontSize: 12,
+                padding: '12px 14px',
+                resize: 'none',
+                outline: 'none',
+                boxSizing: 'border-box',
+                lineHeight: 1.65,
+                minHeight: 200,
+              }}
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0, flexWrap: 'wrap' }}>
+            <BpCopyBtn text={output} label='COPY' />
+          </div>
+        </Panel>
+      </div>
+
+      {/* Error / empty state */}
+      {error && (
+        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', borderTop: '1px solid rgba(239,68,68,0.3)', background: 'rgba(127,29,29,0.15)' }}>
+          <AlertCircle style={{ width: 16, height: 16, color: '#f87171', flexShrink: 0, marginTop: 1 }} />
+          <span style={{ fontSize: 12, color: '#fca5a5' }}>{error}</span>
+        </div>
+      )}
+
+      {!input.trim() && !error && (
+        <div style={{ position: 'absolute', bottom: 40, left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, pointerEvents: 'none' }}>
+          <Type style={{ width: 32, height: 32, color: 'var(--bp-ink-faint)', opacity: 0.5 }} />
+          <span style={{ fontSize: 11, color: 'var(--bp-ink-faint)' }}>Enter text and choose an operation to get started</span>
+        </div>
+      )}
+    </div>
   );
 }

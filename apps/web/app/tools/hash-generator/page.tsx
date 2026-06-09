@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import { BpCopyBtn } from '@/components/blueprint';
 import { Hash } from 'lucide-react';
 import CryptoJS from 'crypto-js';
 
@@ -9,6 +9,31 @@ type HashAlgorithm = 'md5' | 'sha1' | 'sha256' | 'sha512';
 type OutputFormat = 'hex' | 'base64';
 
 interface HashResult { algorithm: HashAlgorithm; value: string; length: number; }
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#4ad29a',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export default function HashGeneratorPage() {
   const [input, setInput] = useState('');
@@ -56,78 +81,144 @@ export default function HashGeneratorPage() {
   };
 
   return (
-    <BpToolStage cat='data'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Hash Generator</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Generate cryptographic hashes for text input</p>
+    <div
+      className='h-full flex flex-col overflow-hidden relative'
+      data-cat='data'
+      style={{ ...CSS_VARS, background: 'var(--bp-bg)', color: 'var(--bp-ink)', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: 0, marginBottom: 2, letterSpacing: '0.02em' }}>Hash Generator</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Generate MD5, SHA-1, SHA-256 and SHA-512 digests</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-3xl mx-auto space-y-4'>
+      {/* Main content */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
 
-          <BpPanel title='Input Text'>
-            <textarea className='bp-textarea font-mono text-sm' placeholder='Enter text to hash...' value={input} onChange={(e) => setInput(e.target.value)} rows={8} />
-          </BpPanel>
+        {/* Left: Input + Config */}
+        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: '1px solid var(--bp-border)' }}>
+          <Panel title='Input Text' style={{ flex: 1, minHeight: 0, border: 0, borderBottom: '1px solid var(--bp-border)' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder='Enter text to hash...'
+                spellCheck={false}
+                style={{
+                  flex: 1, width: '100%', background: 'var(--bp-bg)', border: 0,
+                  color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12,
+                  padding: '12px 14px', resize: 'none', outline: 'none',
+                  boxSizing: 'border-box', lineHeight: 1.65,
+                }}
+              />
+            </div>
+          </Panel>
 
-          <BpPanel title='Configuration'>
-            <div className='space-y-4'>
+          <Panel title='Configuration' style={{ border: 0, flexShrink: 0 }}>
+            <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <label className='block text-xs text-gray-500 mb-2'>Hash Algorithms</label>
-                <div className='flex flex-wrap gap-2'>
-                  {(['md5', 'sha1', 'sha256', 'sha512'] as HashAlgorithm[]).map((alg) => (
-                    <label key={alg} className='flex items-center gap-2 px-3 py-2 rounded border border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] cursor-pointer hover:bg-[#222] transition-colors'>
-                      <input type='checkbox' checked={algorithms.includes(alg)} onChange={() => handleAlgorithmToggle(alg)} className='w-4 h-4' />
-                      <span className='text-sm text-gray-300'>{alg.toUpperCase()}</span>
-                    </label>
-                  ))}
+                <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 8 }}>Hash Algorithms</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {(['md5', 'sha1', 'sha256', 'sha512'] as HashAlgorithm[]).map((alg) => {
+                    const checked = algorithms.includes(alg);
+                    return (
+                      <label
+                        key={alg}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 6,
+                          padding: '5px 10px', cursor: 'pointer',
+                          border: `1px solid ${checked ? 'var(--bp-accent)' : 'var(--bp-border-str)'}`,
+                          background: checked ? 'rgba(74,210,154,0.08)' : 'var(--bp-elevated)',
+                          fontSize: 11, color: checked ? 'var(--bp-accent)' : 'var(--bp-ink-mute)',
+                          userSelect: 'none',
+                        }}
+                      >
+                        <input
+                          type='checkbox'
+                          checked={checked}
+                          onChange={() => handleAlgorithmToggle(alg)}
+                          style={{ width: 12, height: 12, accentColor: 'var(--bp-accent)' }}
+                        />
+                        <span style={{ fontWeight: 600, letterSpacing: '0.05em' }}>{alg.toUpperCase()}</span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
               <div>
-                <label className='block text-xs text-gray-500 mb-2'>Output Format</label>
-                <div className='flex gap-2'>
-                  {(['hex', 'base64'] as OutputFormat[]).map((f) => (
-                    <button key={f} onClick={() => setOutputFormat(f)} type='button'
-                      className={`px-3 py-1.5 text-sm rounded border transition-colors ${outputFormat === f ? 'bg-blue-600 text-white border-blue-600' : 'border-[hsla(0,0%,20%,1)] text-gray-400 hover:text-gray-200'}`}>
-                      {f === 'hex' ? 'Hex' : 'Base64'}
-                    </button>
-                  ))}
+                <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 8 }}>Output Format</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {(['hex', 'base64'] as OutputFormat[]).map((f) => {
+                    const active = outputFormat === f;
+                    return (
+                      <button
+                        key={f}
+                        onClick={() => setOutputFormat(f)}
+                        type='button'
+                        style={{
+                          padding: '5px 14px', fontSize: 11, cursor: 'pointer',
+                          border: `1px solid ${active ? 'var(--bp-accent)' : 'var(--bp-border-str)'}`,
+                          background: active ? 'rgba(74,210,154,0.08)' : 'var(--bp-elevated)',
+                          color: active ? 'var(--bp-accent)' : 'var(--bp-ink-mute)',
+                          fontFamily: 'inherit', fontWeight: 600, letterSpacing: '0.05em',
+                          outline: 'none',
+                        }}
+                      >
+                        {f === 'hex' ? 'HEX' : 'BASE64'}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-              <button className='bp-btn bp-btn-solid w-full' onClick={handleGenerate} disabled={!input.trim() || algorithms.length === 0} type='button'>
-                <Hash className='w-4 h-4 mr-2 inline' />GENERATE HASHES
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+              <button
+                className='bp-btn bp-btn-solid'
+                onClick={handleGenerate}
+                disabled={!input.trim() || algorithms.length === 0}
+                type='button'
+                style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, justifyContent: 'center' }}
+              >
+                <Hash style={{ width: 13, height: 13 }} />
+                GENERATE HASHES
               </button>
             </div>
-          </BpPanel>
+          </Panel>
+        </div>
 
-          {results.length > 0 && (
-            <BpPanel title='Results'>
-              <div className='space-y-4'>
+        {/* Right: Results */}
+        <Panel title='Results' meta={results.length > 0 ? `${results.length} hash${results.length !== 1 ? 'es' : ''}` : undefined} style={{ border: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            {results.length > 0 ? (
+              <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {results.map((result) => (
                   <div key={result.algorithm}>
-                    <div className='flex items-center justify-between mb-1'>
-                      <span className='text-xs font-mono font-semibold text-gray-300'>{result.algorithm.toUpperCase()}</span>
-                      <div className='flex items-center gap-2'>
-                        <span className='text-xs text-gray-600'>{result.length} chars</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-accent)' }}>
+                        {result.algorithm.toUpperCase()}
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 9, color: 'var(--bp-ink-faint)' }}>{result.length} chars</span>
                         <BpCopyBtn text={result.value} label='COPY' />
                       </div>
                     </div>
-                    <div className='bp-code-view'>
-                      <pre className='bp-code-pre break-all whitespace-pre-wrap'>{result.value}</pre>
+                    <div style={{ background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', padding: '10px 12px' }}>
+                      <pre style={{ margin: 0, fontSize: 11, color: 'var(--bp-ink)', fontFamily: 'inherit', wordBreak: 'break-all', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                        {result.value}
+                      </pre>
                     </div>
                   </div>
                 ))}
               </div>
-            </BpPanel>
-          )}
-
-          {!input.trim() && (
-            <div className='text-center text-gray-600 py-12'>
-              <Hash className='w-12 h-12 mx-auto mb-4 opacity-40' />
-              <p className='text-sm'>Enter text and select algorithms to generate hashes</p>
-            </div>
-          )}
-        </div>
+            ) : (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, color: 'var(--bp-ink-faint)' }}>
+                <Hash style={{ width: 36, height: 36, opacity: 0.3 }} />
+                <span style={{ fontSize: 11 }}>Enter text and generate hashes</span>
+              </div>
+            )}
+          </div>
+        </Panel>
       </div>
-    </BpToolStage>
+    </div>
   );
 }

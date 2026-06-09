@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import { BpCopyBtn } from '@/components/blueprint';
 import { Scan, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import bcrypt from 'bcryptjs';
 import { argon2id, argon2i, argon2d } from 'hash-wasm';
@@ -14,6 +14,18 @@ interface VerifyResult { match: boolean; durationMs: number; }
 interface HashOptions { bcryptRounds: number; argon2Iterations: number; argon2Memory: number; argon2Parallelism: number; }
 
 const DEFAULT_OPTIONS: HashOptions = { bcryptRounds: 12, argon2Iterations: 3, argon2Memory: 65536, argon2Parallelism: 4 };
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#ff7a85',
+} as React.CSSProperties;
 
 function generateSalt(length: number): Uint8Array { return crypto.getRandomValues(new Uint8Array(length)); }
 
@@ -45,6 +57,19 @@ const algorithms: { value: Algorithm; label: string; desc: string }[] = [
   { value: 'argon2i', label: 'Argon2i', desc: 'Side-channel resistant' },
   { value: 'argon2d', label: 'Argon2d', desc: 'GPU resistant' },
 ];
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export default function BcryptGeneratorPage() {
   const [tab, setTab] = useState<Tab>('hash');
@@ -78,117 +103,156 @@ export default function BcryptGeneratorPage() {
   };
 
   return (
-    <BpToolStage cat='security'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Bcrypt / Argon2 Generator</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Generate and verify bcrypt and Argon2 password hashes — all in-browser, nothing leaves your machine</p>
+    <div className='h-full flex flex-col overflow-hidden' data-cat='security' style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}>
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Bcrypt / Argon2 Generator</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Generate and verify bcrypt and Argon2 password hashes — all in-browser, nothing leaves your machine</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-2xl mx-auto space-y-4'>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-          <div className='flex gap-1 bg-[#121212] rounded-lg p-1 w-fit'>
-            {(['hash', 'verify'] as Tab[]).map((t) => (
-              <button key={t} type='button' onClick={() => { setTab(t); setError(null); setHashResult(null); setVerifyResult(null); }}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors capitalize ${tab === t ? 'bg-[#2a2a2a] text-white' : 'text-gray-500 hover:text-gray-300'}`}>
-                {t}
-              </button>
-            ))}
-          </div>
+        {/* Tab switcher */}
+        <div style={{ display: 'flex', gap: 4, background: 'var(--bp-surface)', border: '1px solid var(--bp-border)', padding: 4, width: 'fit-content' }}>
+          {(['hash', 'verify'] as Tab[]).map((t) => (
+            <button key={t} type='button' onClick={() => { setTab(t); setError(null); setHashResult(null); setVerifyResult(null); }}
+              style={{ padding: '4px 16px', fontSize: 11, fontFamily: 'inherit', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'capitalize', cursor: 'pointer', border: 'none', transition: 'background 0.15s, color 0.15s', background: tab === t ? 'var(--bp-elevated)' : 'transparent', color: tab === t ? '#fff' : 'var(--bp-ink-mute)' }}>
+              {t}
+            </button>
+          ))}
+        </div>
 
-          {tab === 'hash' && (
-            <>
-              <BpPanel title='Algorithm'>
-                <div className='grid grid-cols-2 gap-2 mb-4'>
+        {tab === 'hash' && (
+          <>
+            <Panel title='Algorithm'>
+              <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {algorithms.map((a) => (
                     <button key={a.value} type='button' onClick={() => setAlgorithm(a.value)}
-                      className={`text-left rounded px-3 py-2 border transition-colors ${algorithm === a.value ? 'bg-blue-500/10 border-blue-500/50 text-white' : 'bg-[#121212] border-[hsla(0,0%,20%,1)] text-gray-300 hover:bg-[#1a1a1a]'}`}>
-                      <p className='text-sm font-medium font-mono'>{a.label}</p>
-                      <p className='text-xs text-gray-500'>{a.desc}</p>
+                      style={{ textAlign: 'left', padding: '8px 12px', border: `1px solid ${algorithm === a.value ? 'var(--bp-accent)' : 'var(--bp-border)'}`, background: algorithm === a.value ? 'rgba(255,122,133,0.08)' : 'var(--bp-bg)', cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, background 0.15s' }}>
+                      <p style={{ fontSize: 12, fontWeight: 600, color: '#fff', margin: 0 }}>{a.label}</p>
+                      <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', margin: 0, marginTop: 2 }}>{a.desc}</p>
                     </button>
                   ))}
                 </div>
                 {algorithm === 'bcrypt' ? (
                   <div>
-                    <label className='block text-xs text-gray-500 mb-1'>Cost factor (rounds): <span className='font-mono text-white'>{options.bcryptRounds}</span><span className='text-gray-500 ml-2'>({Math.pow(2, options.bcryptRounds).toLocaleString()} iterations)</span></label>
-                    <input type='range' min={4} max={16} value={options.bcryptRounds} onChange={(e) => setOptions({ ...options, bcryptRounds: parseInt(e.target.value) })} className='w-full accent-blue-500' />
-                    <div className='flex justify-between text-xs text-gray-500 mt-1'><span>4 (fast)</span><span>10 (default)</span><span>16 (slow)</span></div>
+                    <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 6 }}>
+                      Cost factor (rounds): <span style={{ color: '#fff' }}>{options.bcryptRounds}</span>
+                      <span style={{ color: 'var(--bp-ink-mute)', marginLeft: 8 }}>({Math.pow(2, options.bcryptRounds).toLocaleString()} iterations)</span>
+                    </label>
+                    <input type='range' min={4} max={16} value={options.bcryptRounds} onChange={(e) => setOptions({ ...options, bcryptRounds: parseInt(e.target.value) })} style={{ width: '100%', accentColor: 'var(--bp-accent)' }} />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--bp-ink-mute)', marginTop: 4 }}>
+                      <span>4 (fast)</span><span>10 (default)</span><span>16 (slow)</span>
+                    </div>
                   </div>
                 ) : (
-                  <div className='grid grid-cols-3 gap-3'>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
                     {[{ label: 'Iterations', key: 'argon2Iterations' as const, min: 1, max: 16 }, { label: 'Memory (KB)', key: 'argon2Memory' as const, min: 4096, max: 262144, step: 4096 }, { label: 'Parallelism', key: 'argon2Parallelism' as const, min: 1, max: 8 }].map(({ label, key, min, max, step = 1 }) => (
                       <div key={key}>
-                        <label className='block text-xs text-gray-500 mb-1'>{label}</label>
-                        <input type='number' value={options[key]} min={min} max={max} step={step} onChange={(e) => setOptions({ ...options, [key]: parseInt(e.target.value) || min })} className='bp-input w-full font-mono' />
+                        <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>{label}</label>
+                        <input type='number' value={options[key]} min={min} max={max} step={step} onChange={(e) => setOptions({ ...options, [key]: parseInt(e.target.value) || min })}
+                          style={{ width: '100%', background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }} />
                       </div>
                     ))}
                   </div>
                 )}
-              </BpPanel>
+              </div>
+            </Panel>
 
-              <BpPanel title='Password'>
-                <input value={password} onChange={(e) => setPassword(e.target.value)} type='text' placeholder='Enter password to hash…' className='bp-input w-full font-mono mb-3' onKeyDown={(e) => e.key === 'Enter' && handleHash()} />
-                <button type='button' className='bp-btn bp-btn-solid w-full' onClick={handleHash} disabled={loading || !password}>
+            <Panel title='Password'>
+              <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <input value={password} onChange={(e) => setPassword(e.target.value)} type='text' placeholder='Enter password to hash…'
+                  style={{ width: '100%', background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
+                  onKeyDown={(e) => e.key === 'Enter' && handleHash()} />
+                <button type='button' className='bp-btn bp-btn-solid' onClick={handleHash} disabled={loading || !password} style={{ width: '100%' }}>
                   <Scan className='w-4 h-4 mr-2 inline' />{loading ? 'Hashing…' : `GENERATE ${algorithms.find(a => a.value === algorithm)?.label.toUpperCase()} HASH`}
                 </button>
-              </BpPanel>
+              </div>
+            </Panel>
 
-              {error && <div className='flex items-center gap-2 p-3 rounded border border-red-500/40 bg-red-950/20'><AlertCircle className='w-4 h-4 text-red-400 shrink-0' /><span className='text-sm text-red-300'>{error}</span></div>}
+            {error && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(127,29,29,0.15)' }}>
+                <AlertCircle style={{ width: 16, height: 16, color: '#f87171', flexShrink: 0 }} />
+                <span style={{ fontSize: 12, color: '#fca5a5' }}>{error}</span>
+              </div>
+            )}
 
-              {hashResult && (
-                <BpPanel title={`${algorithms.find(a => a.value === hashResult.algorithm)?.label} Hash`} meta={`Generated in ${hashResult.durationMs}ms`}>
-                  <div className='bp-panel-actions mb-3'><BpCopyBtn text={hashResult.hash} label='COPY' /></div>
-                  <div className='bp-code-view px-4 py-3 font-mono text-xs text-green-400 break-all'>{hashResult.hash}</div>
-                  <button type='button' className='bp-btn w-full mt-3' onClick={() => { setTab('verify'); setVerifyHash(hashResult.hash); }}>Test this hash in Verify tab →</button>
-                </BpPanel>
-              )}
-            </>
-          )}
-
-          {tab === 'verify' && (
-            <>
-              <BpPanel title='Verify Password'>
-                <div className='space-y-3'>
-                  <div>
-                    <label className='block text-xs text-gray-500 mb-1'>Password</label>
-                    <input value={verifyPassword_} onChange={(e) => setVerifyPassword_(e.target.value)} type='text' placeholder='Password to test…' className='bp-input w-full font-mono' onKeyDown={(e) => e.key === 'Enter' && handleVerify()} />
+            {hashResult && (
+              <Panel title={`${algorithms.find(a => a.value === hashResult.algorithm)?.label} Hash`} meta={`Generated in ${hashResult.durationMs}ms`}>
+                <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <BpCopyBtn text={hashResult.hash} label='COPY' />
                   </div>
-                  <div>
-                    <label className='block text-xs text-gray-500 mb-1'>Hash</label>
-                    <textarea value={verifyHash} onChange={(e) => setVerifyHash(e.target.value)} placeholder='$2b$12$… or $argon2id$v=…' rows={4} className='bp-textarea font-mono text-xs' />
-                    <p className='text-xs text-gray-500 mt-1'>Algorithm is auto-detected from the hash prefix</p>
-                  </div>
-                  <button type='button' className='bp-btn bp-btn-solid w-full' onClick={handleVerify} disabled={loading || !verifyPassword_ || !verifyHash}>
-                    <Scan className='w-4 h-4 mr-2 inline' />{loading ? 'Verifying…' : 'VERIFY PASSWORD'}
+                  <div style={{ background: 'var(--bp-bg)', padding: '10px 14px', fontSize: 11, color: '#4ade80', wordBreak: 'break-all', lineHeight: 1.65 }}>{hashResult.hash}</div>
+                  <button type='button' className='bp-btn' onClick={() => { setTab('verify'); setVerifyHash(hashResult.hash); }} style={{ width: '100%' }}>
+                    Test this hash in Verify tab →
                   </button>
                 </div>
-              </BpPanel>
+              </Panel>
+            )}
+          </>
+        )}
 
-              {error && <div className='flex items-center gap-2 p-3 rounded border border-red-500/40 bg-red-950/20'><AlertCircle className='w-4 h-4 text-red-400 shrink-0' /><span className='text-sm text-red-300'>{error}</span></div>}
-
-              {verifyResult && (
-                <div className={`flex items-center gap-3 p-4 rounded border ${verifyResult.match ? 'border-green-500/40 bg-green-950/20' : 'border-red-500/40 bg-red-950/20'}`}>
-                  {verifyResult.match ? <CheckCircle className='w-6 h-6 text-green-400 shrink-0' /> : <XCircle className='w-6 h-6 text-red-400 shrink-0' />}
-                  <div>
-                    <p className={`text-lg font-semibold ${verifyResult.match ? 'text-green-400' : 'text-red-400'}`}>{verifyResult.match ? 'Password matches' : 'Password does not match'}</p>
-                    <p className='text-xs text-gray-500'>Verified in {verifyResult.durationMs}ms</p>
-                  </div>
+        {tab === 'verify' && (
+          <>
+            <Panel title='Verify Password'>
+              <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Password</label>
+                  <input value={verifyPassword_} onChange={(e) => setVerifyPassword_(e.target.value)} type='text' placeholder='Password to test…'
+                    style={{ width: '100%', background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
+                    onKeyDown={(e) => e.key === 'Enter' && handleVerify()} />
                 </div>
-              )}
-            </>
-          )}
+                <div>
+                  <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Hash</label>
+                  <textarea value={verifyHash} onChange={(e) => setVerifyHash(e.target.value)} placeholder='$2b$12$… or $argon2id$v=…' rows={4}
+                    style={{ width: '100%', background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', resize: 'none', outline: 'none', boxSizing: 'border-box', lineHeight: 1.65 }} />
+                  <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', margin: '4px 0 0' }}>Algorithm is auto-detected from the hash prefix</p>
+                </div>
+                <button type='button' className='bp-btn bp-btn-solid' onClick={handleVerify} disabled={loading || !verifyPassword_ || !verifyHash} style={{ width: '100%' }}>
+                  <Scan className='w-4 h-4 mr-2 inline' />{loading ? 'Verifying…' : 'VERIFY PASSWORD'}
+                </button>
+              </div>
+            </Panel>
 
-          <BpPanel title='Algorithm Guide'>
-            <div className='space-y-2 text-xs text-gray-400'>
-              <div className='flex gap-2'><span className='font-mono text-blue-400 w-20 shrink-0'>bcrypt</span><span>Widely supported, 72-char password limit, cost factor controls speed</span></div>
-              <div className='flex gap-2'><span className='font-mono text-green-400 w-20 shrink-0'>argon2id</span><span>Winner of Password Hashing Competition. Resistant to both side-channel and GPU attacks. Recommended for new systems</span></div>
-              <div className='flex gap-2'><span className='font-mono text-yellow-400 w-20 shrink-0'>argon2i</span><span>Optimised against side-channel attacks; prefer argon2id unless you have a specific reason</span></div>
-              <div className='flex gap-2'><span className='font-mono text-orange-400 w-20 shrink-0'>argon2d</span><span>Maximum GPU resistance; vulnerable to side-channel — not suitable for password hashing</span></div>
-            </div>
-          </BpPanel>
+            {error && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(127,29,29,0.15)' }}>
+                <AlertCircle style={{ width: 16, height: 16, color: '#f87171', flexShrink: 0 }} />
+                <span style={{ fontSize: 12, color: '#fca5a5' }}>{error}</span>
+              </div>
+            )}
 
-        </div>
+            {verifyResult && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', border: `1px solid ${verifyResult.match ? 'rgba(74,222,128,0.4)' : 'rgba(239,68,68,0.4)'}`, background: verifyResult.match ? 'rgba(20,83,45,0.2)' : 'rgba(127,29,29,0.2)' }}>
+                {verifyResult.match
+                  ? <CheckCircle style={{ width: 24, height: 24, color: '#4ade80', flexShrink: 0 }} />
+                  : <XCircle style={{ width: 24, height: 24, color: '#f87171', flexShrink: 0 }} />}
+                <div>
+                  <p style={{ fontSize: 16, fontWeight: 600, color: verifyResult.match ? '#4ade80' : '#f87171', margin: 0 }}>{verifyResult.match ? 'Password matches' : 'Password does not match'}</p>
+                  <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', margin: 0, marginTop: 2 }}>Verified in {verifyResult.durationMs}ms</p>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        <Panel title='Algorithm Guide'>
+          <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[
+              { key: 'bcrypt', color: '#60a5fa', text: 'Widely supported, 72-char password limit, cost factor controls speed' },
+              { key: 'argon2id', color: '#4ade80', text: 'Winner of Password Hashing Competition. Resistant to both side-channel and GPU attacks. Recommended for new systems' },
+              { key: 'argon2i', color: '#facc15', text: 'Optimised against side-channel attacks; prefer argon2id unless you have a specific reason' },
+              { key: 'argon2d', color: '#fb923c', text: 'Maximum GPU resistance; vulnerable to side-channel — not suitable for password hashing' },
+            ].map(({ key, color, text }) => (
+              <div key={key} style={{ display: 'flex', gap: 8 }}>
+                <span style={{ fontSize: 11, color, width: 72, flexShrink: 0 }}>{key}</span>
+                <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)' }}>{text}</span>
+              </div>
+            ))}
+          </div>
+        </Panel>
+
       </div>
-    </BpToolStage>
+    </div>
   );
 }

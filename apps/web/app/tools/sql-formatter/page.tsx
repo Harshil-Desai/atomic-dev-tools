@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import React, { useState } from 'react';
+import { BpCopyBtn } from '@/components/blueprint';
 import { LayoutList, AlertCircle } from 'lucide-react';
 
 // ─── SQL keywords ─────────────────────────────────────────────────────────────
@@ -133,6 +133,33 @@ const EXAMPLES = [
   { label: 'UPDATE', sql: `UPDATE users SET last_login = NOW(), login_count = login_count + 1, updated_at = NOW() WHERE id = 42;` },
 ];
 
+// ─── blueprint design ─────────────────────────────────────────────────────────
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#c792ea',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 // ─── component ────────────────────────────────────────────────────────────────
 
 export default function SQLFormatterPage() {
@@ -150,96 +177,152 @@ export default function SQLFormatterPage() {
   };
 
   return (
-    <BpToolStage cat='backend'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>SQL Formatter & Linter</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Pretty-print SQL with keyword normalization and basic lint warnings</p>
+    <div
+      className='h-full flex flex-col overflow-hidden'
+      data-cat='backend'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>SQL Formatter</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Format and beautify SQL queries with syntax highlighting</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-5xl mx-auto space-y-4'>
-
-          <BpPanel title='Options'>
-            <div className='flex flex-wrap gap-6 items-end mb-4'>
-              <div>
-                <label className='block text-xs text-gray-500 mb-2'>Indent</label>
-                <div className='flex gap-2'>
-                  {[2, 4].map((n) => (
-                    <button key={n} type='button' onClick={() => setIndentSize(n)}
-                      className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${indentSize === n ? 'bg-blue-600 text-white' : 'bp-btn'}`}>
-                      {n} spaces
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className='block text-xs text-gray-500 mb-2'>Keywords</label>
-                <div className='flex gap-2'>
-                  <button type='button' onClick={() => setUppercase(true)} className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${uppercase ? 'bg-blue-600 text-white' : 'bp-btn'}`}>UPPERCASE</button>
-                  <button type='button' onClick={() => setUppercase(false)} className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${!uppercase ? 'bg-blue-600 text-white' : 'bp-btn'}`}>lowercase</button>
-                </div>
-              </div>
-              <div>
-                <label className='block text-xs text-gray-500 mb-2'>Dialect</label>
-                <div className='flex gap-2 flex-wrap'>
-                  {[['standard', 'Standard'], ['postgresql', 'PostgreSQL'], ['mysql', 'MySQL'], ['sqlite', 'SQLite']].map(([d, label]) => (
-                    <button key={d} type='button' onClick={() => setDialect(d)}
-                      className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${dialect === d ? 'bg-blue-600 text-white' : 'bp-btn'}`}>
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div>
-              <p className='text-xs text-gray-500 mb-2'>Examples</p>
-              <div className='flex gap-2 flex-wrap'>
-                {EXAMPLES.map((ex) => (
-                  <button key={ex.label} type='button' onClick={() => setInput(ex.sql)}
-                    className='text-xs px-3 py-1.5 rounded border border-[hsla(0,0%,20%,1)] bg-[#121212] hover:bg-[#222] text-gray-300 transition-colors'>
-                    {ex.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </BpPanel>
-
-          <div className='bp-layout-2col'>
-            <BpPanel title='Input SQL'>
-              <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder='Paste raw SQL here…'
-                rows={18} className='bp-textarea font-mono text-xs mb-3' />
-              <button type='button' className='bp-btn bp-btn-solid w-full' onClick={handleFormat} disabled={!input.trim()}>
-                <LayoutList className='w-4 h-4 mr-2 inline' />FORMAT SQL
+      {/* Options bar */}
+      <div style={{ borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0, padding: '8px 16px', display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end' }}>
+        {/* Indent */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)' }}>Indent</span>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {[2, 4].map((n) => (
+              <button
+                key={n}
+                type='button'
+                onClick={() => setIndentSize(n)}
+                className='bp-chip'
+                style={indentSize === n ? { background: 'var(--bp-accent)', color: '#000', borderColor: 'var(--bp-accent)' } : {}}
+              >
+                {n} spaces
               </button>
-            </BpPanel>
-
-            <BpPanel title='Formatted Output'>
-              {output && (
-                <div className='bp-panel-actions mb-3'>
-                  <BpCopyBtn text={output} label='COPY' />
-                </div>
-              )}
-              <pre className='bp-code-pre min-h-64 p-4 font-mono text-xs text-gray-300 overflow-auto whitespace-pre'>
-                {output || <span className='text-gray-600'>Formatted SQL will appear here…</span>}
-              </pre>
-            </BpPanel>
+            ))}
           </div>
+        </div>
 
-          {warnings.length > 0 && (
-            <BpPanel title='Lint Warnings'>
-              <div className='space-y-2'>
-                {warnings.map((w, i) => (
-                  <div key={i} className={`flex items-start gap-2 text-sm ${w.severity === 'error' ? 'text-red-400' : 'text-yellow-400'}`}>
-                    <AlertCircle className='w-4 h-4 shrink-0 mt-0.5' />
-                    <span>{w.message}</span>
-                  </div>
-                ))}
-              </div>
-            </BpPanel>
-          )}
+        {/* Keywords */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)' }}>Keywords</span>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button
+              type='button'
+              onClick={() => setUppercase(true)}
+              className='bp-chip'
+              style={uppercase ? { background: 'var(--bp-accent)', color: '#000', borderColor: 'var(--bp-accent)' } : {}}
+            >
+              UPPERCASE
+            </button>
+            <button
+              type='button'
+              onClick={() => setUppercase(false)}
+              className='bp-chip'
+              style={!uppercase ? { background: 'var(--bp-accent)', color: '#000', borderColor: 'var(--bp-accent)' } : {}}
+            >
+              lowercase
+            </button>
+          </div>
+        </div>
 
+        {/* Dialect */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)' }}>Dialect</span>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {[['standard', 'Standard'], ['postgresql', 'PostgreSQL'], ['mysql', 'MySQL'], ['sqlite', 'SQLite']].map(([d, label]) => (
+              <button
+                key={d}
+                type='button'
+                onClick={() => setDialect(d)}
+                className='bp-chip'
+                style={dialect === d ? { background: 'var(--bp-accent)', color: '#000', borderColor: 'var(--bp-accent)' } : {}}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Examples */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)' }}>Examples</span>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {EXAMPLES.map((ex) => (
+              <button
+                key={ex.label}
+                type='button'
+                onClick={() => setInput(ex.sql)}
+                className='bp-chip'
+              >
+                {ex.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
-    </BpToolStage>
+
+      {/* Main 2-col layout */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+        {/* Input panel */}
+        <Panel title='Input SQL' style={{ borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder='Paste raw SQL here…'
+              style={{ flex: 1, width: '100%', background: 'var(--bp-bg)', border: 0, color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '12px 14px', resize: 'none', outline: 'none', boxSizing: 'border-box', lineHeight: 1.65, minHeight: 200 }}
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <button
+              type='button'
+              className='bp-btn bp-btn-solid'
+              onClick={handleFormat}
+              disabled={!input.trim()}
+              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              <LayoutList style={{ width: 14, height: 14 }} />
+              FORMAT SQL
+            </button>
+          </div>
+        </Panel>
+
+        {/* Output panel */}
+        <Panel title='Formatted Output' style={{ borderTop: 0, borderBottom: 0, borderRight: 0 }}>
+          {output && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 12px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0, background: 'var(--bp-surface)' }}>
+              <BpCopyBtn text={output} label='COPY' />
+            </div>
+          )}
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            <pre style={{ margin: 0, padding: '12px 14px', fontFamily: 'inherit', fontSize: 12, color: 'var(--bp-ink)', whiteSpace: 'pre', lineHeight: 1.65 }}>
+              {output || <span style={{ color: 'var(--bp-ink-faint)' }}>Formatted SQL will appear here…</span>}
+            </pre>
+          </div>
+        </Panel>
+      </div>
+
+      {/* Lint warnings */}
+      {warnings.length > 0 && (
+        <div style={{ flexShrink: 0, borderTop: '1px solid var(--bp-border)' }}>
+          <Panel title='Lint Warnings' meta={`${warnings.length} issue${warnings.length !== 1 ? 's' : ''}`} style={{ border: 0 }}>
+            <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {warnings.map((w, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: w.severity === 'error' ? '#f87171' : '#fbbf24' }}>
+                  <AlertCircle style={{ width: 14, height: 14, flexShrink: 0, marginTop: 1 }} />
+                  <span>{w.message}</span>
+                </div>
+              ))}
+            </div>
+          </Panel>
+        </div>
+      )}
+    </div>
   );
 }

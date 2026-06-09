@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import { BpCopyBtn } from '@/components/blueprint';
 import { AlertCircle } from 'lucide-react';
 
 // ─── cron → systemd OnCalendar conversion ────────────────────────────────────
@@ -131,6 +131,35 @@ const EXAMPLES = [
   { label: '@hourly shortcut', expr: '@hourly' },
 ];
 
+// ─── CSS vars ─────────────────────────────────────────────────────────────────
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#b48cff',
+} as React.CSSProperties;
+
+// ─── local Panel component ────────────────────────────────────────────────────
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 // ─── component ────────────────────────────────────────────────────────────────
 
 export default function SystemdTimerGeneratorPage() {
@@ -163,110 +192,190 @@ export default function SystemdTimerGeneratorPage() {
     : null;
 
   return (
-    <BpToolStage cat='infra'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Systemd Timer Generator</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Convert cron expressions into systemd .timer and .service unit files</p>
+    <div className='h-full flex flex-col overflow-hidden' data-cat='systems' style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}>
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Systemd Timer Generator</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Convert cron expressions into systemd .timer and .service unit files</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-4xl mx-auto space-y-4'>
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '380px 1fr', overflow: 'hidden' }}>
 
-          <BpPanel title='Configuration'>
-            <div className='space-y-4'>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Cron Expression</label>
-                <input value={cronExpr} onChange={(e) => handleExprChange(e.target.value)} placeholder='*/5 * * * *' className='bp-input w-full font-mono' />
-                <p className='text-xs text-gray-500 mt-1'>5-field cron (min hr day month weekday) or shortcuts like @daily</p>
+        {/* LEFT: Configuration + Examples */}
+        <Panel title='Configuration' style={{ borderTop: 0, borderLeft: 0, borderRight: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+
+            {/* Cron expression */}
+            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bp-border)' }}>
+              <label style={{ display: 'block', fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 6 }}>Cron Expression</label>
+              <input
+                value={cronExpr}
+                onChange={(e) => handleExprChange(e.target.value)}
+                placeholder='*/5 * * * *'
+                style={{ width: '100%', background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
+              />
+              <p style={{ fontSize: 10, color: 'var(--bp-ink-faint)', margin: '5px 0 0' }}>5-field cron (min hr day month weekday) or shortcuts like @daily</p>
+            </div>
+
+            {/* Unit Name + ExecStart */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid var(--bp-border)' }}>
+              <div style={{ padding: '12px 14px', borderRight: '1px solid var(--bp-border)' }}>
+                <label style={{ display: 'block', fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 6 }}>Unit Name</label>
+                <input
+                  value={unitName}
+                  onChange={(e) => setUnitName(e.target.value.replace(/\s+/g, '-'))}
+                  placeholder='my-job'
+                  style={{ width: '100%', background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
+                />
+                <p style={{ fontSize: 10, color: 'var(--bp-ink-faint)', margin: '5px 0 0' }}>{unitName || 'my-job'}.timer / .service</p>
               </div>
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                <div>
-                  <label className='block text-xs text-gray-500 mb-1'>Unit Name</label>
-                  <input value={unitName} onChange={(e) => setUnitName(e.target.value.replace(/\s+/g, '-'))} placeholder='my-job' className='bp-input w-full' />
-                  <p className='text-xs text-gray-500 mt-1'>Filename: {unitName || 'my-job'}.timer / .service</p>
-                </div>
-                <div>
-                  <label className='block text-xs text-gray-500 mb-1'>ExecStart</label>
-                  <input value={execStart} onChange={(e) => setExecStart(e.target.value)} placeholder='/usr/bin/my-job' className='bp-input w-full font-mono' />
-                </div>
+              <div style={{ padding: '12px 14px' }}>
+                <label style={{ display: 'block', fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 6 }}>ExecStart</label>
+                <input
+                  value={execStart}
+                  onChange={(e) => setExecStart(e.target.value)}
+                  placeholder='/usr/bin/my-job'
+                  style={{ width: '100%', background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
+                />
               </div>
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Description <span className='text-gray-600'>(optional)</span></label>
-                <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder='Describe what this job does' className='bp-input w-full' />
-              </div>
-              <label className='flex items-center gap-2 cursor-pointer'>
-                <input type='checkbox' checked={persistent} onChange={(e) => setPersistent(e.target.checked)} className='w-4 h-4 rounded' />
-                <span className='text-sm text-gray-300'>Persistent=true <span className='text-gray-500'>(catch up missed runs after downtime)</span></span>
+            </div>
+
+            {/* Description */}
+            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bp-border)' }}>
+              <label style={{ display: 'block', fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 6 }}>
+                Description <span style={{ color: 'var(--bp-ink-faint)', textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+              </label>
+              <input
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder='Describe what this job does'
+                style={{ width: '100%', background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            {/* Persistent checkbox */}
+            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bp-border)' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <input
+                  type='checkbox'
+                  checked={persistent}
+                  onChange={(e) => setPersistent(e.target.checked)}
+                  style={{ width: 14, height: 14, accentColor: 'var(--bp-accent)' }}
+                />
+                <span style={{ fontSize: 12, color: 'var(--bp-ink)' }}>
+                  Persistent=true{' '}
+                  <span style={{ color: 'var(--bp-ink-mute)' }}>(catch up missed runs after downtime)</span>
+                </span>
               </label>
             </div>
-          </BpPanel>
 
-          <BpPanel title='Quick Examples'>
-            <div className='grid grid-cols-2 sm:grid-cols-4 gap-2'>
-              {EXAMPLES.map((ex) => (
-                <button key={ex.expr} type='button' onClick={() => handleExprChange(ex.expr)}
-                  className='text-left rounded px-3 py-2 bg-[#121212] hover:bg-[#222] border border-[hsla(0,0%,20%,1)] transition-colors'>
-                  <p className='text-xs text-gray-400 mb-0.5'>{ex.label}</p>
-                  <p className='font-mono text-xs text-blue-400'>{ex.expr}</p>
-                </button>
-              ))}
+            {/* Quick Examples */}
+            <div style={{ padding: '12px 14px' }}>
+              <p style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', margin: '0 0 8px' }}>Quick Examples</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                {EXAMPLES.map((ex) => (
+                  <button
+                    key={ex.expr}
+                    type='button'
+                    onClick={() => handleExprChange(ex.expr)}
+                    style={{ textAlign: 'left', background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', padding: '7px 10px', cursor: 'pointer', transition: 'border-color 0.15s' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--bp-border-str)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--bp-border)')}
+                  >
+                    <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', margin: '0 0 2px' }}>{ex.label}</p>
+                    <p style={{ fontSize: 10, color: 'var(--bp-accent)', margin: 0, fontFamily: 'inherit' }}>{ex.expr}</p>
+                  </button>
+                ))}
+              </div>
             </div>
-          </BpPanel>
 
-          {error && (
-            <div className='flex items-center gap-2 p-3 rounded border border-red-500/40 bg-red-950/20'>
-              <AlertCircle className='w-4 h-4 text-red-400 shrink-0' />
-              <span className='text-sm text-red-300'>{error}</span>
-            </div>
-          )}
+          </div>
+        </Panel>
 
-          {!error && onCalendar && (
-            <>
-              <BpPanel title='Converted OnCalendar'>
-                <div className='flex items-center gap-2'>
-                  <code className='flex-1 bp-code-view px-3 py-2 font-mono text-sm text-green-400'>{onCalendar}</code>
-                  <BpCopyBtn text={onCalendar} label='COPY' />
+        {/* RIGHT: Output */}
+        <Panel title='Output' style={{ borderTop: 0, borderRight: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+
+            {error && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderBottom: '1px solid rgba(239,68,68,0.3)', background: 'rgba(127,29,29,0.15)', flexShrink: 0 }}>
+                <AlertCircle style={{ width: 14, height: 14, color: '#f87171', flexShrink: 0 }} />
+                <span style={{ fontSize: 12, color: '#fca5a5' }}>{error}</span>
+              </div>
+            )}
+
+            {!error && onCalendar && (
+              <>
+                {/* OnCalendar result */}
+                <div style={{ borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-elevated)' }}>
+                    <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>OnCalendar</span>
+                    <span style={{ marginLeft: 'auto' }}>
+                      <BpCopyBtn text={onCalendar} label='COPY' />
+                    </span>
+                  </div>
+                  <div style={{ padding: '10px 14px', background: 'var(--bp-bg)' }}>
+                    <code style={{ fontSize: 13, color: '#86efac', fontFamily: 'inherit' }}>{onCalendar}</code>
+                  </div>
                 </div>
-              </BpPanel>
 
-              {timerUnit && (
-                <BpPanel title={`${unitName || 'my-job'}.timer`}>
-                  <div className='bp-panel-actions mb-3'>
-                    <BpCopyBtn text={timerUnit} label='COPY' />
-                  </div>
-                  <pre className='bp-code-pre px-4 py-3 text-xs text-gray-300 overflow-x-auto whitespace-pre'>{timerUnit}</pre>
-                </BpPanel>
-              )}
-
-              {serviceUnit && (
-                <BpPanel title={`${unitName || 'my-job'}.service`}>
-                  <div className='bp-panel-actions mb-3'>
-                    <BpCopyBtn text={serviceUnit} label='COPY' />
-                  </div>
-                  <pre className='bp-code-pre px-4 py-3 text-xs text-gray-300 overflow-x-auto whitespace-pre'>{serviceUnit}</pre>
-                </BpPanel>
-              )}
-
-              <BpPanel title='Install Instructions'>
-                <div className='space-y-2'>
-                  {[
-                    `sudo cp ${unitName || 'my-job'}.timer ${unitName || 'my-job'}.service /etc/systemd/system/`,
-                    'sudo systemctl daemon-reload',
-                    `sudo systemctl enable --now ${unitName || 'my-job'}.timer`,
-                    `systemctl status ${unitName || 'my-job'}.timer`,
-                  ].map((cmd, i) => (
-                    <div key={i} className='flex items-center gap-2'>
-                      <code className='flex-1 bp-code-view px-3 py-2 font-mono text-xs text-gray-300'>{cmd}</code>
-                      <BpCopyBtn text={cmd} label='COPY' />
+                {/* Timer unit */}
+                {timerUnit && (
+                  <div style={{ borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-elevated)' }}>
+                      <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>{unitName || 'my-job'}.timer</span>
+                      <span style={{ marginLeft: 'auto' }}>
+                        <BpCopyBtn text={timerUnit} label='COPY' />
+                      </span>
                     </div>
-                  ))}
-                </div>
-              </BpPanel>
-            </>
-          )}
+                    <pre style={{ margin: 0, padding: '12px 14px', fontSize: 11, color: 'var(--bp-ink)', lineHeight: 1.7, background: 'var(--bp-bg)', overflowX: 'auto', whiteSpace: 'pre', fontFamily: 'inherit' }}>{timerUnit}</pre>
+                  </div>
+                )}
 
-        </div>
+                {/* Service unit */}
+                {serviceUnit && (
+                  <div style={{ borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-elevated)' }}>
+                      <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>{unitName || 'my-job'}.service</span>
+                      <span style={{ marginLeft: 'auto' }}>
+                        <BpCopyBtn text={serviceUnit} label='COPY' />
+                      </span>
+                    </div>
+                    <pre style={{ margin: 0, padding: '12px 14px', fontSize: 11, color: 'var(--bp-ink)', lineHeight: 1.7, background: 'var(--bp-bg)', overflowX: 'auto', whiteSpace: 'pre', fontFamily: 'inherit' }}>{serviceUnit}</pre>
+                  </div>
+                )}
+
+                {/* Install instructions */}
+                <div style={{ flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-elevated)' }}>
+                    <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+                    <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>Install Instructions</span>
+                  </div>
+                  <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6, background: 'var(--bp-bg)' }}>
+                    {[
+                      `sudo cp ${unitName || 'my-job'}.timer ${unitName || 'my-job'}.service /etc/systemd/system/`,
+                      'sudo systemctl daemon-reload',
+                      `sudo systemctl enable --now ${unitName || 'my-job'}.timer`,
+                      `systemctl status ${unitName || 'my-job'}.timer`,
+                    ].map((cmd, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <code style={{ flex: 1, background: 'var(--bp-surface)', border: '1px solid var(--bp-border)', padding: '6px 10px', fontSize: 11, color: 'var(--bp-ink)', fontFamily: 'inherit', overflowX: 'auto', whiteSpace: 'nowrap' }}>{cmd}</code>
+                        <BpCopyBtn text={cmd} label='COPY' />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {!error && !onCalendar && (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <p style={{ fontSize: 12, color: 'var(--bp-ink-faint)' }}>Enter a cron expression to generate unit files</p>
+              </div>
+            )}
+
+          </div>
+        </Panel>
+
       </div>
-    </BpToolStage>
+    </div>
   );
 }

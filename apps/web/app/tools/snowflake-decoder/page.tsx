@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import React, { useState } from 'react';
+import { BpCopyBtn } from '@/components/blueprint';
 import { AlertCircle } from 'lucide-react';
 
 // ─── Snowflake platforms ───────────────────────────────────────────────────────
@@ -103,6 +103,35 @@ const EXAMPLES: Record<string, string> = {
   mastodon: '108131495937255386',
 };
 
+// ─── CSS vars ─────────────────────────────────────────────────────────────────
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#c792ea',
+} as React.CSSProperties;
+
+// ─── local Panel component ────────────────────────────────────────────────────
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 // ─── component ────────────────────────────────────────────────────────────────
 
 export default function SnowflakeDecoderPage() {
@@ -119,90 +148,116 @@ export default function SnowflakeDecoderPage() {
   const parseError = input.trim() && !decoded ? 'Invalid Snowflake ID' : null;
 
   return (
-    <BpToolStage cat='backend'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Snowflake ID Decoder</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Extract timestamp, worker ID, and sequence from distributed Snowflake IDs</p>
+    <div
+      className='h-full flex flex-col overflow-hidden'
+      data-cat='backend'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Snowflake ID Decoder</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Decode Snowflake IDs to extract timestamp and machine information</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-3xl mx-auto space-y-4'>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-          <BpPanel title='Platform & Input'>
-            <div className='space-y-4'>
-              <div>
-                <label className='block text-xs text-gray-500 mb-2'>Platform</label>
-                <div className='flex flex-wrap gap-2'>
-                  {Object.entries(PLATFORMS).map(([k, p]) => (
-                    <button key={k} type='button' onClick={() => { setPlatformKey(k); setInput(EXAMPLES[k] || ''); }}
-                      className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${platformKey === k ? 'bg-blue-600 text-white' : 'bp-btn'}`}>
-                      {p.label}
-                    </button>
-                  ))}
-                  <button type='button' onClick={() => setPlatformKey('custom')}
-                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${platformKey === 'custom' ? 'bg-blue-600 text-white' : 'bp-btn'}`}>
-                    Custom
+        <Panel title='Platform & Input'>
+          <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Platform</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {Object.entries(PLATFORMS).map(([k, p]) => (
+                  <button
+                    key={k}
+                    type='button'
+                    onClick={() => { setPlatformKey(k); setInput(EXAMPLES[k] || ''); }}
+                    style={platformKey === k ? { padding: '4px 10px', fontSize: 11, fontFamily: 'inherit', background: 'var(--bp-accent)', color: '#0a0e14', border: '1px solid var(--bp-accent)', cursor: 'pointer', fontWeight: 600 } : undefined}
+                    className={platformKey === k ? undefined : 'bp-btn'}
+                  >
+                    {p.label}
                   </button>
-                </div>
-              </div>
-
-              {platformKey === 'custom' && (
-                <div>
-                  <label className='block text-xs text-gray-500 mb-1'>Custom Epoch (ms since Unix epoch)</label>
-                  <input value={customEpoch} onChange={(e) => setCustomEpoch(e.target.value)}
-                    placeholder='e.g. 1288834974657' className='bp-input w-full font-mono' />
-                </div>
-              )}
-
-              <div>
-                <label className='block text-xs text-gray-500 mb-1'>Snowflake ID</label>
-                <input value={input} onChange={(e) => setInput(e.target.value)}
-                  placeholder='Paste a Snowflake ID…' className='bp-input w-full font-mono text-lg' />
-                <p className='text-xs text-gray-500 mt-1'>
-                  Example: <button type='button' className='text-blue-400 hover:underline font-mono' onClick={() => setInput(EXAMPLES[platformKey] || EXAMPLES.twitter)}>
-                    {EXAMPLES[platformKey] || EXAMPLES.twitter}
-                  </button>
-                </p>
+                ))}
+                <button
+                  type='button'
+                  onClick={() => setPlatformKey('custom')}
+                  style={platformKey === 'custom' ? { padding: '4px 10px', fontSize: 11, fontFamily: 'inherit', background: 'var(--bp-accent)', color: '#0a0e14', border: '1px solid var(--bp-accent)', cursor: 'pointer', fontWeight: 600 } : undefined}
+                  className={platformKey === 'custom' ? undefined : 'bp-btn'}
+                >
+                  Custom
+                </button>
               </div>
             </div>
-          </BpPanel>
 
-          {parseError && (
-            <div className='flex items-center gap-2 p-3 rounded border border-red-500/40 bg-red-950/20'>
-              <AlertCircle className='w-4 h-4 text-red-400 shrink-0' />
-              <span className='text-sm text-red-300'>{parseError}</span>
+            {platformKey === 'custom' && (
+              <div>
+                <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Custom Epoch (ms since Unix epoch)</div>
+                <input
+                  value={customEpoch}
+                  onChange={(e) => setCustomEpoch(e.target.value)}
+                  placeholder='e.g. 1288834974657'
+                  style={{ width: '100%', background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+            )}
+
+            <div>
+              <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Snowflake ID</div>
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder='Paste a Snowflake ID…'
+                style={{ width: '100%', background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 14, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
+              />
+              <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', marginTop: 4 }}>
+                Example:{' '}
+                <button
+                  type='button'
+                  onClick={() => setInput(EXAMPLES[platformKey] || EXAMPLES.twitter)}
+                  style={{ background: 'none', border: 'none', color: 'var(--bp-accent)', fontFamily: 'inherit', fontSize: 10, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                >
+                  {EXAMPLES[platformKey] || EXAMPLES.twitter}
+                </button>
+              </div>
             </div>
-          )}
+          </div>
+        </Panel>
 
-          {decoded && (
-            <>
-              <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
-                {[
-                  { label: 'Timestamp (UTC)', value: decoded.timestamp.toUTCString() },
-                  { label: 'ISO 8601', value: decoded.timestamp.toISOString() },
-                  { label: 'Unix ms', value: decoded.timestampMs.toString() },
-                ].map(({ label, value }) => (
-                  <div key={label} className='bg-[#1C1C1C] border border-[hsla(0,0%,20%,1)] rounded-lg p-3'>
-                    <p className='text-xs text-gray-500 mb-1'>{label}</p>
-                    <p className='font-mono text-xs font-semibold text-white break-all'>{value}</p>
+        {parseError && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(127,29,29,0.15)' }}>
+            <AlertCircle style={{ width: 14, height: 14, color: '#f87171', flexShrink: 0 }} />
+            <span style={{ fontSize: 12, color: '#fca5a5' }}>{parseError}</span>
+          </div>
+        )}
+
+        {decoded && (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              {[
+                { label: 'Timestamp (UTC)', value: decoded.timestamp.toUTCString() },
+                { label: 'ISO 8601', value: decoded.timestamp.toISOString() },
+                { label: 'Unix ms', value: decoded.timestampMs.toString() },
+              ].map(({ label, value }) => (
+                <div key={label} style={{ background: 'var(--bp-surface)', border: '1px solid var(--bp-border)', padding: '10px 12px' }}>
+                  <div style={{ fontSize: 9, color: 'var(--bp-ink-mute)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</div>
+                  <div style={{ fontFamily: 'inherit', fontSize: 11, fontWeight: 600, color: '#fff', wordBreak: 'break-all' }}>{value}</div>
+                </div>
+              ))}
+            </div>
+
+            <Panel title='Field Breakdown'>
+              <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {decoded.fields.map((f) => (
+                  <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div className={`rounded px-2 py-1 text-xs font-medium border ${f.color}`} style={{ width: 192, flexShrink: 0 }}>{f.label}</div>
+                    <code style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', padding: '5px 10px', fontFamily: 'inherit', fontSize: 12, color: 'var(--bp-ink)' }}>{f.value.toString()}</code>
+                    <BpCopyBtn text={f.value.toString()} label='COPY' />
                   </div>
                 ))}
               </div>
+            </Panel>
 
-              <BpPanel title='Field Breakdown'>
-                <div className='space-y-3'>
-                  {decoded.fields.map((f) => (
-                    <div key={f.label} className='flex items-center gap-3'>
-                      <div className={`rounded px-2 py-1 text-xs font-medium border w-48 shrink-0 ${f.color}`}>{f.label}</div>
-                      <code className='flex-1 bp-code-view px-3 py-1.5 font-mono text-sm text-gray-200'>{f.value.toString()}</code>
-                      <BpCopyBtn text={f.value.toString()} label='COPY' />
-                    </div>
-                  ))}
-                </div>
-              </BpPanel>
-
-              <BpPanel title='64-bit Binary Layout'>
-                <div className='flex flex-wrap gap-0.5 mb-3'>
+            <Panel title='64-bit Binary Layout'>
+              <div style={{ padding: '12px 14px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, marginBottom: 10 }}>
                   {(() => {
                     const bin = decoded.binary;
                     let offset = 0;
@@ -210,37 +265,44 @@ export default function SnowflakeDecoderPage() {
                       const segment = bin.slice(offset, offset + f.bits);
                       offset += f.bits;
                       return segment.split('').map((bit, bi) => (
-                        <div key={`${fi}-${bi}`} title={f.label}
-                          className={`w-4 h-6 flex items-center justify-center text-[10px] font-mono font-bold rounded-sm ${bit === '1' ? f.color.replace('/20', '/40') : 'bg-[#1a1a1a] text-gray-700'}`}>
+                        <div
+                          key={`${fi}-${bi}`}
+                          title={f.label}
+                          className={`w-4 h-6 flex items-center justify-center text-[10px] font-mono font-bold rounded-sm ${bit === '1' ? f.color.replace('/20', '/40') : 'bg-[#1a1a1a] text-gray-700'}`}
+                        >
                           {bit}
                         </div>
                       ));
                     });
                   })()}
                 </div>
-                <div className='flex flex-wrap gap-2'>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {effectivePlatform.layout.map((f) => (
                     <span key={f.label} className={`text-xs px-2 py-0.5 rounded border ${f.color}`}>{f.label}</span>
                   ))}
                 </div>
-              </BpPanel>
-            </>
-          )}
+              </div>
+            </Panel>
+          </>
+        )}
 
-          <BpPanel title='About Snowflake IDs'>
-            <p className='text-xs text-gray-400 mb-3'>Snowflake IDs are 64-bit integers that encode a millisecond timestamp, machine/worker identifier, and a per-machine sequence counter. This makes them sortable by creation time while remaining unique across distributed systems without coordination.</p>
-            <div className='grid grid-cols-2 gap-2'>
+        <Panel title='About Snowflake IDs'>
+          <div style={{ padding: '12px 14px' }}>
+            <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: '0 0 10px 0', lineHeight: 1.65 }}>
+              Snowflake IDs are 64-bit integers that encode a millisecond timestamp, machine/worker identifier, and a per-machine sequence counter. This makes them sortable by creation time while remaining unique across distributed systems without coordination.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
               {Object.entries(PLATFORMS).map(([k, p]) => (
-                <div key={k} className='text-xs'>
-                  <span className='text-gray-400'>{p.label}: </span>
-                  <span className='text-gray-500 font-mono'>epoch +{p.epoch.toString().slice(-6)}…</span>
+                <div key={k} style={{ fontSize: 11 }}>
+                  <span style={{ color: 'var(--bp-ink-mute)' }}>{p.label}: </span>
+                  <span style={{ color: 'var(--bp-ink-faint)', fontFamily: 'inherit' }}>epoch +{p.epoch.toString().slice(-6)}…</span>
                 </div>
               ))}
             </div>
-          </BpPanel>
+          </div>
+        </Panel>
 
-        </div>
       </div>
-    </BpToolStage>
+    </div>
   );
 }

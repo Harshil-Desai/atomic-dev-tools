@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import { BpCopyBtn } from '@/components/blueprint';
 import { AlertCircle } from 'lucide-react';
 
 const PATTERNS = {
@@ -15,6 +15,31 @@ const PATTERNS = {
 type PatternKey = keyof typeof PATTERNS;
 
 const SAMPLE = `Server logs from 2024-01-15:\n\n[INFO] Request from 192.168.1.42 to https://api.example.com/v2/users\n[WARN] Failed login attempt for user@company.io from 10.0.0.1\n[INFO] Redirect: http://old.myapp.dev/path?query=1#anchor → https://new.myapp.dev/path\n[ERROR] Timeout connecting to db.internal.corp:5432 (2001:db8::1)\n[INFO] CDN asset loaded from https://cdn.cloudflare.com/assets/app.min.js\n\nContact: support@helpdesk.org | abuse@security.net\nDocs: https://docs.example.io/getting-started\n\nBlocked IPs: 203.0.113.0, 198.51.100.255, ::1, fe80::1\nTrusted: 172.16.0.0, 10.10.10.10`;
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#f0c674',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export default function URLRegexMatcherPage() {
   const [text, setText] = useState(SAMPLE);
@@ -47,80 +72,166 @@ export default function URLRegexMatcherPage() {
   };
 
   return (
-    <BpToolStage cat='data'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>URL Regex Matcher</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Extract URLs, domains, emails, and IP addresses from large text blocks</p>
+    <div
+      data-cat='text'
+      style={{
+        ...CSS_VARS,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative',
+        background: 'var(--bp-bg)',
+        color: 'var(--bp-ink)',
+        fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+      }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 13, fontWeight: 700, color: '#fff', margin: 0, letterSpacing: '0.01em' }}>URL Regex Matcher</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: '2px 0 0' }}>Test URL patterns against regular expressions</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-5xl mx-auto space-y-4'>
+      {/* Main content */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
 
-          <BpPanel title='Input'>
-            <div className='flex flex-wrap gap-2 items-center mb-3'>
-              <span className='text-xs text-gray-500 mr-1'>Extract:</span>
+        {/* Left: Input panel */}
+        <Panel title='Input' style={{ borderRight: 0, borderTop: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+            {/* Controls bar */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)', marginRight: 2 }}>Extract:</span>
               {(Object.entries(PATTERNS) as [PatternKey, typeof PATTERNS[PatternKey]][]).map(([key, def]) => (
-                <button key={key} onClick={() => togglePattern(key)} type='button'
-                  className={`px-3 py-1.5 rounded text-xs font-medium border transition-colors ${enabledPatterns.has(key) ? def.color : 'bg-[#121212] text-gray-500 border-[hsla(0,0%,15%,1)] hover:border-[hsla(0,0%,30%,1)]'}`}>
+                <button
+                  key={key}
+                  onClick={() => togglePattern(key)}
+                  type='button'
+                  className={`bp-chip ${enabledPatterns.has(key) ? def.color : ''}`}
+                  style={!enabledPatterns.has(key) ? { background: 'var(--bp-elevated)', color: 'var(--bp-ink-mute)', borderColor: 'var(--bp-border-str)' } : {}}
+                >
                   {def.label}
                 </button>
               ))}
-              <label className='flex items-center gap-2 cursor-pointer ml-2'>
-                <input type='checkbox' checked={dedup} onChange={(e) => setDedup(e.target.checked)} className='w-4 h-4 rounded' />
-                <span className='text-xs text-gray-400'>Deduplicate</span>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', marginLeft: 4 }}>
+                <input
+                  type='checkbox'
+                  checked={dedup}
+                  onChange={(e) => setDedup(e.target.checked)}
+                  style={{ width: 14, height: 14, accentColor: 'var(--bp-accent)', cursor: 'pointer' }}
+                />
+                <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)' }}>Deduplicate</span>
               </label>
             </div>
-            <textarea className='bp-textarea font-mono text-xs mb-3' value={text} onChange={(e) => setText(e.target.value)} rows={10} placeholder='Paste logs, HTML, config files, or any text here…' />
-            <div className='flex items-center justify-between'>
-              <span className='text-sm text-gray-400'>Found <span className='text-white font-semibold'>{totalMatches}</span> match{totalMatches !== 1 ? 'es' : ''}{dedup ? ' (unique)' : ''}</span>
-              {totalMatches > 0 && <BpCopyBtn text={''} label='COPY ALL' />}
+            {/* Textarea */}
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder='Paste logs, HTML, config files, or any text here...'
+              spellCheck={false}
+              style={{
+                flex: 1,
+                width: '100%',
+                background: 'var(--bp-bg)',
+                border: 0,
+                color: 'var(--bp-ink)',
+                fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+                fontSize: 12,
+                padding: '12px 14px',
+                resize: 'none',
+                outline: 'none',
+                boxSizing: 'border-box',
+                lineHeight: 1.65,
+              }}
+            />
+            {/* Stats / actions bar */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)', flex: 1 }}>
+                Found{' '}
+                <span style={{ color: 'var(--bp-ink)', fontWeight: 600 }}>{totalMatches}</span>
+                {' '}match{totalMatches !== 1 ? 'es' : ''}{dedup ? ' (unique)' : ''}
+              </span>
+              {totalMatches > 0 && (
+                <button className='bp-btn' onClick={copyAllResults} type='button'>
+                  COPY ALL
+                </button>
+              )}
             </div>
-          </BpPanel>
+          </div>
+        </Panel>
 
-          {(Object.entries(results) as [PatternKey, string[]][])
-            .filter(([key]) => enabledPatterns.has(key))
-            .map(([key, matches]) => {
-              const def = PATTERNS[key];
-              return (
-                <BpPanel key={key} title={def.label} meta={`${matches.length} match${matches.length !== 1 ? 'es' : ''}`}>
-                  <div className='flex items-center gap-2 mb-2'>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded border ${def.color}`}>{def.label}</span>
-                    <span className='text-xs text-gray-500'>{def.description}</span>
-                    {matches.length > 0 && <BpCopyBtn text={matches.join('\n')} label='COPY' />}
-                  </div>
-                  {matches.length === 0 ? (
-                    <div className='flex items-center gap-2 text-gray-600 text-sm py-2'>
-                      <AlertCircle className='w-4 h-4' />
-                      <span>No {def.label.toLowerCase()} found</span>
+        {/* Right: Results panel */}
+        <Panel title='Results' meta={totalMatches > 0 ? `${totalMatches} match${totalMatches !== 1 ? 'es' : ''}` : undefined} style={{ borderTop: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            {(Object.entries(results) as [PatternKey, string[]][])
+              .filter(([key]) => enabledPatterns.has(key))
+              .map(([key, matches]) => {
+                const def = PATTERNS[key];
+                return (
+                  <div key={key} style={{ borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+                    {/* Result section header */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', background: 'var(--bp-elevated)', borderBottom: matches.length > 0 ? '1px solid var(--bp-border)' : 'none' }}>
+                      <span className={`bp-chip ${def.color}`}>{def.label}</span>
+                      <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)', flex: 1 }}>{def.description}</span>
+                      <span style={{ fontSize: 10, color: 'var(--bp-ink-faint)' }}>{matches.length} match{matches.length !== 1 ? 'es' : ''}</span>
+                      {matches.length > 0 && <BpCopyBtn text={matches.join('\n')} label='COPY' />}
                     </div>
-                  ) : (
-                    <div className='space-y-1 max-h-48 overflow-auto'>
-                      {matches.map((match, i) => (
-                        <div key={i} className='flex items-center gap-2 group'>
-                          <code className='flex-1 font-mono text-xs text-gray-300 bg-[#121212] rounded px-3 py-1.5 truncate'>{match}</code>
-                          <div className='opacity-0 group-hover:opacity-100 transition-opacity shrink-0'>
-                            <BpCopyBtn text={match} label='COPY' />
+                    {/* Match list or empty state */}
+                    {matches.length === 0 ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', color: 'var(--bp-ink-faint)', fontSize: 11 }}>
+                        <AlertCircle style={{ width: 13, height: 13, flexShrink: 0 }} />
+                        <span>No {def.label.toLowerCase()} found</span>
+                      </div>
+                    ) : (
+                      <div style={{ padding: '6px 12px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        {matches.map((match, i) => (
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }} className='group'>
+                            <code style={{
+                              flex: 1,
+                              fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+                              fontSize: 11,
+                              color: 'var(--bp-ink)',
+                              background: 'var(--bp-bg)',
+                              padding: '3px 8px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              display: 'block',
+                            }}>{match}</code>
+                            <div className='opacity-0 group-hover:opacity-100 transition-opacity' style={{ flexShrink: 0 }}>
+                              <BpCopyBtn text={match} label='COPY' />
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </BpPanel>
-              );
-            })}
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
 
-          <BpPanel title='Regex Patterns'>
-            <div className='space-y-2'>
-              {(Object.entries(PATTERNS) as [PatternKey, typeof PATTERNS[PatternKey]][]).map(([key, def]) => (
-                <div key={key} className='flex gap-2 items-start'>
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded border shrink-0 ${def.color}`}>{def.label}</span>
-                  <code className='text-xs font-mono text-gray-500 break-all'>{def.regex.source}</code>
-                </div>
-              ))}
+            {/* Regex patterns reference at the bottom */}
+            <div style={{ marginTop: 'auto', borderTop: '1px solid var(--bp-border)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)' }}>
+                <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+                <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>Regex Patterns</span>
+              </div>
+              <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {(Object.entries(PATTERNS) as [PatternKey, typeof PATTERNS[PatternKey]][]).map(([key, def]) => (
+                  <div key={key} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                    <span className={`bp-chip ${def.color}`} style={{ flexShrink: 0 }}>{def.label}</span>
+                    <code style={{
+                      fontSize: 10,
+                      fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+                      color: 'var(--bp-ink-mute)',
+                      wordBreak: 'break-all',
+                      lineHeight: 1.5,
+                    }}>{def.regex.source}</code>
+                  </div>
+                ))}
+              </div>
             </div>
-          </BpPanel>
-        </div>
+          </div>
+        </Panel>
       </div>
-    </BpToolStage>
+    </div>
   );
 }

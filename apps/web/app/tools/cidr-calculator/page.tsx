@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import React, { useState } from 'react';
+import { BpCopyBtn } from '@/components/blueprint';
 import { AlertCircle } from 'lucide-react';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -95,110 +95,194 @@ const EXAMPLES = [
   { label: '/32 host route', cidr: '192.168.1.1/32' },
 ];
 
+// ─── CSS vars ─────────────────────────────────────────────────────────────────
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#b48cff',
+} as React.CSSProperties;
+
+// ─── Panel component ──────────────────────────────────────────────────────────
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function CIDRCalculatorPage() {
   const [cidr, setCIDR] = useState('192.168.1.0/24');
 
   const { info, error } = calculate(cidr);
 
   return (
-    <BpToolStage cat='infra'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>CIDR / Subnet Calculator</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Calculate IP ranges, netmasks, and broadcast addresses from CIDR notation</p>
+    <div
+      className='h-full flex flex-col overflow-hidden'
+      data-cat='systems'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>CIDR Calculator</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Calculate subnet ranges, broadcast address and usable host count</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-3xl mx-auto space-y-4'>
+      {/* Content */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '320px 1fr', overflow: 'hidden' }}>
 
-          <BpPanel title='CIDR Notation'>
-            <input value={cidr} onChange={(e) => setCIDR(e.target.value)} placeholder='192.168.1.0/24'
-              className={`bp-input w-full font-mono text-lg mb-2 ${error ? 'border-red-500/50' : ''}`} />
-            <p className='text-xs text-gray-500'>Format: &lt;ip-address&gt;/&lt;prefix-length&gt; — e.g. 10.0.0.0/8</p>
-          </BpPanel>
-
-          <BpPanel title='Examples'>
-            <div className='grid grid-cols-2 sm:grid-cols-3 gap-2'>
-              {EXAMPLES.map((ex) => (
-                <button key={ex.cidr} type='button' onClick={() => setCIDR(ex.cidr)}
-                  className='text-left rounded px-3 py-2 bg-[#121212] hover:bg-[#222] border border-[hsla(0,0%,20%,1)] transition-colors'>
-                  <p className='text-xs text-gray-400 mb-0.5'>{ex.label}</p>
-                  <p className='font-mono text-xs text-blue-400'>{ex.cidr}</p>
-                </button>
-              ))}
+        {/* Left: Input + Examples */}
+        <Panel title='Input' style={{ borderRight: 0, borderTop: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: 12, gap: 12 }}>
+            {/* CIDR input */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>CIDR Notation</span>
+              <input
+                value={cidr}
+                onChange={(e) => setCIDR(e.target.value)}
+                placeholder='192.168.1.0/24'
+                style={{
+                  flex: 1,
+                  background: 'var(--bp-bg)',
+                  border: `1px solid ${error ? 'rgba(239,68,68,0.5)' : 'var(--bp-border-str)'}`,
+                  color: 'var(--bp-ink)',
+                  fontFamily: 'inherit',
+                  fontSize: 14,
+                  padding: '8px 10px',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <span style={{ fontSize: 10, color: 'var(--bp-ink-faint)' }}>Format: &lt;ip-address&gt;/&lt;prefix-length&gt; — e.g. 10.0.0.0/8</span>
             </div>
-          </BpPanel>
 
-          {error && (
-            <div className='flex items-center gap-2 p-3 rounded border border-red-500/40 bg-red-950/20'>
-              <AlertCircle className='w-4 h-4 text-red-400 shrink-0' />
-              <span className='text-sm text-red-300'>{error}</span>
-            </div>
-          )}
+            {/* Error */}
+            {error && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(127,29,29,0.2)' }}>
+                <AlertCircle style={{ width: 14, height: 14, color: '#f87171', flexShrink: 0 }} />
+                <span style={{ fontSize: 12, color: '#fca5a5' }}>{error}</span>
+              </div>
+            )}
 
-          {info && (
-            <>
-              <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
-                {[
-                  { label: 'Network', value: info.networkAddress },
-                  { label: 'Broadcast', value: info.broadcastAddress },
-                  { label: 'Usable Hosts', value: info.usableHosts.toLocaleString() },
-                  { label: 'IP Class', value: info.ipClass },
-                ].map(({ label, value }) => (
-                  <div key={label} className='bg-[#1C1C1C] border border-[hsla(0,0%,20%,1)] rounded-lg p-3'>
-                    <p className='text-xs text-gray-500 mb-1'>{label}</p>
-                    <p className='font-mono text-sm font-semibold text-white'>{value}</p>
-                  </div>
+            {/* Examples */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Examples</span>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                {EXAMPLES.map((ex) => (
+                  <button
+                    key={ex.cidr}
+                    type='button'
+                    onClick={() => setCIDR(ex.cidr)}
+                    style={{
+                      textAlign: 'left',
+                      padding: '7px 10px',
+                      background: 'var(--bp-surface)',
+                      border: '1px solid var(--bp-border)',
+                      color: 'var(--bp-ink)',
+                      fontFamily: 'inherit',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', margin: 0, marginBottom: 2 }}>{ex.label}</p>
+                    <p style={{ fontSize: 11, color: '#a78bfa', margin: 0, fontFamily: 'inherit' }}>{ex.cidr}</p>
+                  </button>
                 ))}
               </div>
+            </div>
+          </div>
+        </Panel>
 
-              <BpPanel title='Network Details'>
-                <div className='space-y-2'>
+        {/* Right: Results */}
+        <Panel title='Results' style={{ borderTop: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {info && (
+              <>
+                {/* Summary stats */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                   {[
-                    { label: 'Network Address', value: info.networkAddress },
-                    { label: 'Broadcast Address', value: info.broadcastAddress },
-                    { label: 'Subnet Mask', value: info.subnetMask },
-                    { label: 'Wildcard Mask', value: info.wildcardMask },
-                    { label: 'First Usable Host', value: info.firstHost },
-                    { label: 'Last Usable Host', value: info.lastHost },
-                    { label: 'CIDR Range', value: `${info.networkAddress}/${info.prefix}` },
-                    { label: 'Total Addresses', value: info.totalHosts.toLocaleString() },
+                    { label: 'Network', value: info.networkAddress },
+                    { label: 'Broadcast', value: info.broadcastAddress },
                     { label: 'Usable Hosts', value: info.usableHosts.toLocaleString() },
+                    { label: 'IP Class', value: info.ipClass },
                   ].map(({ label, value }) => (
-                    <div key={label} className='flex items-center gap-2'>
-                      <span className='text-xs text-gray-500 w-36 shrink-0'>{label}</span>
-                      <code className='flex-1 bp-code-view px-3 py-1.5 font-mono text-sm text-gray-200'>{value}</code>
-                      <BpCopyBtn text={value} label='COPY' />
-                    </div>
-                  ))}
-                  {info.privateRange && (
-                    <div className='flex items-center gap-2'>
-                      <span className='text-xs text-gray-500 w-36 shrink-0'>Private Range</span>
-                      <span className='flex-1 bg-green-500/10 border border-green-500/30 rounded px-3 py-1.5 text-sm text-green-400 font-mono'>{info.privateRange}</span>
-                    </div>
-                  )}
-                </div>
-              </BpPanel>
-
-              <BpPanel title='Binary Representation'>
-                <div className='space-y-2'>
-                  {[
-                    { label: 'Input IP', value: info.ipBinary },
-                    { label: 'Subnet Mask', value: info.maskBinary },
-                    { label: 'Network Addr', value: info.networkBinary },
-                    { label: 'Broadcast', value: info.broadcastBinary },
-                  ].map(({ label, value }) => (
-                    <div key={label} className='flex items-start gap-2'>
-                      <span className='text-xs text-gray-500 w-24 shrink-0 pt-1.5'>{label}</span>
-                      <code className='flex-1 bp-code-view px-3 py-1.5 font-mono text-xs text-gray-300 break-all'>{value}</code>
+                    <div key={label} style={{ background: 'var(--bp-surface)', border: '1px solid var(--bp-border)', padding: '8px 10px' }}>
+                      <p style={{ fontSize: 9, color: 'var(--bp-ink-mute)', margin: 0, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</p>
+                      <p style={{ fontSize: 12, fontWeight: 600, color: '#fff', margin: 0, fontFamily: 'inherit' }}>{value}</p>
                     </div>
                   ))}
                 </div>
-              </BpPanel>
-            </>
-          )}
 
-        </div>
+                {/* Network Details */}
+                <Panel title='Network Details'>
+                  <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {[
+                      { label: 'Network Address', value: info.networkAddress },
+                      { label: 'Broadcast Address', value: info.broadcastAddress },
+                      { label: 'Subnet Mask', value: info.subnetMask },
+                      { label: 'Wildcard Mask', value: info.wildcardMask },
+                      { label: 'First Usable Host', value: info.firstHost },
+                      { label: 'Last Usable Host', value: info.lastHost },
+                      { label: 'CIDR Range', value: `${info.networkAddress}/${info.prefix}` },
+                      { label: 'Total Addresses', value: info.totalHosts.toLocaleString() },
+                      { label: 'Usable Hosts', value: info.usableHosts.toLocaleString() },
+                    ].map(({ label, value }) => (
+                      <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)', width: 140, flexShrink: 0 }}>{label}</span>
+                        <code style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', padding: '4px 10px', fontSize: 12, color: 'var(--bp-ink)', fontFamily: 'inherit' }}>{value}</code>
+                        <BpCopyBtn text={value} label='COPY' />
+                      </div>
+                    ))}
+                    {info.privateRange && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)', width: 140, flexShrink: 0 }}>Private Range</span>
+                        <span style={{ flex: 1, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', padding: '4px 10px', fontSize: 12, color: '#4ade80', fontFamily: 'inherit' }}>{info.privateRange}</span>
+                      </div>
+                    )}
+                  </div>
+                </Panel>
+
+                {/* Binary Representation */}
+                <Panel title='Binary Representation'>
+                  <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {[
+                      { label: 'Input IP', value: info.ipBinary },
+                      { label: 'Subnet Mask', value: info.maskBinary },
+                      { label: 'Network Addr', value: info.networkBinary },
+                      { label: 'Broadcast', value: info.broadcastBinary },
+                    ].map(({ label, value }) => (
+                      <div key={label} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                        <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)', width: 96, flexShrink: 0, paddingTop: 4 }}>{label}</span>
+                        <code style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', padding: '4px 10px', fontSize: 11, color: '#a5b4c8', fontFamily: 'inherit', wordBreak: 'break-all' }}>{value}</code>
+                      </div>
+                    ))}
+                  </div>
+                </Panel>
+              </>
+            )}
+
+            {!info && !error && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: 'var(--bp-ink-faint)', fontSize: 12 }}>
+                Enter a CIDR address to see results
+              </div>
+            )}
+          </div>
+        </Panel>
       </div>
-    </BpToolStage>
+    </div>
   );
 }

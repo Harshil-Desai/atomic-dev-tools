@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import React, { useState } from 'react';
+import { BpCopyBtn } from '@/components/blueprint';
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -64,30 +64,71 @@ function groupBits(bin: string): string {
   return bin.replace(/(.{4})/g, '$1 ').trim();
 }
 
+// ─── CSS vars ─────────────────────────────────────────────────────────────────
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#b48cff',
+} as React.CSSProperties;
+
 // ─── bit display component ────────────────────────────────────────────────────
 
 function BitRow({ value, width, label }: { value: number; width: BitWidth; label: string }) {
   const bin = toBin(value, width);
   return (
-    <div className='space-y-1'>
-      <div className='flex items-center justify-between'>
-        <span className='text-xs text-gray-500'>{label}</span>
-        <span className='font-mono text-xs text-gray-400'>{toHex(value, width)} | {value}</span>
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+        <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)' }}>{label}</span>
+        <span style={{ fontFamily: 'inherit', fontSize: 10, color: 'var(--bp-ink-mute)' }}>{toHex(value, width)} | {value}</span>
       </div>
-      <div className='flex gap-0.5 flex-wrap'>
+      <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
         {bin.split('').map((bit, i) => (
-          <div key={i} className={`w-6 h-6 flex items-center justify-center rounded text-xs font-mono font-bold ${bit === '1' ? 'bg-blue-500/30 text-blue-300 border border-blue-500/50' : 'bg-[#1a1a1a] text-gray-600 border border-[hsla(0,0%,15%,1)]'}`}>
+          <div key={i} style={{
+            width: 22,
+            height: 22,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 11,
+            fontFamily: 'inherit',
+            fontWeight: 700,
+            border: bit === '1' ? '1px solid rgba(180,140,255,0.5)' : '1px solid var(--bp-border)',
+            background: bit === '1' ? 'rgba(180,140,255,0.18)' : 'var(--bp-bg)',
+            color: bit === '1' ? '#b48cff' : 'var(--bp-ink-faint)',
+          }}>
             {bit}
           </div>
         ))}
       </div>
-      <div className='flex gap-0.5 flex-wrap'>
+      <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap', marginTop: 2 }}>
         {Array.from({ length: width }, (_, i) => width - 1 - i).map((pos, i) => (
-          <div key={i} className='w-6 text-center'>
-            {pos % 4 === 0 || pos === 0 ? <span className='text-[9px] text-gray-600'>{pos}</span> : null}
+          <div key={i} style={{ width: 22, textAlign: 'center' }}>
+            {pos % 4 === 0 || pos === 0 ? <span style={{ fontSize: 8, color: 'var(--bp-ink-faint)' }}>{pos}</span> : null}
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ─── Panel component ──────────────────────────────────────────────────────────
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
     </div>
   );
 }
@@ -131,133 +172,194 @@ export default function BitwiseCalculatorPage() {
   ];
 
   return (
-    <BpToolStage cat='infra'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Bitwise Calculator</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Visual calculator for bit masking, shifting, and endianness swapping</p>
+    <div
+      className='h-full flex flex-col overflow-hidden'
+      data-cat='systems'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Bitwise Calculator</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Perform AND, OR, XOR and shift operations with bit-level visualization</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-3xl mx-auto space-y-4'>
+      {/* Content */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
 
-          <BpPanel title='Bit Width & Operation'>
-            <div className='space-y-4'>
-              <div>
-                <label className='block text-xs text-gray-500 mb-2'>Bit Width</label>
-                <div className='flex gap-2'>
-                  {([8, 16, 32] as BitWidth[]).map((w) => (
-                    <button key={w} type='button' onClick={() => setWidth(w)}
-                      className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${width === w ? 'bg-blue-600 text-white' : 'bp-btn'}`}>
-                      {w}-bit
-                    </button>
-                  ))}
-                </div>
-              </div>
+        {/* Left: Controls */}
+        <Panel title='Configuration' style={{ borderRight: 0, borderTop: 0, borderLeft: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-              <div>
-                <label className='block text-xs text-gray-500 mb-2'>Operation</label>
-                <div className='flex flex-wrap gap-2'>
-                  {ops.map((o) => (
-                    <button key={o.value} type='button' onClick={() => setOp(o.value)}
-                      className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${op === o.value ? 'bg-blue-600 text-white' : 'bp-btn'}`}>
-                      <span className='font-mono mr-1 text-blue-300'>{o.sym}</span>{o.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                <div className='space-y-2'>
-                  <label className='block text-xs text-gray-500'>Operand A</label>
-                  <div className='flex gap-1'>
-                    {bases.map((bv) => (
-                      <button key={bv.value} type='button' onClick={() => setBaseA(bv.value)}
-                        className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${baseA === bv.value ? 'bg-blue-600 text-white' : 'bp-btn'}`}>
-                        {bv.label}
-                      </button>
-                    ))}
-                  </div>
-                  <input value={inputA} onChange={(e) => setInputA(e.target.value)}
-                    placeholder={baseA === 'hex' ? '0x2A' : baseA === 'bin' ? '00101010' : '42'}
-                    className={`bp-input w-full font-mono ${!aValid && inputA ? 'border-red-500/50' : ''}`} />
-                </div>
-                {!isUnary && (
-                  <div className='space-y-2'>
-                    <label className='block text-xs text-gray-500'>Operand B</label>
-                    <div className='flex gap-1'>
-                      {bases.map((bv) => (
-                        <button key={bv.value} type='button' onClick={() => setBaseB(bv.value)}
-                          className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${baseB === bv.value ? 'bg-blue-600 text-white' : 'bp-btn'}`}>
-                          {bv.label}
-                        </button>
-                      ))}
-                    </div>
-                    <input value={inputB} onChange={(e) => setInputB(e.target.value)}
-                      placeholder={baseB === 'hex' ? '0x0F' : baseB === 'bin' ? '00001111' : '15'}
-                      className={`bp-input w-full font-mono ${!bValid && inputB ? 'border-red-500/50' : ''}`} />
-                  </div>
-                )}
+            {/* Bit Width */}
+            <div>
+              <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 8 }}>Bit Width</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {([8, 16, 32] as BitWidth[]).map((w) => (
+                  <button key={w} type='button' onClick={() => setWidth(w)}
+                    style={width === w ? { background: 'var(--bp-accent)', color: '#0a0e14', border: 'none', padding: '5px 14px', fontSize: 11, fontFamily: 'inherit', fontWeight: 700, cursor: 'pointer' } : undefined}
+                    className={width === w ? undefined : 'bp-btn'}
+                  >
+                    {w}-bit
+                  </button>
+                ))}
               </div>
             </div>
-          </BpPanel>
 
-          {canCompute && result !== null && (
-            <BpPanel title='Bit Visualization'>
-              <div className='space-y-5'>
-                <BitRow value={mask(a!, width)} width={width} label='A' />
-                {!isUnary && <BitRow value={mask(b!, width)} width={width} label='B' />}
-                <div className='border-t border-[hsla(0,0%,20%,1)] pt-4'>
-                  <div className='flex items-center gap-2 mb-3'>
-                    <span className='text-xs text-gray-500'>Result</span>
-                    <span className='font-mono text-xs text-yellow-400'>({op})</span>
-                  </div>
-                  <BitRow value={result} width={width} label='Result' />
-                </div>
+            {/* Operation */}
+            <div>
+              <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 8 }}>Operation</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {ops.map((o) => (
+                  <button key={o.value} type='button' onClick={() => setOp(o.value)}
+                    style={op === o.value ? { background: 'var(--bp-accent)', color: '#0a0e14', border: 'none', padding: '5px 12px', fontSize: 11, fontFamily: 'inherit', fontWeight: 700, cursor: 'pointer' } : undefined}
+                    className={op === o.value ? undefined : 'bp-btn'}
+                  >
+                    <span style={{ fontFamily: 'inherit', marginRight: 4, color: op === o.value ? '#0a0e14' : '#b48cff' }}>{o.sym}</span>{o.label}
+                  </button>
+                ))}
               </div>
-            </BpPanel>
-          )}
+            </div>
 
-          {canCompute && result !== null && (
-            <BpPanel title='Result Representations'>
-              <div className='space-y-2'>
+            {/* Operand A */}
+            <div>
+              <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 8 }}>Operand A</div>
+              <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
+                {bases.map((bv) => (
+                  <button key={bv.value} type='button' onClick={() => setBaseA(bv.value)}
+                    style={baseA === bv.value ? { background: 'var(--bp-accent)', color: '#0a0e14', border: 'none', padding: '4px 10px', fontSize: 10, fontFamily: 'inherit', fontWeight: 700, cursor: 'pointer' } : undefined}
+                    className={baseA === bv.value ? undefined : 'bp-btn'}
+                  >
+                    {bv.label}
+                  </button>
+                ))}
+              </div>
+              <input
+                value={inputA}
+                onChange={(e) => setInputA(e.target.value)}
+                placeholder={baseA === 'hex' ? '0x2A' : baseA === 'bin' ? '00101010' : '42'}
+                style={{
+                  flex: 1,
+                  width: '100%',
+                  background: 'var(--bp-bg)',
+                  border: !aValid && inputA ? '1px solid rgba(220,80,80,0.5)' : '1px solid var(--bp-border-str)',
+                  color: 'var(--bp-ink)',
+                  fontFamily: 'inherit',
+                  fontSize: 12,
+                  padding: '7px 10px',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            {/* Operand B */}
+            {!isUnary && (
+              <div>
+                <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 8 }}>Operand B</div>
+                <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
+                  {bases.map((bv) => (
+                    <button key={bv.value} type='button' onClick={() => setBaseB(bv.value)}
+                      style={baseB === bv.value ? { background: 'var(--bp-accent)', color: '#0a0e14', border: 'none', padding: '4px 10px', fontSize: 10, fontFamily: 'inherit', fontWeight: 700, cursor: 'pointer' } : undefined}
+                      className={baseB === bv.value ? undefined : 'bp-btn'}
+                    >
+                      {bv.label}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  value={inputB}
+                  onChange={(e) => setInputB(e.target.value)}
+                  placeholder={baseB === 'hex' ? '0x0F' : baseB === 'bin' ? '00001111' : '15'}
+                  style={{
+                    flex: 1,
+                    width: '100%',
+                    background: 'var(--bp-bg)',
+                    border: !bValid && inputB ? '1px solid rgba(220,80,80,0.5)' : '1px solid var(--bp-border-str)',
+                    color: 'var(--bp-ink)',
+                    fontFamily: 'inherit',
+                    fontSize: 12,
+                    padding: '7px 10px',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Common Patterns */}
+            <div>
+              <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 8 }}>Common Patterns</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {[
-                  { label: 'Decimal', value: result.toString(10) },
-                  { label: 'Hexadecimal', value: toHex(result, width) },
-                  { label: 'Binary', value: groupBits(toBin(result, width)) },
-                  { label: 'Octal', value: '0o' + result.toString(8) },
-                ].map(({ label, value }) => (
-                  <div key={label} className='flex items-center gap-2'>
-                    <span className='text-xs text-gray-500 w-24 shrink-0'>{label}</span>
-                    <code className='flex-1 bp-code-view px-3 py-1.5 font-mono text-sm text-gray-200'>{value}</code>
-                    <BpCopyBtn text={value} label='COPY' />
+                  ['Check bit n', 'val & (1 << n)'],
+                  ['Set bit n', 'val | (1 << n)'],
+                  ['Clear bit n', 'val & ~(1 << n)'],
+                  ['Toggle bit n', 'val ^ (1 << n)'],
+                  ['Check if power of 2', 'val & (val - 1) == 0'],
+                  ['Lower nibble', 'val & 0x0F'],
+                  ['Upper nibble (8-bit)', '(val >> 4) & 0x0F'],
+                  ['Align to 4 bytes', '(val + 3) & ~3'],
+                ].map(([desc, pattern]) => (
+                  <div key={desc} style={{ display: 'flex', gap: 10 }}>
+                    <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)', width: 140, flexShrink: 0 }}>{desc}</span>
+                    <code style={{ fontSize: 10, color: '#b48cff', fontFamily: 'inherit' }}>{pattern}</code>
                   </div>
                 ))}
               </div>
-            </BpPanel>
-          )}
-
-          <BpPanel title='Common Patterns'>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs'>
-              {[
-                ['Check bit n', 'val & (1 << n)'],
-                ['Set bit n', 'val | (1 << n)'],
-                ['Clear bit n', 'val & ~(1 << n)'],
-                ['Toggle bit n', 'val ^ (1 << n)'],
-                ['Check if power of 2', 'val & (val - 1) == 0'],
-                ['Lower nibble', 'val & 0x0F'],
-                ['Upper nibble (8-bit)', '(val >> 4) & 0x0F'],
-                ['Align to 4 bytes', '(val + 3) & ~3'],
-              ].map(([desc, pattern]) => (
-                <div key={desc} className='flex gap-2'>
-                  <span className='text-gray-500 w-36 shrink-0'>{desc}</span>
-                  <code className='text-blue-400 font-mono'>{pattern}</code>
-                </div>
-              ))}
             </div>
-          </BpPanel>
 
-        </div>
+          </div>
+        </Panel>
+
+        {/* Right: Visualization + Results */}
+        <Panel title='Output' style={{ borderTop: 0, borderRight: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+            {canCompute && result !== null ? (
+              <>
+                {/* Bit Visualization */}
+                <div>
+                  <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 10 }}>Bit Visualization</div>
+                  <BitRow value={mask(a!, width)} width={width} label='A' />
+                  {!isUnary && <BitRow value={mask(b!, width)} width={width} label='B' />}
+                  <div style={{ borderTop: '1px solid var(--bp-border)', paddingTop: 12, marginTop: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)' }}>Result</span>
+                      <span style={{ fontFamily: 'inherit', fontSize: 10, color: '#b48cff' }}>({op})</span>
+                    </div>
+                    <BitRow value={result} width={width} label='Result' />
+                  </div>
+                </div>
+
+                {/* Result Representations */}
+                <div>
+                  <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 10 }}>Result Representations</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {[
+                      { label: 'Decimal', value: result.toString(10) },
+                      { label: 'Hexadecimal', value: toHex(result, width) },
+                      { label: 'Binary', value: groupBits(toBin(result, width)) },
+                      { label: 'Octal', value: '0o' + result.toString(8) },
+                    ].map(({ label, value }) => (
+                      <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)', width: 88, flexShrink: 0 }}>{label}</span>
+                        <code style={{ flex: 1, background: 'var(--bp-surface)', border: '1px solid var(--bp-border)', padding: '5px 10px', fontSize: 11, fontFamily: 'inherit', color: 'var(--bp-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</code>
+                        <BpCopyBtn text={value} label='COPY' />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: 11, color: 'var(--bp-ink-faint)' }}>Enter valid operand{!isUnary ? 's' : ''} to see results</span>
+              </div>
+            )}
+
+          </div>
+        </Panel>
+
       </div>
-    </BpToolStage>
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Send, Plus, Trash2, AlertCircle } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Send, Plus, Trash2, AlertCircle, ChevronDown } from 'lucide-react';
 import { BpCopyBtn, colorJson } from '@/components/blueprint';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -27,6 +27,57 @@ const METHOD_COLORS: Record<HttpMethod, string> = {
   DELETE: '#ff7a85',
 };
 
+function parseCurl(raw: string): {
+  method: HttpMethod;
+  url: string;
+  headers: { key: string; value: string }[];
+  body: string;
+} | null {
+  const text = raw.trim();
+  if (!/^curl\s/i.test(text)) return null;
+
+  // Normalize line continuations
+  const line = text.replace(/\\\s*\n/g, ' ').replace(/\s+/g, ' ');
+
+  // Extract method
+  const methodMatch = line.match(/-X\s+([A-Z]+)/i);
+  let method: HttpMethod = 'GET';
+  if (methodMatch) {
+    const m = methodMatch[1].toUpperCase();
+    if (['GET','POST','PUT','PATCH','DELETE'].includes(m)) method = m as HttpMethod;
+  }
+
+  // Extract URL — first bare http(s):// or quoted url arg
+  const urlMatch = line.match(/curl\s+(?:-[^\s]+\s+\S+\s+)*['"]?(https?:\/\/[^\s'"]+)['"]?/)
+    ?? line.match(/['"]?(https?:\/\/[^\s'"]+)['"]?/);
+  if (!urlMatch) return null;
+  const url = urlMatch[1];
+
+  // Extract headers
+  const headers: { key: string; value: string }[] = [];
+  const headerRegex = /-H\s+['"]([^'"]+)['"]/g;
+  let hm: RegExpExecArray | null;
+  while ((hm = headerRegex.exec(line)) !== null) {
+    const colon = hm[1].indexOf(':');
+    if (colon > 0) {
+      headers.push({ key: hm[1].slice(0, colon).trim(), value: hm[1].slice(colon + 1).trim() });
+    }
+  }
+
+  // Extract body
+  const bodyMatch = line.match(/(?:--data-raw|--data-binary|--data|-d)\s+['"](.+?)['"]\s*(?:-|$)/)
+    ?? line.match(/(?:--data-raw|--data-binary|--data|-d)\s+['"](.+?)['"]$/);
+  let body = '';
+  if (bodyMatch) {
+    body = bodyMatch[1];
+    // Try to pretty-print JSON
+    try { body = JSON.stringify(JSON.parse(body), null, 2); } catch { /* not json */ }
+    if (method === 'GET') method = 'POST';
+  }
+
+  return { method, url, headers, body };
+}
+
 function KvTable({ rows, setter }: {
   rows: KVRow[];
   setter: React.Dispatch<React.SetStateAction<KVRow[]>>;
@@ -38,7 +89,6 @@ function KvTable({ rows, setter }: {
 
   return (
     <div style={{ fontFamily: 'inherit' }}>
-      {/* Column headers */}
       <div style={{ display: 'grid', gridTemplateColumns: '30px 1fr 1fr 30px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-bg)' }}>
         <div />
         <div style={{ padding: '4px 10px', fontSize: 9, color: 'var(--bp-ink-faint)', letterSpacing: '0.18em', textTransform: 'uppercase', borderRight: '1px solid var(--bp-border)' }}>KEY</div>
@@ -106,6 +156,7 @@ export default function ApiTesterPage() {
   const [reqTab, setReqTab] = useState<ReqTab>('headers');
   const [resTab, setResTab] = useState<ResTab>('body');
   const [timeout, setTimeout_] = useState(30);
+  const urlInputRef = useRef<HTMLInputElement>(null);
 
   const [headers, setHeaders] = useState<KVRow[]>([
     { id: 1, enabled: true,  key: 'Authorization', value: 'Bearer eyJ0eXAi...' },
@@ -119,6 +170,31 @@ export default function ApiTesterPage() {
   const [response, setResponse] = useState<ResponseData | null>(null);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState<string | null>(null);
+  const [curlToast, setCurlToast] = useState(false);
+
+  const applyParsedCurl = (parsed: NonNullable<ReturnType<typeof parseCurl>>) => {
+    setMethod(parsed.method);
+    setUrl(parsed.url);
+    if (parsed.headers.length > 0) {
+      setHeaders(parsed.headers.map((h, i) => ({ id: Date.now() + i, enabled: true, key: h.key, value: h.value })));
+      setReqTab('headers');
+    }
+    if (parsed.body) {
+      setBody(parsed.body);
+      setReqTab('body');
+    }
+    setCurlToast(true);
+    setTimeout(() => setCurlToast(false), 2500);
+  };
+
+  const handleUrlPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData('text');
+    if (/^curl\s/i.test(text.trim())) {
+      e.preventDefault();
+      const parsed = parseCurl(text);
+      if (parsed) applyParsedCurl(parsed);
+    }
+  };
 
   const sendRequest = async () => {
     setLoading(true);
@@ -172,7 +248,7 @@ export default function ApiTesterPage() {
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Unknown error';
       setError(
-        msg.includes('abort')        ? `Request timed out after ${timeout}s` :
+        msg.includes('abort')           ? `Request timed out after ${timeout}s` :
         msg.includes('Failed to fetch') ? 'Network error — check CORS or the URL' : msg
       );
     } finally {
@@ -191,7 +267,7 @@ export default function ApiTesterPage() {
     b < 1024 ? `${b} B` : `${(b / 1024).toFixed(1)} KB`;
 
   const TAB_STYLE = (active: boolean): React.CSSProperties => ({
-    padding: '8px 16px',
+    padding: '8px 14px',
     background: 'transparent',
     border: 0,
     borderBottom: active ? '2px solid var(--bp-accent)' : '2px solid transparent',
@@ -214,57 +290,84 @@ export default function ApiTesterPage() {
       <div className='bp-ruler-x' />
       <div className='bp-ruler-y' />
 
+      {/* cURL import toast */}
+      {curlToast && (
+        <div style={{
+          position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)',
+          background: 'var(--bp-elevated)', border: '1px solid var(--bp-border-str)',
+          color: '#4ad29a', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase',
+          padding: '6px 14px', zIndex: 50, pointerEvents: 'none',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+        }}>
+          cURL imported
+        </div>
+      )}
+
       <div
         className='flex-1 min-h-0 flex flex-col overflow-hidden'
-        style={{ paddingLeft: 20, paddingTop: 18, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}
+        style={{ fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}
       >
         {/* ── Tool header ──────────────────────────────────────────── */}
-        <div style={{ padding: '14px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-          <h1 style={{ fontSize: 17, fontWeight: 700, color: 'var(--bp-ink)', margin: '0 0 3px', letterSpacing: '-0.01em' }}>API Tester</h1>
-          <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', margin: 0, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Test HTTP endpoints — Ctrl+Enter to send</p>
+        <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0, display: 'flex', alignItems: 'baseline', gap: 16 }}>
+          <h1 style={{ fontSize: 15, fontWeight: 700, color: 'var(--bp-ink)', margin: 0, letterSpacing: '-0.01em' }}>API Tester</h1>
+          <p style={{ fontSize: 10, color: 'var(--bp-ink-faint)', margin: 0, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Test HTTP endpoints — Ctrl+Enter to send · Paste cURL to import</p>
         </div>
 
         {/* ── URL Bar ──────────────────────────────────────────────── */}
-        <div style={{ display: 'flex', padding: '10px 20px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0, gap: 0, alignItems: 'center' }}>
-          <select
-            value={method}
-            onChange={e => setMethod(e.target.value as HttpMethod)}
-            style={{
-              background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', borderRight: 0,
-              color: METHOD_COLORS[method], fontFamily: 'inherit', fontSize: 12, fontWeight: 700,
-              padding: '0 10px', letterSpacing: '0.08em', outline: 'none', cursor: 'pointer',
-              height: 36, flexShrink: 0,
-            }}
-          >
-            {(['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as HttpMethod[]).map(m => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
+        <div style={{ display: 'flex', padding: '8px 16px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0, gap: 0, alignItems: 'center' }}>
+          {/* Method selector */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <select
+              value={method}
+              onChange={e => setMethod(e.target.value as HttpMethod)}
+              style={{
+                appearance: 'none',
+                background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', borderRight: 0,
+                color: METHOD_COLORS[method], fontFamily: 'inherit', fontSize: 11, fontWeight: 700,
+                padding: '0 28px 0 10px', letterSpacing: '0.1em', outline: 'none', cursor: 'pointer',
+                height: 34, flexShrink: 0,
+              }}
+            >
+              {(['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as HttpMethod[]).map(m => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+            <ChevronDown size={10} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--bp-ink-faint)', pointerEvents: 'none' }} />
+          </div>
+
+          {/* URL input */}
           <input
+            ref={urlInputRef}
             value={url}
             onChange={e => setUrl(e.target.value)}
             onKeyDown={onKey}
-            placeholder='https://api.example.com/endpoint'
+            onPaste={handleUrlPaste}
+            placeholder='https://api.example.com/endpoint  —  or paste a cURL command'
             style={{
               flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', borderRight: 0,
-              color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 13,
-              padding: '0 12px', height: 36, outline: 'none', boxSizing: 'border-box',
+              color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12,
+              padding: '0 12px', height: 34, outline: 'none', boxSizing: 'border-box',
             }}
           />
+
+          {/* Send button */}
           <button
             onClick={sendRequest}
             disabled={loading || !url.trim()}
             style={{
-              background: 'var(--bp-accent)', border: '1px solid var(--bp-accent)',
-              color: '#0a0e14', fontFamily: 'inherit', fontSize: 11, fontWeight: 700,
-              letterSpacing: '0.12em', textTransform: 'uppercase',
-              padding: '0 22px', height: 36, cursor: loading || !url.trim() ? 'not-allowed' : 'pointer',
-              display: 'flex', alignItems: 'center', gap: 8,
-              opacity: loading || !url.trim() ? 0.55 : 1, whiteSpace: 'nowrap', flexShrink: 0,
-              transition: 'opacity 120ms',
+              background: loading ? 'transparent' : 'var(--bp-accent)',
+              border: '1px solid var(--bp-accent)',
+              color: loading ? 'var(--bp-accent)' : '#0a0e14',
+              fontFamily: 'inherit', fontSize: 10, fontWeight: 700,
+              letterSpacing: '0.14em', textTransform: 'uppercase',
+              padding: '0 20px', height: 34,
+              cursor: loading || !url.trim() ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', gap: 7,
+              opacity: !url.trim() ? 0.4 : 1, whiteSpace: 'nowrap', flexShrink: 0,
+              transition: 'background 120ms, color 120ms',
             }}
           >
-            <Send size={12} />
+            <Send size={11} />
             {loading ? 'SENDING…' : 'SEND'}
           </button>
         </div>
@@ -273,22 +376,21 @@ export default function ApiTesterPage() {
         <div style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
 
           {/* ──── Left: Request pane ─────────────────────────────── */}
-          <div style={{ width: 380, flexShrink: 0, borderRight: '1px solid var(--bp-border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ width: '42%', minWidth: 300, maxWidth: 480, flexShrink: 0, borderRight: '1px solid var(--bp-border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* Request tabs */}
             <div style={{ display: 'flex', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-bg)', flexShrink: 0 }}>
               {(['params', 'headers', 'body', 'auth'] as ReqTab[]).map(t => (
                 <button key={t} onClick={() => setReqTab(t)} style={TAB_STYLE(reqTab === t)}>{t}</button>
               ))}
               <div style={{ flex: 1 }} />
-              {/* Timeout control */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 12px', borderLeft: '1px solid var(--bp-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '0 10px', borderLeft: '1px solid var(--bp-border)' }}>
                 <span style={{ fontSize: 9, color: 'var(--bp-ink-faint)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>TIMEOUT</span>
                 <input
                   type='number'
                   value={timeout}
                   min={1} max={300}
                   onChange={e => setTimeout_(parseInt(e.target.value) || 30)}
-                  style={{ width: 44, background: 'transparent', border: '1px solid var(--bp-border)', color: 'var(--bp-ink-mute)', fontFamily: 'inherit', fontSize: 10, padding: '2px 5px', outline: 'none', textAlign: 'center' }}
+                  style={{ width: 38, background: 'transparent', border: '1px solid var(--bp-border)', color: 'var(--bp-ink-mute)', fontFamily: 'inherit', fontSize: 10, padding: '2px 4px', outline: 'none', textAlign: 'center' }}
                 />
                 <span style={{ fontSize: 9, color: 'var(--bp-ink-faint)' }}>s</span>
               </div>
@@ -298,7 +400,7 @@ export default function ApiTesterPage() {
             <div style={{ flex: 1, overflowY: 'auto' }}>
               {reqTab === 'headers' && <KvTable rows={headers} setter={setHeaders} />}
               {reqTab === 'params'  && <KvTable rows={params}  setter={setParams} />}
-              {reqTab === 'body'    && (
+              {reqTab === 'body' && (
                 <div style={{ height: '100%' }}>
                   <textarea
                     value={body}
@@ -333,26 +435,27 @@ export default function ApiTesterPage() {
               </div>
             )}
 
-            {/* Response status bar */}
+            {/* Response status + stats bar */}
             {response && (
               <div style={{ display: 'flex', alignItems: 'stretch', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-                {/* Status code */}
-                <div style={{ padding: '12px 24px', borderRight: '1px solid var(--bp-border)', display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                  <span style={{ fontSize: 36, fontWeight: 700, color: statusColor(response.status), lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+                <div style={{ padding: '10px 20px', borderRight: '1px solid var(--bp-border)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{
+                    fontSize: 13, fontWeight: 700, letterSpacing: '0.04em',
+                    color: '#0a0e14', background: statusColor(response.status),
+                    padding: '3px 10px', lineHeight: 1,
+                  }}>
                     {response.status}
                   </span>
                   <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)', letterSpacing: '0.04em' }}>{response.statusText}</span>
                 </div>
-
-                {/* Stats */}
                 <div style={{ display: 'flex', marginLeft: 'auto' }}>
                   {[
                     { label: 'TIME', value: `${response.time} ms` },
                     { label: 'SIZE', value: fmtSize(response.size) },
                   ].map(s => (
-                    <div key={s.label} style={{ padding: '12px 20px', borderLeft: '1px solid var(--bp-border)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end' }}>
+                    <div key={s.label} style={{ padding: '8px 18px', borderLeft: '1px solid var(--bp-border)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end' }}>
                       <div style={{ fontSize: 9, color: 'var(--bp-ink-faint)', letterSpacing: '0.18em', textTransform: 'uppercase' }}>{s.label}</div>
-                      <div style={{ fontSize: 16, color: 'var(--bp-accent)', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
+                      <div style={{ fontSize: 13, color: 'var(--bp-accent)', marginTop: 1, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
                     </div>
                   ))}
                 </div>
@@ -376,7 +479,7 @@ export default function ApiTesterPage() {
               </div>
             )}
 
-            {/* Response body */}
+            {/* Response content */}
             {response && (
               <div style={{ flex: 1, overflow: 'auto', padding: '14px 18px' }}>
                 {resTab === 'body' && (
@@ -397,12 +500,14 @@ export default function ApiTesterPage() {
                 {resTab === 'timing' && (
                   <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', rowGap: 10 }}>
                     {[
-                      { label: 'TOTAL TIME',     value: `${response.time} ms`, color: 'var(--bp-ink)' },
-                      { label: 'RESPONSE SIZE',  value: fmtSize(response.size), color: 'var(--bp-ink)' },
-                      { label: 'STATUS',         value: `${response.status} ${response.statusText}`, color: statusColor(response.status) },
+                      { label: 'TOTAL TIME',    value: `${response.time} ms`,             color: 'var(--bp-ink)' },
+                      { label: 'RESPONSE SIZE', value: fmtSize(response.size),             color: 'var(--bp-ink)' },
+                      { label: 'STATUS',        value: `${response.status} ${response.statusText}`, color: statusColor(response.status) },
                     ].map(row => (
-                      <><span key={row.label + 'l'} style={{ fontSize: 10, color: 'var(--bp-ink-mute)', letterSpacing: '0.12em', textTransform: 'uppercase', alignSelf: 'center' }}>{row.label}</span>
-                      <span key={row.label + 'v'} style={{ fontSize: 13, color: row.color, fontVariantNumeric: 'tabular-nums' }}>{row.value}</span></>
+                      <>
+                        <span key={row.label + 'l'} style={{ fontSize: 10, color: 'var(--bp-ink-mute)', letterSpacing: '0.12em', textTransform: 'uppercase', alignSelf: 'center' }}>{row.label}</span>
+                        <span key={row.label + 'v'} style={{ fontSize: 13, color: row.color, fontVariantNumeric: 'tabular-nums' }}>{row.value}</span>
+                      </>
                     ))}
                   </div>
                 )}
@@ -412,8 +517,8 @@ export default function ApiTesterPage() {
             {/* Empty / loading states */}
             {!response && !error && !loading && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, color: 'var(--bp-ink-faint)' }}>
-                <Send size={38} style={{ opacity: 0.2 }} />
-                <p style={{ fontSize: 11, margin: 0, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Send a request to see the response</p>
+                <Send size={34} style={{ opacity: 0.15 }} />
+                <p style={{ fontSize: 10, margin: 0, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Send a request to see the response</p>
               </div>
             )}
             {loading && (
@@ -421,8 +526,8 @@ export default function ApiTesterPage() {
                 <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>SENDING…</span>
               </div>
             )}
-          </div>
 
+          </div>
         </div>
       </div>
     </div>

@@ -1,8 +1,33 @@
 'use client';
 
 import { useState } from 'react';
-import { BpToolStage, BpPanel, BpCopyBtn } from '@/components/blueprint';
+import { BpCopyBtn } from '@/components/blueprint';
 import { AlertCircle, ArrowUpDown } from 'lucide-react';
+
+const CSS_VARS: React.CSSProperties = {
+  '--bp-bg': '#0a0e14',
+  '--bp-surface': '#0f141c',
+  '--bp-elevated': '#131a24',
+  '--bp-border': '#1e2d3d',
+  '--bp-border-str': '#2a3a52',
+  '--bp-ink': '#cfd8e3',
+  '--bp-ink-mute': '#6b7a8c',
+  '--bp-ink-faint': '#3a4554',
+  '--bp-accent': '#4ad29a',
+} as React.CSSProperties;
+
+function Panel({ title, meta, children, style }: { title: string; meta?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--bp-border)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 28, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        {meta && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--bp-ink-faint)' }}>{meta}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export default function Base64EncoderPage() {
   const [input, setInput] = useState('');
@@ -37,51 +62,83 @@ export default function Base64EncoderPage() {
   };
 
   return (
-    <BpToolStage cat='data'>
-      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6'>
-        <h1 className='text-xl sm:text-2xl font-semibold text-white mb-1'>Base64 Encoder/Decoder</h1>
-        <p className='text-xs sm:text-sm text-gray-400'>Encode or decode text to/from Base64 format instantly</p>
+    <div
+      className='h-full flex flex-col overflow-hidden relative'
+      data-cat='data'
+      style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
+    >
+      {/* Header */}
+      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2, letterSpacing: '0.01em' }}>Base64 Encoder / Decoder</h1>
+        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Encode plaintext to Base64 or decode back</p>
       </div>
 
-      <div className='flex-1 overflow-auto p-4 sm:p-5 md:p-6'>
-        <div className='max-w-6xl mx-auto'>
-          <div className='bp-layout-2col'>
-            <BpPanel title={mode === 'encode' ? 'Text to Encode' : 'Base64 to Decode'}>
-              <div className='bp-panel-actions mb-3'>
-                <button className='bp-btn' onClick={toggleMode} type='button'>
-                  <ArrowUpDown className='w-3.5 h-3.5 mr-1 inline' />SWITCH MODE
-                </button>
+      {/* Main content */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+        <Panel title={mode === 'encode' ? 'Text to Encode' : 'Base64 to Decode'} style={{ borderRight: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <textarea
+              value={input}
+              onChange={(e) => handleInputChange(e.target.value)}
+              placeholder={mode === 'encode' ? 'Enter text to encode to Base64...' : 'Enter Base64 string to decode...'}
+              spellCheck={false}
+              style={{
+                flex: 1,
+                width: '100%',
+                background: 'var(--bp-bg)',
+                border: 0,
+                color: 'var(--bp-ink)',
+                fontFamily: 'inherit',
+                fontSize: 12,
+                padding: '12px 14px',
+                resize: 'none',
+                outline: 'none',
+                boxSizing: 'border-box',
+                lineHeight: 1.65,
+              }}
+            />
+            {error && (
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, padding: '6px 12px', flexShrink: 0 }}>
+                <AlertCircle style={{ width: 14, height: 14, color: '#f87171', flexShrink: 0, marginTop: 1 }} />
+                <p style={{ fontSize: 11, color: '#fca5a5', margin: 0 }}>{error}</p>
               </div>
-              <textarea
-                className='bp-textarea font-mono text-sm'
-                placeholder={mode === 'encode' ? 'Enter text to encode to Base64...' : 'Enter Base64 string to decode...'}
-                value={input}
-                onChange={(e) => handleInputChange(e.target.value)}
-                rows={12}
-              />
-              {error && (
-                <div className='flex items-start gap-2 mt-2'>
-                  <AlertCircle className='w-4 h-4 text-red-400 flex-shrink-0 mt-0.5' />
-                  <p className='text-xs text-red-300'>{error}</p>
-                </div>
-              )}
-            </BpPanel>
-
-            <BpPanel title={mode === 'encode' ? 'Base64 Output' : 'Decoded Text'}>
-              <div className='bp-panel-actions mb-3'>
-                <BpCopyBtn text={output} label='COPY' />
-              </div>
-              <textarea
-                className='bp-textarea font-mono text-sm'
-                placeholder={mode === 'encode' ? 'Base64 encoded output will appear here...' : 'Decoded text will appear here...'}
-                value={output}
-                readOnly
-                rows={12}
-              />
-            </BpPanel>
+            )}
           </div>
-        </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0, flexWrap: 'wrap' }}>
+            <button className='bp-btn' onClick={toggleMode} type='button'>
+              <ArrowUpDown className='w-3.5 h-3.5 mr-1 inline' />SWITCH MODE
+            </button>
+          </div>
+        </Panel>
+
+        <Panel title={mode === 'encode' ? 'Base64 Output' : 'Decoded Text'}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <textarea
+              value={output}
+              readOnly
+              placeholder={mode === 'encode' ? 'Base64 encoded output will appear here...' : 'Decoded text will appear here...'}
+              spellCheck={false}
+              style={{
+                flex: 1,
+                width: '100%',
+                background: 'var(--bp-bg)',
+                border: 0,
+                color: 'var(--bp-ink)',
+                fontFamily: 'inherit',
+                fontSize: 12,
+                padding: '12px 14px',
+                resize: 'none',
+                outline: 'none',
+                boxSizing: 'border-box',
+                lineHeight: 1.65,
+              }}
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0, flexWrap: 'wrap' }}>
+            <BpCopyBtn text={output} label='COPY' />
+          </div>
+        </Panel>
       </div>
-    </BpToolStage>
+    </div>
   );
 }
