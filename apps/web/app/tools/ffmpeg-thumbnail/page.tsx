@@ -151,13 +151,13 @@ export default function FfmpegThumbnailPage() {
       style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Thumbnail Generator</h1>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>Thumbnail Generator</h1>
         <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Extract thumbnail frames from video at specific timestamps</p>
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 overflow-hidden'>
         {/* Left: Configuration */}
         <Panel title='Configuration' style={{ borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
@@ -305,7 +305,7 @@ export default function FfmpegThumbnailPage() {
                   </select>
                 </div>
                 {scalePreset === 'custom' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3'>
                     <div>
                       <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Width (px, -1 = auto)</label>
                       <input type='number' value={customWidth} onChange={(e) => setCustomWidth(e.target.value)} placeholder='1280' style={{ ...inputStyle, width: '100%' }} />
@@ -322,8 +322,8 @@ export default function FfmpegThumbnailPage() {
           </div>
 
           {/* Action bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
-            <button type='button' className='bp-btn bp-btn-solid' style={{ flex: 1 }} onClick={generateCommand}>
+          <div className='flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-t border-[var(--bp-border-str)]' style={{ borderTopStyle: 'dashed', flexShrink: 0 }}>
+            <button type='button' className='bp-btn bp-btn-solid min-h-10 px-2 sm:px-3 flex-1' onClick={generateCommand}>
               <Image className='w-4 h-4 mr-2 inline' />GENERATE COMMAND
             </button>
           </div>

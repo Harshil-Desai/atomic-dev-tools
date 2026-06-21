@@ -140,12 +140,12 @@ export default function FfmpegClipperPage() {
       data-cat='ffmpeg'
       style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
     >
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>FFmpeg Clipper</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Trim video clips with precise start and end time controls</p>
+      <div className='border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0 p-4 sm:p-5 md:p-6'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>FFmpeg Clipper</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Trim video clips with precise start and end time controls</p>
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 overflow-hidden'>
         {/* Left panel: configuration */}
         <Panel title='Configuration' style={{ borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
@@ -153,9 +153,9 @@ export default function FfmpegClipperPage() {
             {/* Preset Templates */}
             <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--bp-border)' }}>
               <span style={labelStyle}>Preset Templates</span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {[['quick-gif', 'Quick GIF'], ['social-media', 'Social Media'], ['high-quality', 'High Quality']].map(([key, label]) => (
-                  <button key={key} type='button' className='bp-btn' onClick={() => applyPreset(key)}>{label}</button>
+              <div className='flex flex-wrap gap-2'>
+                {[['quick-gif', 'Quick GIF'], ['social-media', 'Social'], ['high-quality', 'High']].map(([key, label]) => (
+                  <button key={key} type='button' className='bp-btn min-h-10 px-2 sm:px-3 text-xs sm:text-sm' onClick={() => applyPreset(key)}>{label}</button>
                 ))}
               </div>
             </div>
@@ -173,7 +173,7 @@ export default function FfmpegClipperPage() {
                     style={inputStyle}
                   />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                <div className='grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3' style={{}}>
                   <div>
                     <label style={labelStyle}>Start Time</label>
                     <input
@@ -208,7 +208,7 @@ export default function FfmpegClipperPage() {
             {/* Output Options */}
             <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--bp-border)' }}>
               <span style={labelStyle}>Output Options</span>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3' style={{}}>
                 <div>
                   <label style={labelStyle}>Output Format</label>
                   <select value={outputFormat} onChange={(e) => setOutputFormat(e.target.value as OutputFormat)} style={selectStyle}>
@@ -279,15 +279,14 @@ export default function FfmpegClipperPage() {
           </div>
 
           {/* Action bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+          <div className='flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-t border-dashed border-[var(--bp-border-str)] flex-shrink-0'>
             <button
               type='button'
-              className='bp-btn bp-btn-solid'
-              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              className='bp-btn bp-btn-solid min-h-10 px-3 flex items-center justify-center gap-2 flex-1'
               onClick={generateCommand}
             >
               <Scissors style={{ width: 14, height: 14 }} />
-              GENERATE COMMAND
+              GENERATE
             </button>
           </div>
         </Panel>

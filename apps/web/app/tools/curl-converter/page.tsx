@@ -318,8 +318,8 @@ export default function CurlConverterPage() {
             <button
               key={d}
               onClick={() => switchDirection(d)}
+              className='min-h-10 px-3 py-2 sm:min-h-10'
               style={{
-                padding: '3px 10px',
                 fontSize: '10px',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
@@ -369,9 +369,9 @@ export default function CurlConverterPage() {
           </div>
           {/* Left bottom bar */}
           <div
-            className='flex items-center justify-between px-3 flex-shrink-0'
+            className='flex items-center justify-between p-2 sm:p-3 gap-2 sm:gap-3 flex-shrink-0'
             style={{
-              height: '32px',
+              minHeight: '44px',
               background: 'var(--bp-surface)',
               borderTop: '1px solid var(--bp-border)',
             }}
@@ -382,8 +382,8 @@ export default function CurlConverterPage() {
                   <button
                     key={fmt}
                     onClick={() => handleInputFormatChange(fmt)}
+                    className='min-h-10 px-3 py-2 sm:min-h-10'
                     style={{
-                      padding: '2px 8px',
                       fontSize: '10px',
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
@@ -437,9 +437,9 @@ export default function CurlConverterPage() {
           </div>
           {/* Right bottom bar */}
           <div
-            className='flex items-center justify-between px-3 flex-shrink-0'
+            className='flex items-center justify-between p-2 sm:p-3 gap-2 sm:gap-3 flex-shrink-0'
             style={{
-              height: '32px',
+              minHeight: '44px',
               background: 'var(--bp-surface)',
               borderTop: '1px solid var(--bp-border)',
             }}
@@ -454,8 +454,8 @@ export default function CurlConverterPage() {
                   <button
                     key={key}
                     onClick={() => setOutputTab(key)}
+                    className='min-h-10 px-3 py-2 sm:min-h-10'
                     style={{
-                      padding: '2px 8px',
                       fontSize: '10px',
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
@@ -477,8 +477,8 @@ export default function CurlConverterPage() {
                   <button
                     key={fmt}
                     onClick={() => setInputFormat(fmt)}
+                    className='min-h-10 px-3 py-2 sm:min-h-10'
                     style={{
-                      padding: '2px 8px',
                       fontSize: '10px',
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',

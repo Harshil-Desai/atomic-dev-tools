@@ -68,13 +68,13 @@ export default function Base64EncoderPage() {
       style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2, letterSpacing: '0.01em' }}>Base64 Encoder / Decoder</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Encode plaintext to Base64 or decode back</p>
+      <div className='border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0 p-4 sm:p-5 md:p-6'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1 tracking-tight'>Base64 Encoder / Decoder</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Encode plaintext to Base64 or decode back</p>
       </div>
 
       {/* Main content */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 overflow-hidden'>
         <Panel title={mode === 'encode' ? 'Text to Encode' : 'Base64 to Decode'} style={{ borderRight: 0 }}>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
             <textarea
@@ -104,8 +104,8 @@ export default function Base64EncoderPage() {
               </div>
             )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0, flexWrap: 'wrap' }}>
-            <button className='bp-btn' onClick={toggleMode} type='button'>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0, flexWrap: 'wrap' }} className='p-2 sm:p-3'>
+            <button className='bp-btn min-h-11 px-3 py-2' onClick={toggleMode} type='button'>
               <ArrowUpDown className='w-3.5 h-3.5 mr-1 inline' />SWITCH MODE
             </button>
           </div>
@@ -134,7 +134,7 @@ export default function Base64EncoderPage() {
               }}
             />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0, flexWrap: 'wrap' }} className='p-2 sm:p-3'>
             <BpCopyBtn text={output} label='COPY' />
           </div>
         </Panel>

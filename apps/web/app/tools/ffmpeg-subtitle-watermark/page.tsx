@@ -171,12 +171,12 @@ export default function FfmpegSubtitleWatermarkPage() {
       data-cat='ffmpeg'
       style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
     >
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Subtitle &amp; Watermark</h1>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>Subtitle &amp; Watermark</h1>
         <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Burn subtitles and image overlays into video files</p>
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 overflow-hidden'>
         {/* Left panel: configuration */}
         <Panel title='Configuration' style={{ borderRight: 0, borderTop: 0 }}>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
@@ -191,7 +191,7 @@ export default function FfmpegSubtitleWatermarkPage() {
             {/* Input / Output */}
             <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
               <div style={sectionHeadStyle}>Input / Output</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3'>
                 <div>
                   <label style={labelStyle}>Input Video</label>
                   <input value={inputFile} onChange={(e) => setInputFile(e.target.value)} placeholder='input.mp4' style={{ ...inputStyle, fontFamily: 'monospace' }} />
@@ -212,7 +212,7 @@ export default function FfmpegSubtitleWatermarkPage() {
                     <label style={labelStyle}>Subtitle File (.srt, .ass, .vtt)</label>
                     <input value={subtitleFile} onChange={(e) => setSubtitleFile(e.target.value)} placeholder='subtitle.srt' style={{ ...inputStyle, fontFamily: 'monospace' }} />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                  <div className='grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3'>
                     <div>
                       <label style={labelStyle}>Font Size</label>
                       <input type='number' value={subtitleFontSize} onChange={(e) => setSubtitleFontSize(parseInt(e.target.value) || 24)} style={inputStyle} />
@@ -242,7 +242,7 @@ export default function FfmpegSubtitleWatermarkPage() {
                     <label style={labelStyle}>Watermark Text</label>
                     <input value={watermarkText} onChange={(e) => setWatermarkText(e.target.value)} placeholder='Copyright 2024' style={inputStyle} />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3'>
                     <div>
                       <label style={labelStyle}>Position</label>
                       <select value={textPosition} onChange={(e) => setTextPosition(e.target.value)} style={selectStyle}>
@@ -283,7 +283,7 @@ export default function FfmpegSubtitleWatermarkPage() {
                     <label style={labelStyle}>Image File</label>
                     <input value={imageFile} onChange={(e) => setImageFile(e.target.value)} placeholder='watermark.png' style={{ ...inputStyle, fontFamily: 'monospace' }} />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3'>
                     <div>
                       <label style={labelStyle}>Position</label>
                       <select value={imagePosition} onChange={(e) => setImagePosition(e.target.value)} style={selectStyle}>
@@ -314,8 +314,8 @@ export default function FfmpegSubtitleWatermarkPage() {
           </div>
 
           {/* Action bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
-            <button type='button' className='bp-btn bp-btn-solid' style={{ flex: 1 }} onClick={generateCommand}>
+          <div className='flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-t border-[var(--bp-border-str)] flex-shrink-0' style={{ borderTop: '1px dashed var(--bp-border-str)' }}>
+            <button type='button' className='bp-btn bp-btn-solid min-h-10 px-2 sm:px-3' style={{ flex: 1 }} onClick={generateCommand}>
               <FileText className='w-4 h-4 mr-2 inline' />GENERATE COMMAND
             </button>
           </div>
@@ -326,7 +326,7 @@ export default function FfmpegSubtitleWatermarkPage() {
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
             {command ? (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+                <div className='flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-b border-[var(--bp-border)] flex-shrink-0'>
                   <BpCopyBtn text={command} label='COPY' />
                 </div>
                 <pre style={{ flex: 1, margin: 0, padding: '12px 14px', fontSize: 12, color: 'var(--bp-ink)', whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.65, overflowY: 'auto' }}>{command}</pre>

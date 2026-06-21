@@ -127,17 +127,17 @@ export default function CsvJsonConverterPage() {
       }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 2 }}>
           <Table style={{ width: 16, height: 16, color: 'var(--bp-accent)', flexShrink: 0 }} />
-          <h1 style={{ fontSize: 14, fontWeight: 600, color: 'var(--bp-ink)', margin: 0, letterSpacing: '0.01em' }}>CSV ↔ JSON Converter</h1>
+          <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1' style={{ letterSpacing: '0.01em' }}>CSV ↔ JSON Converter</h1>
         </div>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Convert CSV spreadsheets to JSON arrays and back</p>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Convert CSV spreadsheets to JSON arrays and back</p>
       </div>
 
       {/* Options bar */}
       <div style={{ flexShrink: 0, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', flexWrap: 'wrap' }}>
+        <div className='flex items-center gap-2 sm:gap-3 p-2 sm:p-3 flex-wrap'>
           {/* Direction toggle */}
           <div style={{ display: 'flex', overflow: 'hidden', border: '1px solid var(--bp-border-str)' }}>
             {(['csv-to-json', 'json-to-csv'] as Direction[]).map((d) => (
@@ -163,7 +163,7 @@ export default function CsvJsonConverterPage() {
             ))}
           </div>
 
-          <button className='bp-btn' onClick={switchDirection} type='button'>
+          <button className='bp-btn min-h-11 px-3 py-2' onClick={switchDirection} type='button'>
             <ArrowLeftRight className='w-3.5 h-3.5 mr-1 inline' />SWAP
           </button>
 
@@ -204,7 +204,7 @@ export default function CsvJsonConverterPage() {
       </div>
 
       {/* Main 2-column layout */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='grid grid-cols-1 lg:grid-cols-2 flex-1 min-h-0 overflow-hidden'>
         {/* Input panel */}
         <Panel title={direction === 'csv-to-json' ? 'CSV Input' : 'JSON Input'} style={{ borderRight: 0, borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
@@ -236,9 +236,9 @@ export default function CsvJsonConverterPage() {
               <span style={{ fontSize: 11, color: '#f87171', fontFamily: 'inherit' }}>{error}</span>
             </div>
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+          <div className='flex items-center gap-2 sm:gap-3 p-2 sm:p-3 flex-shrink-0' style={{ borderTop: '1px dashed var(--bp-border-str)' }}>
             <button
-              className='bp-btn bp-btn-solid'
+              className='bp-btn bp-btn-solid min-h-11 px-3 py-2'
               onClick={handleConvert}
               disabled={!input.trim()}
               type='button'
@@ -285,7 +285,7 @@ export default function CsvJsonConverterPage() {
             )}
           </div>
           {output && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <div className='flex items-center gap-2 sm:gap-3 p-2 sm:p-3 flex-shrink-0' style={{ borderTop: '1px dashed var(--bp-border-str)' }}>
               <BpCopyBtn text={output} label='COPY' />
             </div>
           )}

@@ -117,16 +117,16 @@ export default function PortCheckerPage() {
       style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
     >
       {/* header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Port Checker</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Test TCP port connectivity for any host and port combination</p>
+      <div className='p-4 sm:p-5 md:p-6' style={{ borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1' style={{ fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Port Checker</h1>
+        <p className='text-xs sm:text-sm' style={{ color: 'var(--bp-ink-mute)', margin: 0 }}>Test TCP port connectivity for any host and port combination</p>
       </div>
 
       {/* content */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='grid grid-cols-1 lg:grid-cols-2' style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
 
         {/* left column — inputs */}
-        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: '1px solid var(--bp-border)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: '1px solid var(--bp-border)', borderBottomWidth: 0 }} className='lg:border-r lg:border-b-0 border-b border-[var(--bp-border)]'>
 
           {/* check port panel */}
           <Panel title='Check Port' style={{ border: 0, borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
@@ -155,13 +155,13 @@ export default function PortCheckerPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <label style={{ fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)' }}>Timeout</label>
-                <div style={{ display: 'flex', gap: 6 }}>
+                <div className='flex gap-2 sm:gap-3' style={{ gap: 6 }}>
                   {['2000', '5000', '10000'].map((t) => (
                     <button
                       key={t}
                       type='button'
                       onClick={() => setTimeout_(t)}
-                      className='bp-btn'
+                      className='bp-btn min-h-10 px-2 sm:px-3 py-2'
                       style={timeout === t ? { background: 'var(--bp-accent)', color: '#0a0e14', borderColor: 'var(--bp-accent)', fontWeight: 700 } : {}}
                     >
                       {parseInt(t) / 1000}s
@@ -170,10 +170,10 @@ export default function PortCheckerPage() {
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <div className='p-2 sm:p-3' style={{ display: 'flex', alignItems: 'center', gap: 8, borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
               <button
                 type='button'
-                className='bp-btn'
+                className='bp-btn min-h-10 px-3 py-2'
                 onClick={handleSubmit}
                 disabled={loading}
                 style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'var(--bp-accent)', color: '#0a0e14', borderColor: 'var(--bp-accent)', fontWeight: 700, opacity: loading ? 0.6 : 1 }}
@@ -186,16 +186,16 @@ export default function PortCheckerPage() {
 
           {/* quick checks panel */}
           <Panel title='Quick Checks' style={{ border: 0, borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
-            <div style={{ padding: '10px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+            <div className='p-2 sm:p-3 grid grid-cols-2 gap-2 sm:gap-3' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
               {QUICK_CHECKS.map((q) => (
                 <button
                   key={q.label}
                   type='button'
                   onClick={() => { setHost(q.host); setPort(String(q.port)); runCheck(q.host, q.port); }}
                   disabled={loading}
+                  className='min-h-10 px-2 sm:px-3 py-2'
                   style={{
                     textAlign: 'left',
-                    padding: '7px 10px',
                     background: 'var(--bp-bg)',
                     border: '1px solid var(--bp-border)',
                     color: 'var(--bp-accent)',
@@ -214,18 +214,18 @@ export default function PortCheckerPage() {
 
           {/* common ports panel */}
           <Panel title='Common Ports' style={{ border: 0, flex: 1, overflow: 'hidden' }}>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 4 }}>
+            <div className='p-2 sm:p-3 grid grid-cols-2 gap-2 sm:gap-3 overflow-y-auto' style={{ flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 4 }}>
               {Object.entries(WELL_KNOWN).map(([p, name]) => (
                 <button
                   key={p}
                   type='button'
                   onClick={() => setPort(p)}
+                  className='min-h-10 px-2 sm:px-3 py-2'
                   style={{
                     display: 'flex',
                     gap: 8,
                     alignItems: 'center',
                     textAlign: 'left',
-                    padding: '5px 8px',
                     background: 'var(--bp-bg)',
                     border: '1px solid var(--bp-border)',
                     color: 'var(--bp-ink)',

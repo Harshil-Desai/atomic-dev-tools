@@ -153,15 +153,15 @@ export default function SnowflakeDecoderPage() {
       data-cat='backend'
       style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
     >
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Snowflake ID Decoder</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Decode Snowflake IDs to extract timestamp and machine information</p>
+      <div className='border-b border-[hsla(0,0%,20%,1)] bg-[#1C1C1C] p-4 sm:p-5 md:p-6' style={{ borderColor: 'var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <h1 className='text-sm sm:text-base md:text-base font-semibold text-white m-0 mb-1' style={{ fontWeight: 600, color: '#fff' }}>Snowflake ID Decoder</h1>
+        <p className='text-xs sm:text-sm m-0' style={{ color: 'var(--bp-ink-mute)' }}>Decode Snowflake IDs to extract timestamp and machine information</p>
       </div>
 
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
         <Panel title='Platform & Input'>
-          <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className='p-2 sm:p-3 md:p-3.5 flex flex-col gap-3' style={{ display: 'flex', flexDirection: 'column' }}>
             <div>
               <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Platform</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -171,7 +171,7 @@ export default function SnowflakeDecoderPage() {
                     type='button'
                     onClick={() => { setPlatformKey(k); setInput(EXAMPLES[k] || ''); }}
                     style={platformKey === k ? { padding: '4px 10px', fontSize: 11, fontFamily: 'inherit', background: 'var(--bp-accent)', color: '#0a0e14', border: '1px solid var(--bp-accent)', cursor: 'pointer', fontWeight: 600 } : undefined}
-                    className={platformKey === k ? undefined : 'bp-btn'}
+                    className={platformKey === k ? 'min-h-10 px-3 py-2' : 'bp-btn min-h-10 px-3 py-2'}
                   >
                     {p.label}
                   </button>
@@ -180,7 +180,7 @@ export default function SnowflakeDecoderPage() {
                   type='button'
                   onClick={() => setPlatformKey('custom')}
                   style={platformKey === 'custom' ? { padding: '4px 10px', fontSize: 11, fontFamily: 'inherit', background: 'var(--bp-accent)', color: '#0a0e14', border: '1px solid var(--bp-accent)', cursor: 'pointer', fontWeight: 600 } : undefined}
-                  className={platformKey === 'custom' ? undefined : 'bp-btn'}
+                  className={platformKey === 'custom' ? 'min-h-10 px-3 py-2' : 'bp-btn min-h-10 px-3 py-2'}
                 >
                   Custom
                 </button>
@@ -230,7 +230,7 @@ export default function SnowflakeDecoderPage() {
 
         {decoded && (
           <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2 md:gap-3' style={{ gap: 8 }}>
               {[
                 { label: 'Timestamp (UTC)', value: decoded.timestamp.toUTCString() },
                 { label: 'ISO 8601', value: decoded.timestamp.toISOString() },
@@ -244,7 +244,7 @@ export default function SnowflakeDecoderPage() {
             </div>
 
             <Panel title='Field Breakdown'>
-              <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div className='p-2 sm:p-3 md:p-3.5 flex flex-col gap-2' style={{ display: 'flex', flexDirection: 'column' }}>
                 {decoded.fields.map((f) => (
                   <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div className={`rounded px-2 py-1 text-xs font-medium border ${f.color}`} style={{ width: 192, flexShrink: 0 }}>{f.label}</div>
@@ -256,7 +256,7 @@ export default function SnowflakeDecoderPage() {
             </Panel>
 
             <Panel title='64-bit Binary Layout'>
-              <div style={{ padding: '12px 14px' }}>
+              <div className='p-2 sm:p-3 md:p-3.5'>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, marginBottom: 10 }}>
                   {(() => {
                     const bin = decoded.binary;
@@ -287,11 +287,11 @@ export default function SnowflakeDecoderPage() {
         )}
 
         <Panel title='About Snowflake IDs'>
-          <div style={{ padding: '12px 14px' }}>
+          <div className='p-2 sm:p-3 md:p-3.5'>
             <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: '0 0 10px 0', lineHeight: 1.65 }}>
               Snowflake IDs are 64-bit integers that encode a millisecond timestamp, machine/worker identifier, and a per-machine sequence counter. This makes them sortable by creation time while remaining unique across distributed systems without coordination.
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2'>
               {Object.entries(PLATFORMS).map(([k, p]) => (
                 <div key={k} style={{ fontSize: 11 }}>
                   <span style={{ color: 'var(--bp-ink-mute)' }}>{p.label}: </span>

@@ -121,13 +121,13 @@ export default function JsonYamlConverterPage() {
       }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 700, color: '#fff', margin: 0, marginBottom: 2 }}>JSON ↔ YAML Converter</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Bidirectional lossless conversion between JSON and YAML</p>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>JSON ↔ YAML Converter</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Bidirectional lossless conversion between JSON and YAML</p>
       </div>
 
       {/* Settings bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '6px 16px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0, flexWrap: 'wrap' }}>
+      <div className='flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0 flex-wrap'>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)' }}>YAML Indent:</span>
           <select style={selectStyle} value={yamlIndent} onChange={(e) => setYamlIndent(parseInt(e.target.value))}>
@@ -149,7 +149,7 @@ export default function JsonYamlConverterPage() {
       </div>
 
       {/* Main 2-column input area */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 overflow-hidden'>
         {/* JSON Panel */}
         <Panel
           title='JSON'
@@ -187,8 +187,8 @@ export default function JsonYamlConverterPage() {
               </div>
             )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0, flexWrap: 'wrap' }}>
-            <button className='bp-btn bp-btn-solid' onClick={jsonToYaml} disabled={!jsonValid || !jsonInput.trim()} type='button'>JSON → YAML</button>
+          <div className='flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-t border-dashed border-[var(--bp-border-str)] flex-shrink-0 flex-wrap'>
+            <button className='bp-btn bp-btn-solid min-h-10 px-3' onClick={jsonToYaml} disabled={!jsonValid || !jsonInput.trim()} type='button'>JSON → YAML</button>
           </div>
         </Panel>
 
@@ -229,11 +229,11 @@ export default function JsonYamlConverterPage() {
               </div>
             )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0, flexWrap: 'wrap' }}>
-            <button className='bp-btn' onClick={swapContent} type='button' title='Swap JSON and YAML'>
+          <div className='flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-t border-dashed border-[var(--bp-border-str)] flex-shrink-0 flex-wrap'>
+            <button className='bp-btn min-h-10 px-3' onClick={swapContent} type='button' title='Swap JSON and YAML'>
               <ArrowLeftRight style={{ width: 14, height: 14 }} />
             </button>
-            <button className='bp-btn bp-btn-solid' onClick={yamlToJson} disabled={!yamlValid || !yamlInput.trim()} type='button'>YAML → JSON</button>
+            <button className='bp-btn bp-btn-solid min-h-10 px-3' onClick={yamlToJson} disabled={!yamlValid || !yamlInput.trim()} type='button'>YAML → JSON</button>
           </div>
         </Panel>
       </div>
@@ -249,7 +249,7 @@ export default function JsonYamlConverterPage() {
               style={{ ...textareaStyle, flex: 1 }}
             />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+          <div className='flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-t border-dashed border-[var(--bp-border-str)] flex-shrink-0'>
             <BpCopyBtn text={jsonOutput || yamlOutput} label='COPY' />
           </div>
         </Panel>

@@ -125,12 +125,12 @@ export default function FfmpegAudioExtractorPage() {
       data-cat='ffmpeg'
       style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
     >
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>FFmpeg Audio Extractor</h1>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>FFmpeg Audio Extractor</h1>
         <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Extract audio tracks from video files to common formats</p>
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 overflow-hidden'>
         {/* Left: Configuration */}
         <Panel title='Configuration' style={{ borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
@@ -138,9 +138,9 @@ export default function FfmpegAudioExtractorPage() {
             {/* Preset Profiles */}
             <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--bp-border)' }}>
               <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 8, fontWeight: 600 }}>Preset Profiles</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <div className='flex flex-wrap gap-2 sm:gap-3'>
                 {[['podcast', 'Podcast'], ['music', 'Music'], ['audiobook', 'Audiobook']].map(([key, label]) => (
-                  <button key={key} type='button' className='bp-btn' onClick={() => applyPreset(key)}>{label}</button>
+                  <button key={key} type='button' className='bp-btn min-h-10 px-2 sm:px-3' onClick={() => applyPreset(key)}>{label}</button>
                 ))}
               </div>
             </div>
@@ -148,7 +148,7 @@ export default function FfmpegAudioExtractorPage() {
             {/* Input / Output */}
             <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--bp-border)' }}>
               <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 8, fontWeight: 600 }}>Input / Output</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3'>
                 <div>
                   <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Input Video/Audio</label>
                   <input
@@ -173,7 +173,7 @@ export default function FfmpegAudioExtractorPage() {
             {/* Format & Quality */}
             <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--bp-border)' }}>
               <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 8, fontWeight: 600 }}>Format & Quality</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
+              <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 mb-2'>
                 <div>
                   <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Output Format</label>
                   <select
@@ -239,7 +239,7 @@ export default function FfmpegAudioExtractorPage() {
             {/* Advanced Options */}
             <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--bp-border)' }}>
               <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 8, fontWeight: 600 }}>Advanced Options</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3'>
                 <div>
                   <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Trim Start</label>
                   <input
@@ -283,11 +283,10 @@ export default function FfmpegAudioExtractorPage() {
           </div>
 
           {/* Action bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+          <div className='flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-t border-dashed border-[var(--bp-border-str)] flex-shrink-0'>
             <button
               type='button'
-              className='bp-btn bp-btn-solid'
-              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              className='bp-btn bp-btn-solid flex-1 flex items-center justify-center gap-2 sm:gap-3 min-h-10 px-2 sm:px-3'
               onClick={generateCommand}
             >
               <Music style={{ width: 14, height: 14 }} />

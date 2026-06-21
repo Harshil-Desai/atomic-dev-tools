@@ -111,21 +111,21 @@ export default function JwtGeneratorPage() {
       style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>JWT Generator & Signer</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Build and sign JWT tokens with HMAC — runs entirely in your browser</p>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>JWT Generator & Signer</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Build and sign JWT tokens with HMAC — runs entirely in your browser</p>
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='flex-1 grid grid-cols-1 lg:grid-cols-2 overflow-hidden' style={{ minHeight: 0 }}>
 
         {/* Left column: config + payload */}
         <Panel title='Sign' style={{ borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
 
             {/* Algorithm & Secret */}
-            <div style={{ borderBottom: '1px solid var(--bp-border)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            <div className='p-2 sm:p-3' style={{ borderBottom: '1px solid var(--bp-border)', display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+              <div className='flex flex-col sm:flex-row gap-2 sm:gap-3' style={{ alignItems: 'flex-start' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Algorithm</div>
                   <select
@@ -152,7 +152,7 @@ export default function JwtGeneratorPage() {
                     placeholder='your-secret-key'
                     style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
                   />
-                  <button type='button' className='bp-btn' onClick={() => setShowSecret(!showSecret)} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <button type='button' className='bp-btn min-h-10 px-3' onClick={() => setShowSecret(!showSecret)} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {showSecret ? <EyeOff className='w-4 h-4' /> : <Eye className='w-4 h-4' />}
                   </button>
                 </div>
@@ -160,15 +160,15 @@ export default function JwtGeneratorPage() {
             </div>
 
             {/* Quick claims + Payload textarea */}
-            <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+            <div className='p-2 sm:p-3' style={{ borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
               <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 6 }}>Quick claims</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              <div className='flex flex-wrap gap-1 sm:gap-2'>
                 {QUICK_CLAIMS.map((c) => (
                   <button
                     key={c.label}
                     type='button'
                     onClick={() => addClaim(c.key, c.value())}
-                    className='bp-btn'
+                    className='bp-btn min-h-10 px-3 py-2'
                     style={{ fontSize: 10, display: 'flex', alignItems: 'center', gap: 3 }}
                   >
                     <Plus className='w-3 h-3' />{c.label}
@@ -186,10 +186,10 @@ export default function JwtGeneratorPage() {
           </div>
 
           {/* Action bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+          <div className='flex items-center gap-2 sm:gap-3 p-2 sm:p-3' style={{ borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
             <button
               type='button'
-              className='bp-btn bp-btn-solid'
+              className='bp-btn bp-btn-solid min-h-10 px-3'
               onClick={generate}
               disabled={generating}
               style={{ flex: 1 }}
@@ -235,7 +235,7 @@ export default function JwtGeneratorPage() {
 
             {/* Decode section */}
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-              <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+              <div className='p-2 sm:p-3' style={{ borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
                 <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 6 }}>Decode any JWT</div>
                 <textarea
                   value={inspectToken}
@@ -245,18 +245,18 @@ export default function JwtGeneratorPage() {
                   spellCheck={false}
                   style={{ width: '100%', background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 11, padding: '8px 10px', resize: 'none', outline: 'none', boxSizing: 'border-box', lineHeight: 1.65 }}
                 />
-                <button type='button' className='bp-btn' onClick={inspect} style={{ marginTop: 6, width: '100%' }}>DECODE</button>
+                <button type='button' className='bp-btn min-h-10 px-3 w-full' onClick={inspect} style={{ marginTop: 6 }}>DECODE</button>
               </div>
 
               {inspected && (
-                <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div className='flex-1 overflow-y-auto p-2 sm:p-3 flex flex-col gap-2 sm:gap-3'>
                   {inspected.error ? (
                     <div style={{ padding: '8px 10px', border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(127,29,29,0.2)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                       <AlertCircle style={{ width: 14, height: 14, color: '#f87171', flexShrink: 0, marginTop: 1 }} />
                       <span style={{ fontSize: 12, color: '#fca5a5' }}>{inspected.error}</span>
                     </div>
                   ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <div className='grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3'>
                       {([['Header', 'h', inspected.header], ['Payload', 'p', inspected.payload]] as const).map(([title, key, obj]) => (
                         <div key={key} style={{ background: 'var(--bp-surface)', border: '1px solid var(--bp-border)', padding: 10 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>

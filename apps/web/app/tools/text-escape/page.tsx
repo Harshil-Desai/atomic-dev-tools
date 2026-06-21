@@ -91,13 +91,13 @@ export default function TextEscapePage() {
       }}
     >
       {/* Compact header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--bp-ink)', letterSpacing: '0.02em' }}>Text Escape</h1>
-        <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--bp-ink-mute)' }}>Escape and unescape HTML, URL, JavaScript and more</p>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1' style={{ letterSpacing: '0.02em' }}>Text Escape</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Escape and unescape HTML, URL, JavaScript and more</p>
       </div>
 
       {/* Config bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-elevated)', flexShrink: 0, flexWrap: 'wrap' }}>
+      <div className='p-2 sm:p-3 flex flex-wrap items-center gap-2 sm:gap-3' style={{ borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-elevated)', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', fontWeight: 600 }}>Type</span>
           <select
@@ -124,13 +124,13 @@ export default function TextEscapePage() {
           </select>
         </div>
         <div style={{ display: 'flex', gap: 6, marginLeft: 4 }}>
-          <button className='bp-btn bp-btn-solid' onClick={() => run(ops[escapeType].escape)} disabled={!input.trim()} type='button'>ESCAPE</button>
-          <button className='bp-btn' onClick={() => run(ops[escapeType].unescape)} disabled={!input.trim()} type='button'>UNESCAPE</button>
+          <button className='bp-btn bp-btn-solid min-h-10 px-3 py-2' onClick={() => run(ops[escapeType].escape)} disabled={!input.trim()} type='button'>ESCAPE</button>
+          <button className='bp-btn min-h-10 px-3 py-2' onClick={() => run(ops[escapeType].unescape)} disabled={!input.trim()} type='button'>UNESCAPE</button>
         </div>
       </div>
 
       {/* Main 2-column layout */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='grid grid-cols-1 lg:grid-cols-2' style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <Panel title='Input Text' meta={`${input.length} chars`} style={{ borderRight: 0, borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
             <textarea
@@ -181,7 +181,7 @@ export default function TextEscapePage() {
               }}
             />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0, flexWrap: 'wrap' }}>
+          <div className='p-2 sm:p-3 flex flex-wrap items-center gap-2 sm:gap-3' style={{ borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
             <BpCopyBtn text={output} label='COPY' />
           </div>
         </Panel>

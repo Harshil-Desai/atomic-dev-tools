@@ -199,14 +199,14 @@ export default function CodeFormatterPage() {
       }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#fff', letterSpacing: '0.01em' }}>Code Formatter</h1>
-        <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--bp-ink-mute)' }}>Beautify and minify JSON, JavaScript, CSS and HTML</p>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>Code Formatter</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Beautify and minify JSON, JavaScript, CSS and HTML</p>
       </div>
 
       {/* Config bar */}
       <div style={{ flexShrink: 0, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, padding: '10px 16px', flexWrap: 'wrap' }}>
+        <div className='p-2 sm:p-3 flex items-end gap-2 sm:gap-3 flex-wrap' style={{ display: 'flex', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 120 }}>
             <label style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', fontWeight: 600 }}>Language</label>
             <select
@@ -235,7 +235,7 @@ export default function CodeFormatterPage() {
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexWrap: 'wrap' }}>
             <button
-              className='bp-btn bp-btn-solid'
+              className='bp-btn bp-btn-solid min-h-10 px-3'
               onClick={() => handleProcess('beautify')}
               disabled={!input.trim()}
               type='button'
@@ -243,7 +243,7 @@ export default function CodeFormatterPage() {
               <Sparkles className='w-4 h-4 mr-2 inline' />BEAUTIFY
             </button>
             <button
-              className='bp-btn'
+              className='bp-btn min-h-10 px-3'
               onClick={() => handleProcess('minify')}
               disabled={!input.trim()}
               type='button'
@@ -256,14 +256,14 @@ export default function CodeFormatterPage() {
 
       {/* Error bar */}
       {error && (
-        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 16px', borderBottom: '1px solid rgba(239,68,68,0.3)', background: 'rgba(127,29,29,0.15)' }}>
+        <div className='p-2 sm:p-3 flex items-start gap-2 sm:gap-3' style={{ flexShrink: 0, display: 'flex', alignItems: 'flex-start', gap: 10, borderBottom: '1px solid rgba(239,68,68,0.3)', background: 'rgba(127,29,29,0.15)' }}>
           <AlertCircle style={{ width: 14, height: 14, color: '#f87171', flexShrink: 0, marginTop: 1 }} />
           <span style={{ fontSize: 12, color: '#fca5a5' }}>{error}</span>
         </div>
       )}
 
       {/* Main 2-col layout */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-0' style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <Panel
           title='Input Code'
           meta={inputStats.chars > 0 ? `${inputStats.lines} lines · ${inputStats.chars} chars` : undefined}
@@ -322,7 +322,7 @@ export default function CodeFormatterPage() {
               }}
             />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0, flexWrap: 'wrap' }}>
+          <div className='p-2 sm:p-3 flex items-center gap-2 sm:gap-3' style={{ display: 'flex', alignItems: 'center', gap: 8, borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0, flexWrap: 'wrap' }}>
             <BpCopyBtn text={output} label='COPY' />
           </div>
         </Panel>

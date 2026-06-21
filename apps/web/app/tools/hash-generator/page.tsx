@@ -87,16 +87,16 @@ export default function HashGeneratorPage() {
       style={{ ...CSS_VARS, background: 'var(--bp-bg)', color: 'var(--bp-ink)', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: 0, marginBottom: 2, letterSpacing: '0.02em' }}>Hash Generator</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Generate MD5, SHA-1, SHA-256 and SHA-512 digests</p>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>Hash Generator</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Generate MD5, SHA-1, SHA-256 and SHA-512 digests</p>
       </div>
 
       {/* Main content */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='grid grid-cols-1 lg:grid-cols-2' style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
 
         {/* Left: Input + Config */}
-        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: '1px solid var(--bp-border)' }}>
+        <div className='hidden lg:flex' style={{ flexDirection: 'column', overflow: 'hidden', borderRight: '1px solid var(--bp-border)' }}>
           <Panel title='Input Text' style={{ flex: 1, minHeight: 0, border: 0, borderBottom: '1px solid var(--bp-border)' }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <textarea
@@ -115,7 +115,7 @@ export default function HashGeneratorPage() {
           </Panel>
 
           <Panel title='Configuration' style={{ border: 0, flexShrink: 0 }}>
-            <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className='p-3 sm:p-4' style={{ display: 'flex', flexDirection: 'column', gap: 14, color: 'var(--bp-ink)' }}>
               <div>
                 <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 8 }}>Hash Algorithms</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -171,9 +171,9 @@ export default function HashGeneratorPage() {
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <div className='p-2 sm:p-3' style={{ display: 'flex', alignItems: 'center', gap: 8, borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
               <button
-                className='bp-btn bp-btn-solid'
+                className='bp-btn bp-btn-solid min-h-10 px-3 py-2'
                 onClick={handleGenerate}
                 disabled={!input.trim() || algorithms.length === 0}
                 type='button'
@@ -190,7 +190,7 @@ export default function HashGeneratorPage() {
         <Panel title='Results' meta={results.length > 0 ? `${results.length} hash${results.length !== 1 ? 'es' : ''}` : undefined} style={{ border: 0 }}>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
             {results.length > 0 ? (
-              <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div className='p-3 sm:p-4' style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {results.map((result) => (
                   <div key={result.algorithm}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>

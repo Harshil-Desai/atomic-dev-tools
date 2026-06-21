@@ -134,16 +134,16 @@ export default function PasswordGeneratorPage() {
       data-cat='security'
       style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
     >
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Password Generator</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Generate cryptographically secure passwords with entropy scoring</p>
+      <div className='border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0 p-4 sm:p-5 md:p-6'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>Password Generator</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Generate cryptographically secure passwords with entropy scoring</p>
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '320px 1fr', overflow: 'hidden' }}>
+      <div className='flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 overflow-hidden'>
 
         {/* Settings Panel */}
         <Panel title='Settings' style={{ borderRight: 0, borderTop: 0 }}>
-          <div style={{ flex: 1, overflowY: 'auto', padding: '14px 14px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div className='flex-1 overflow-y-auto p-3 sm:p-4 flex flex-col gap-4 sm:gap-5' style={{ display: 'flex', flexDirection: 'column' }}>
 
             {/* Length slider */}
             <div>
@@ -164,7 +164,7 @@ export default function PasswordGeneratorPage() {
             {/* Character sets */}
             <div>
               <p style={{ fontSize: 11, color: 'var(--bp-ink)', fontWeight: 500, margin: 0, marginBottom: 10 }}>Character sets</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5' style={{ display: 'grid', gap: 10 }}>
                 <Toggle checked={useUpper} onChange={setUseUpper} label='Uppercase (A-Z)' />
                 <Toggle checked={useLower} onChange={setUseLower} label='Lowercase (a-z)' />
                 <Toggle checked={useDigits} onChange={setUseDigits} label='Digits (0-9)' />
@@ -204,7 +204,7 @@ export default function PasswordGeneratorPage() {
           </div>
 
           {/* Entropy bar */}
-          <div style={{ borderTop: '1px dashed var(--bp-border-str)', padding: '10px 14px', flexShrink: 0 }}>
+          <div className='border-t border-dashed border-[var(--bp-border-str)] p-2 sm:p-3 flex-shrink-0'>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <span style={{ fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Entropy</span>
               <span style={entropyBadgeStyle}>{label} — {bits.toFixed(1)} bits</span>
@@ -220,16 +220,16 @@ export default function PasswordGeneratorPage() {
 
         {/* Output Panel */}
         <Panel title={`Generated password${passwords.length > 1 ? 's' : ''}`} style={{ borderTop: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderBottom: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
-            <button type='button' className='bp-btn' onClick={generate}>
-              <RefreshCw className='w-3.5 h-3.5 mr-1 inline' />REGENERATE
+          <div className='flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-b border-dashed border-[var(--bp-border-str)] flex-shrink-0'>
+            <button type='button' className='bp-btn min-h-10 px-3' onClick={generate}>
+              <RefreshCw className='w-3.5 h-3.5 mr-1 inline' />REGEN
             </button>
-            <button type='button' className='bp-btn' onClick={() => setShowPassword(!showPassword)}>
+            <button type='button' className='bp-btn min-h-10 px-3' onClick={() => setShowPassword(!showPassword)}>
               {showPassword ? <EyeOff className='w-4 h-4 mr-1 inline' /> : <Eye className='w-4 h-4 mr-1 inline' />}
               {showPassword ? 'HIDE' : 'SHOW'}
             </button>
           </div>
-          <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className='flex-1 overflow-y-auto p-3 sm:p-4 flex flex-col gap-2 sm:gap-3' style={{ display: 'flex', flexDirection: 'column' }}>
             {passwords.map((pw, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input

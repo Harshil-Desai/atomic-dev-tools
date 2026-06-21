@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Send, Plus, Trash2, AlertCircle, ChevronDown } from 'lucide-react';
 import { BpCopyBtn, colorJson } from '@/components/blueprint';
 
@@ -172,6 +172,15 @@ export default function ApiTesterPage() {
   const [error, setError]       = useState<string | null>(null);
   const [curlToast, setCurlToast] = useState(false);
 
+  const [isDesktop, setIsDesktop] = useState(true);
+
+  useEffect(() => {
+    const checkViewport = () => setIsDesktop(window.innerWidth >= 1024);
+    checkViewport();
+    window.addEventListener('resize', checkViewport);
+    return () => window.removeEventListener('resize', checkViewport);
+  }, []);
+
   const applyParsedCurl = (parsed: NonNullable<ReturnType<typeof parseCurl>>) => {
     setMethod(parsed.method);
     setUrl(parsed.url);
@@ -281,11 +290,35 @@ export default function ApiTesterPage() {
     whiteSpace: 'nowrap',
   });
 
+  const CSS_VARS = {
+    '--bp-bg': '#0a0e14',
+    '--bp-surface': '#0f141c',
+    '--bp-elevated': '#131a24',
+    '--bp-border': '#1e2d3d',
+    '--bp-border-str': '#2a3a52',
+    '--bp-ink': '#cfd8e3',
+    '--bp-ink-mute': '#6b7a8c',
+    '--bp-ink-faint': '#3a4554',
+    '--bp-accent': '#5fb0ff',
+  } as React.CSSProperties;
+
+  if (!isDesktop) {
+    return (
+      <div className='h-full flex flex-col items-center justify-center' style={{...CSS_VARS, background: 'var(--bp-bg)', color: 'var(--bp-ink)', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace'}}>
+        <div className='text-center px-4 sm:px-6'>
+          <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Desktop Only</h1>
+          <p className='text-sm sm:text-base text-[var(--bp-ink-mute)] mb-4'>This tool requires a larger screen for optimal use.</p>
+          <p className='text-xs sm:text-sm text-[var(--bp-ink-faint)]'>Please open this tool on a desktop or laptop (1024px+ width)</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className='bp-paper h-full flex flex-col overflow-hidden relative'
       data-cat='api'
-      style={{ '--bp-bg': '#0a0e14', '--bp-surface': '#0f141c', '--bp-elevated': '#131a24', '--bp-border': '#1e2d3d', '--bp-border-str': '#2a3a52', '--bp-ink': '#cfd8e3', '--bp-ink-mute': '#6b7a8c', '--bp-ink-faint': '#3a4554', '--bp-accent': '#5fb0ff' } as React.CSSProperties}
+      style={CSS_VARS}
     >
       <div className='bp-ruler-x' />
       <div className='bp-ruler-y' />

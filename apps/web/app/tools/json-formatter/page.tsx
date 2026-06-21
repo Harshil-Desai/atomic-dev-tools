@@ -89,16 +89,16 @@ export default function JsonFormatterPage() {
       style={{ ...CSS_VARS, background: 'var(--bp-bg)', color: 'var(--bp-ink)', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+      <div className='border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0 p-4 sm:p-5 md:p-6'>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 2 }}>
           <FileJson style={{ width: 16, height: 16, color: 'var(--bp-accent)', flexShrink: 0 }} />
-          <h1 style={{ fontSize: 13, fontWeight: 600, color: 'var(--bp-ink)', margin: 0, letterSpacing: '0.01em' }}>JSON Formatter</h1>
+          <h1 className='text-sm sm:text-base font-semibold text-[var(--bp-ink)] m-0 tracking-tight'>JSON Formatter</h1>
         </div>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Validate, format and minify JSON documents</p>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Validate, format and minify JSON documents</p>
       </div>
 
       {/* Actions bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-elevated)', flexShrink: 0, flexWrap: 'wrap' }}>
+      <div className='flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-b border-[var(--bp-border)] bg-[var(--bp-elevated)] flex-shrink-0 flex-wrap'>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)' }}>Indent:</span>
           <select
@@ -128,24 +128,24 @@ export default function JsonFormatterPage() {
           <span className='bp-status-fail' style={{ fontSize: 10 }}>INVALID{errorLine ? ` (line ${errorLine})` : ''}</span>
         )}
 
-        <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', flexWrap: 'wrap' }}>
-          <button className='bp-btn' onClick={handleClear} type='button'>
+        <div className='flex gap-2 sm:gap-3 ml-auto flex-wrap'>
+          <button className='bp-btn min-h-10 px-2 sm:px-3' onClick={handleClear} type='button'>
             <Trash2 style={{ width: 12, height: 12, marginRight: 4, display: 'inline', verticalAlign: 'middle' }} />CLEAR
           </button>
-          <button className='bp-btn' onClick={handleValidateOnly} disabled={!input.trim()} type='button'>
+          <button className='bp-btn min-h-10 px-2 sm:px-3' onClick={handleValidateOnly} disabled={!input.trim()} type='button'>
             <CheckCircle style={{ width: 12, height: 12, marginRight: 4, display: 'inline', verticalAlign: 'middle' }} />VALIDATE
           </button>
-          <button className='bp-btn' onClick={handleMinify} disabled={!input.trim()} type='button'>
+          <button className='bp-btn min-h-10 px-2 sm:px-3' onClick={handleMinify} disabled={!input.trim()} type='button'>
             <Minimize2 style={{ width: 12, height: 12, marginRight: 4, display: 'inline', verticalAlign: 'middle' }} />MINIFY
           </button>
-          <button className='bp-btn bp-btn-solid' onClick={handleFormat} disabled={!input.trim()} type='button'>
+          <button className='bp-btn bp-btn-solid min-h-10 px-2 sm:px-3' onClick={handleFormat} disabled={!input.trim()} type='button'>
             <FileJson style={{ width: 12, height: 12, marginRight: 4, display: 'inline', verticalAlign: 'middle' }} />FORMAT
           </button>
         </div>
       </div>
 
       {/* Main content: 2-column layout */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 overflow-hidden'>
         {/* Input panel */}
         <Panel
           title='JSON Input'

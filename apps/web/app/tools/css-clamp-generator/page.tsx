@@ -115,21 +115,21 @@ export default function CSSClampGeneratorPage() {
       style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2, letterSpacing: '0.01em' }}>CSS clamp() Generator</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Generate fluid typography and spacing that scales between two viewport sizes</p>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0' style={{ borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)' }}>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>CSS clamp() Generator</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Generate fluid typography and spacing that scales between two viewport sizes</p>
       </div>
 
       {/* Main 2-col layout */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 overflow-hidden' style={{ flex: 1, minHeight: 0, display: 'grid', overflow: 'hidden' }}>
 
         {/* Left: Controls */}
-        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: '1px solid var(--bp-border)' }}>
+        <div className='hidden lg:flex flex-col overflow-hidden' style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: '1px solid var(--bp-border)' }}>
           <Panel title='Presets' style={{ flexShrink: 0 }}>
-            <div style={{ padding: '10px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+            <div className='p-2 sm:p-3 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3'>
               {PRESETS.map((p) => (
-                <button key={p.label} type='button' onClick={() => applyPreset(p)}
-                  style={{ background: 'var(--bp-surface)', border: '1px solid var(--bp-border)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 10, padding: '5px 8px', cursor: 'pointer', textAlign: 'left' }}>
+                <button key={p.label} type='button' onClick={() => applyPreset(p)} className='min-h-10 px-3 py-2'
+                  style={{ background: 'var(--bp-surface)', border: '1px solid var(--bp-border)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 10, cursor: 'pointer', textAlign: 'left' }}>
                   <div style={{ color: '#fff', fontWeight: 600, marginBottom: 2 }}>{p.label}</div>
                   <div style={{ color: 'var(--bp-ink-mute)' }}>{p.minSize}–{p.maxSize}px</div>
                 </button>
@@ -144,8 +144,8 @@ export default function CSSClampGeneratorPage() {
                 <span style={labelStyle}>Output Unit</span>
                 <div style={{ display: 'flex', gap: 6 }}>
                   {(['rem', 'px'] as const).map((u) => (
-                    <button key={u} type='button' onClick={() => setUnit(u)}
-                      style={{ height: 26, padding: '0 12px', border: '1px solid var(--bp-border)', background: unit === u ? 'var(--bp-accent)' : 'transparent', color: unit === u ? '#000' : 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 11, cursor: 'pointer' }}>
+                    <button key={u} type='button' onClick={() => setUnit(u)} className='min-h-10 px-3'
+                      style={{ height: 26, border: '1px solid var(--bp-border)', background: unit === u ? 'var(--bp-accent)' : 'transparent', color: unit === u ? '#000' : 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 11, cursor: 'pointer' }}>
                       {u}
                     </button>
                   ))}
@@ -162,7 +162,7 @@ export default function CSSClampGeneratorPage() {
               {/* Size range */}
               <div>
                 <span style={{ ...labelStyle, color: 'var(--bp-accent)' }}>Size Range (px)</span>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
                   <div>
                     <label style={labelStyle}>Min Size</label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -183,7 +183,7 @@ export default function CSSClampGeneratorPage() {
               {/* Viewport range */}
               <div>
                 <span style={{ ...labelStyle, color: 'var(--bp-accent)' }}>Viewport Range (px)</span>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
                   <div>
                     <label style={labelStyle}>Min Viewport</label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -228,8 +228,8 @@ export default function CSSClampGeneratorPage() {
                 {/* Generated clamp */}
                 <div>
                   <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>Generated clamp()</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <code style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: 'var(--bp-accent)', fontSize: 11, padding: '8px 10px', wordBreak: 'break-all', lineHeight: 1.5 }}>{result.clampValue}</code>
+                  <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3' style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <code className='flex-1' style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: 'var(--bp-accent)', fontSize: 11, padding: '8px 10px', wordBreak: 'break-all', lineHeight: 1.5 }}>{result.clampValue}</code>
                     <BpCopyBtn text={result.clampValue} label='COPY' />
                   </div>
                 </div>
@@ -249,9 +249,9 @@ export default function CSSClampGeneratorPage() {
                       { label: 'SCSS var', value: `$fluid-${cssProp}: ${result.clampValue};` },
                       { label: 'CSS var', value: `--fluid-${cssProp}: ${result.clampValue};` },
                     ].map(({ label, value }) => (
-                      <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 9, color: 'var(--bp-ink-faint)', width: 52, flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
-                        <code style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: 'var(--bp-ink)', fontSize: 10, padding: '5px 8px', wordBreak: 'break-all', lineHeight: 1.5 }}>{value}</code>
+                      <div key={label} className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3' style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span className='text-xs sm:text-xs flex-shrink-0' style={{ fontSize: 9, color: 'var(--bp-ink-faint)', width: 52, flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+                        <code className='flex-1 break-all' style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: 'var(--bp-ink)', fontSize: 10, padding: '5px 8px', wordBreak: 'break-all', lineHeight: 1.5 }}>{value}</code>
                         <BpCopyBtn text={value} label='COPY' />
                       </div>
                     ))}
@@ -261,7 +261,7 @@ export default function CSSClampGeneratorPage() {
                 {/* Math breakdown */}
                 <div>
                   <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>Math Breakdown</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+                  <div className='grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3'>
                     {[
                       { label: 'Slope', value: result.slope.toFixed(4), desc: `(${maxSize}-${minSize})÷(${maxVp}-${minVp})` },
                       { label: 'Intercept', value: `${result.intercept.toFixed(4)}px`, desc: `${minSize}−slope×${minVp}` },
@@ -279,7 +279,7 @@ export default function CSSClampGeneratorPage() {
                 {/* Size at common viewports */}
                 <div>
                   <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>Size at Common Viewports</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+                  <div className='grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3'>
                     {[320, 375, 480, 768, 1024, 1280, 1440, 1920].map((vp) => {
                       const size = Math.min(maxSize, Math.max(minSize, minSize + result.slope * (vp - minVp)));
                       const inRange = vp >= minVp && vp <= maxVp;

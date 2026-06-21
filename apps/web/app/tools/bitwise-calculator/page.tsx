@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BpCopyBtn } from '@/components/blueprint';
 
 // ─── types ────────────────────────────────────────────────────────────────────
@@ -138,6 +138,15 @@ function Panel({ title, meta, children, style }: { title: string; meta?: string;
 const UNARY_OPS: Operation[] = ['NOT', 'SWAP'];
 
 export default function BitwiseCalculatorPage() {
+  const [isDesktop, setIsDesktop] = useState(true);
+
+  useEffect(() => {
+    const checkViewport = () => setIsDesktop(window.innerWidth >= 1024);
+    checkViewport();
+    window.addEventListener('resize', checkViewport);
+    return () => window.removeEventListener('resize', checkViewport);
+  }, []);
+
   const [inputA, setInputA] = useState('42');
   const [inputB, setInputB] = useState('15');
   const [baseA, setBaseA] = useState<InputBase>('dec');
@@ -170,6 +179,18 @@ export default function BitwiseCalculatorPage() {
     { label: 'Hex', value: 'hex' },
     { label: 'Bin', value: 'bin' },
   ];
+
+  if (!isDesktop) {
+    return (
+      <div className='h-full flex flex-col items-center justify-center' style={{...CSS_VARS, background: 'var(--bp-bg)', color: 'var(--bp-ink)', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace'}}>
+        <div className='text-center px-4 sm:px-6'>
+          <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Desktop Only</h1>
+          <p className='text-sm sm:text-base text-[var(--bp-ink-mute)] mb-4'>This tool requires a larger screen for optimal use.</p>
+          <p className='text-xs sm:text-sm text-[var(--bp-ink-faint)]'>Please open this tool on a desktop or laptop (1024px+ width)</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

@@ -96,12 +96,12 @@ export default function NumberBaseConverterPage() {
       style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 2 }}>
           <Binary style={{ width: 16, height: 16, color: 'var(--bp-accent)', flexShrink: 0 }} />
-          <h1 style={{ fontSize: 13, fontWeight: 600, color: 'var(--bp-ink)', letterSpacing: '0.02em', margin: 0 }}>Number Base Converter</h1>
+          <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>Number Base Converter</h1>
         </div>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0, paddingLeft: 26 }}>Convert between decimal, binary, octal and hexadecimal</p>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0 pl-[26px]'>Convert between decimal, binary, octal and hexadecimal</p>
       </div>
 
       {/* Main content */}
@@ -109,14 +109,14 @@ export default function NumberBaseConverterPage() {
 
         {/* Options panel */}
         <Panel title='Options'>
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, padding: '10px 12px' }}>
+          <div className='p-2 sm:p-3 flex flex-wrap items-center gap-2 sm:gap-3' style={{ gap: 10 }}>
             <div style={{ display: 'flex', overflow: 'hidden', border: '1px solid var(--bp-border-str)' }}>
               {(['unsigned', 'signed'] as Sign[]).map((s) => (
                 <button
                   key={s}
                   onClick={() => setSign(s)}
+                  className='min-h-10 px-3'
                   style={{
-                    padding: '5px 12px',
                     fontSize: 11,
                     fontWeight: 600,
                     letterSpacing: '0.05em',
@@ -132,7 +132,7 @@ export default function NumberBaseConverterPage() {
                 </button>
               ))}
             </div>
-            <button className='bp-btn' onClick={handleClearAll} type='button' style={{ marginLeft: 'auto' }}>
+            <button className='bp-btn min-h-10 px-3' onClick={handleClearAll} type='button' style={{ marginLeft: 'auto' }}>
               <Trash2 style={{ width: 12, height: 12, marginRight: 4, display: 'inline' }} />CLEAR ALL
             </button>
           </div>
@@ -140,14 +140,14 @@ export default function NumberBaseConverterPage() {
 
         {/* Overflow warning */}
         {overflow && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#fbbf24', background: 'rgba(120,53,15,0.25)', border: '1px solid #92400e', padding: '8px 12px' }}>
+          <div className='p-2 sm:p-3 flex items-center gap-2 sm:gap-3' style={{ fontSize: 11, color: '#fbbf24', background: 'rgba(120,53,15,0.25)', border: '1px solid #92400e', gap: 8 }}>
             <AlertTriangle style={{ width: 14, height: 14, flexShrink: 0 }} />
             <span>Overflow — number exceeds Number.MAX_SAFE_INTEGER. Results may be inaccurate.</span>
           </div>
         )}
 
         {/* Base input panels grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
+        <div className='grid grid-cols-1 lg:grid-cols-2' style={{ gap: 0 }}>
           {(Object.entries(BASE_CONFIGS) as [Base, BaseConfig][]).map(([base, config], idx) => {
             const isRight = idx % 2 === 1;
             const isBottom = idx >= 2;
@@ -161,10 +161,15 @@ export default function NumberBaseConverterPage() {
                   borderLeft: isRight ? 0 : '1px solid var(--bp-border)',
                   borderTop: isBottom ? 0 : '1px solid var(--bp-border)',
                   borderBottom: '1px solid var(--bp-border)',
+                  '@media (max-width: 1024px)': {
+                    borderRight: 0,
+                    borderLeft: '1px solid var(--bp-border)',
+                    borderTop: '1px solid var(--bp-border)',
+                  },
                 }}
               >
-                <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <div style={{ display: 'flex', gap: 6 }}>
+                <div className='p-2 sm:p-3 flex flex-col gap-2 sm:gap-3' style={{ gap: 6 }}>
+                  <div className='flex gap-2 sm:gap-3' style={{ gap: 6 }}>
                     <input
                       value={values[base]}
                       onChange={(e) => handleChange(base, e.target.value)}

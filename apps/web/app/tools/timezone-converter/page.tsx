@@ -153,15 +153,15 @@ export default function TimezoneConverterPage() {
       style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Timezone Converter</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Convert datetimes across timezones with a world clock reference</p>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>Timezone Converter</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Convert datetimes across timezones with a world clock reference</p>
       </div>
 
       {/* Content */}
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Top: Conversion — 2-column split */}
-        <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+        <div className='grid grid-cols-1 lg:grid-cols-2' style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
           {/* Left: Inputs */}
           <Panel title='Conversion — Input' style={{ borderRight: 0, borderBottom: 0 }}>
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '12px 14px', gap: 12 }}>
@@ -174,7 +174,7 @@ export default function TimezoneConverterPage() {
                   style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box', width: '100%' }}
                 />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div className='grid grid-cols-1 lg:grid-cols-2' style={{ gap: 10 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 5 }}>Source Timezone</label>
                   <ZoneSelect
@@ -197,8 +197,8 @@ export default function TimezoneConverterPage() {
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
-              <button type='button' className='bp-btn bp-btn-solid' onClick={handleConvert} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div className='p-2 sm:p-3' style={{ display: 'flex', alignItems: 'center', gap: 8, borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+              <button type='button' className='bp-btn bp-btn-solid min-h-10 px-3 py-2' onClick={handleConvert} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Globe style={{ width: 14, height: 14 }} />
                 CONVERT
               </button>
@@ -242,7 +242,7 @@ export default function TimezoneConverterPage() {
         {/* Bottom: World Clock */}
         <Panel title='World Clock' style={{ flexShrink: 0, borderTop: 0 }}>
           <div style={{ overflowY: 'auto', padding: '10px 14px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 8 }}>
+            <div className='grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 sm:gap-3'>
               {WORLD_CLOCK_CITIES.map((city) => (
                 <div key={city.zone} style={{ background: 'var(--bp-surface)', border: '1px solid var(--bp-border)', padding: '8px 10px' }}>
                   <p style={{ fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', margin: 0, marginBottom: 4 }}>{city.label}</p>

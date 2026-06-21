@@ -176,17 +176,17 @@ export default function ColorConverterPage() {
       }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 700, color: '#fff', margin: 0, marginBottom: 2 }}>Color Converter</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Convert between HEX, RGB, HSL and other color formats</p>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>Color Converter</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Convert between HEX, RGB, HSL and other color formats</p>
       </div>
 
       {/* Main content */}
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div className='p-4 sm:p-5 md:p-6' style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
 
         {/* Color Input Panel */}
         <Panel title='Color Input'>
-          <div style={{ padding: '12px 14px', display: 'flex', gap: 12, alignItems: 'center' }}>
+          <div className='p-2 sm:p-3' style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
             <label style={{ position: 'relative', cursor: 'pointer', flexShrink: 0 }}>
               <div style={{
                 width: 56, height: 56, border: '2px solid var(--bp-border-str)',
@@ -218,15 +218,16 @@ export default function ColorConverterPage() {
 
         {/* Presets Panel */}
         <Panel title='Presets'>
-          <div style={{ padding: '10px 14px', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          <div className='p-2 sm:p-3 gap-2 sm:gap-3' style={{ display: 'flex', flexWrap: 'wrap' }}>
             {PRESETS.map((p) => (
               <button
                 key={p.hex}
                 onClick={() => setInput(p.hex)}
                 type='button'
+                className='min-h-10 px-3'
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,
-                  padding: '5px 10px', border: '1px solid var(--bp-border)',
+                  border: '1px solid var(--bp-border)',
                   background: 'var(--bp-elevated)', cursor: 'pointer',
                   color: 'var(--bp-ink)', fontSize: 11, fontFamily: 'inherit',
                 }}
@@ -266,7 +267,7 @@ export default function ColorConverterPage() {
 
             {/* All Formats Panel */}
             <Panel title='All Formats'>
-              <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div className='p-2 sm:p-3' style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {outputs.map(({ label, value, key }) => (
                   <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)', width: 44, flexShrink: 0, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{label}</span>
@@ -287,7 +288,7 @@ export default function ColorConverterPage() {
 
             {/* Contrast (WCAG) Panel */}
             <Panel title='Contrast (WCAG)'>
-              <div style={{ padding: '10px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div className='p-2 sm:p-3 grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3'>
                 {[{ bg: '#ffffff', label: 'on White', ratio: contrastOnWhite }, { bg: '#000000', label: 'on Black', ratio: contrastOnBlack }].map(({ bg, label, ratio }) => {
                   const aa = ratio >= 4.5, aaa = ratio >= 7, aaLarge = ratio >= 3;
                   return (
@@ -309,7 +310,7 @@ export default function ColorConverterPage() {
 
             {/* Lightness Scale Panel */}
             <Panel title='Lightness Scale'>
-              <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div className='p-2 sm:p-3' style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div style={{ display: 'flex', gap: 4 }}>
                   {[10, 20, 30, 40, 50, 60, 70, 80, 90].map((l) => {
                     const shadeHex = rgbToHex(hslToRgb({ h: hsl_h, s: hsl_s, l }));
@@ -319,8 +320,9 @@ export default function ColorConverterPage() {
                         onClick={() => setInput(shadeHex)}
                         title={`L=${l}% → ${shadeHex}`}
                         type='button'
+                        className='min-h-10'
                         style={{
-                          flex: 1, height: 36, border: 'none', cursor: 'pointer',
+                          flex: 1, border: 'none', cursor: 'pointer',
                           backgroundColor: shadeHex,
                         }}
                       />

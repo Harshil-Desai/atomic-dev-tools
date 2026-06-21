@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BpCopyBtn } from '@/components/blueprint';
 import { FileCode, AlertCircle } from 'lucide-react';
 
@@ -151,6 +151,14 @@ export default function SVGToJSXPage() {
   const [componentName, setComponentName] = useState('MyIcon');
   const [spreadProps, setSpreadProps] = useState(true);
   const [removeComments, setRemoveComments] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(true);
+
+  useEffect(() => {
+    const checkViewport = () => setIsDesktop(window.innerWidth >= 1024);
+    checkViewport();
+    window.addEventListener('resize', checkViewport);
+    return () => window.removeEventListener('resize', checkViewport);
+  }, []);
 
   const convert = () => {
     if (!input.trim()) return;
@@ -169,6 +177,18 @@ export default function SVGToJSXPage() {
     background: active ? 'var(--bp-accent)' : 'transparent',
     color: active ? '#000' : 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 10, cursor: 'pointer',
   });
+
+  if (!isDesktop) {
+    return (
+      <div className='h-full flex flex-col items-center justify-center' style={{...CSS_VARS, background: 'var(--bp-bg)', color: 'var(--bp-ink)', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace'}}>
+        <div className='text-center px-4 sm:px-6'>
+          <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Desktop Only</h1>
+          <p className='text-sm sm:text-base text-[var(--bp-ink-mute)] mb-4'>This tool requires a larger screen for optimal use.</p>
+          <p className='text-xs sm:text-sm text-[var(--bp-ink-faint)]'>Please open this tool on a desktop or laptop (1024px+ width)</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

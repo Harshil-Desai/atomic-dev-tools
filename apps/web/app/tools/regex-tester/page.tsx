@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
 import { BpCopyBtn } from '@/components/blueprint';
 
@@ -119,10 +119,18 @@ function Panel({ title, meta, children, style }: { title: string; meta?: string;
 }
 
 export default function RegexTesterPage() {
+  const [isDesktop, setIsDesktop] = useState(true);
   const [pattern, setPattern] = useState('');
   const [flags, setFlags] = useState<Set<Flag>>(new Set(['g']));
   const [testString, setTestString] = useState('');
   const [accordionOpen, setAccordionOpen] = useState(false);
+
+  useEffect(() => {
+    const checkViewport = () => setIsDesktop(window.innerWidth >= 1024);
+    checkViewport();
+    window.addEventListener('resize', checkViewport);
+    return () => window.removeEventListener('resize', checkViewport);
+  }, []);
 
   const { regex, error } = useMemo(() => buildRegex(pattern, flags), [pattern, flags]);
   const matches = useMemo(() => { if (!regex) return []; try { return getMatches(regex, testString); } catch { return []; } }, [regex, testString]);
@@ -149,6 +157,18 @@ export default function RegexTesterPage() {
   const hasNamedGroups = matches.some(m => Object.keys(m.namedGroups).length > 0);
   const hasGroups = matches.some(m => m.groups.length > 0);
   const flagStr = Array.from(flags).join('');
+
+  if (!isDesktop) {
+    return (
+      <div className='h-full flex flex-col items-center justify-center' style={{...CSS_VARS, background: 'var(--bp-bg)', color: 'var(--bp-ink)', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace'}}>
+        <div className='text-center px-4 sm:px-6'>
+          <h1 className='text-xl sm:text-2xl font-bold text-white mb-2'>Desktop Only</h1>
+          <p className='text-sm sm:text-base text-[var(--bp-ink-mute)] mb-4'>This tool requires a larger screen for optimal use.</p>
+          <p className='text-xs sm:text-sm text-[var(--bp-ink-faint)]'>Please open this tool on a desktop or laptop (1024px+ width)</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

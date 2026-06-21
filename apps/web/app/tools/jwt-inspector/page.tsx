@@ -163,19 +163,19 @@ export default function JWTInspectorPage() {
 
       <div
         className='flex-1 min-h-0 flex flex-col overflow-hidden'
-        style={{ paddingLeft: 20, paddingTop: 18, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}
+        style={{ fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}
       >
         {/* ── Tool header ─────────────────────────────────────── */}
-        <div style={{ padding: '14px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-          <h1 style={{ fontSize: 17, fontWeight: 700, color: 'var(--bp-ink)', margin: '0 0 3px', letterSpacing: '-0.01em' }}>JWT Inspector</h1>
-          <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', margin: 0, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Decode &amp; inspect JSON Web Tokens — header, payload, signature, claims</p>
+        <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+          <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1' style={{ letterSpacing: '-0.01em' }}>JWT Inspector</h1>
+          <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0' style={{ letterSpacing: '0.08em', textTransform: 'uppercase' }}>Decode &amp; inspect JSON Web Tokens — header, payload, signature, claims</p>
         </div>
 
         {/* ── Token input ─────────────────────────────────────── */}
-        <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+        <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
           {/* Color-coded token display — sits above the textarea */}
           {token && (
-            <div style={{ fontSize: 11, lineHeight: 1.7, wordBreak: 'break-all', marginBottom: 8, padding: '8px 10px', background: 'var(--bp-bg)', border: '1px solid var(--bp-border)' }}>
+            <div className='mb-2 sm:mb-3 p-2 sm:p-3 bg-[var(--bp-bg)] border border-[var(--bp-border)]' style={{ fontSize: 11, lineHeight: 1.7, wordBreak: 'break-all' }}>
               {has3 ? (
                 <>
                   <span style={{ color: ACCENT }}>{parts[0]}</span>
@@ -218,12 +218,12 @@ export default function JWTInspectorPage() {
           <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
             {/* Three panels */}
-            <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr 280px', overflow: 'hidden' }}>
+            <div className='grid grid-cols-1 lg:grid-cols-3 gap-0 flex-1 min-h-0 overflow-hidden'>
 
               {/* 01 — HEADER */}
               <Panel title='01 — HEADER' style={{ borderRight: 0, borderBottom: 0 }}>
                 {/* Metadata row */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+                <div className='flex flex-wrap gap-2 sm:gap-3 mb-3' style={{ marginBottom: 10 }}>
                   {parsed.header.alg != null && (
                     <div style={{ padding: '3px 10px', border: `1px solid ${ACCENT}`, color: ACCENT, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', background: 'rgba(95,176,255,0.08)' }}>
                       {String(parsed.header.alg)}
@@ -303,12 +303,13 @@ export default function JWTInspectorPage() {
                   <button
                     onClick={verify}
                     disabled={!secret}
+                    className='min-h-10 px-3'
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                       background: 'transparent', border: `1px solid ${ACCENT}`,
                       color: ACCENT, fontFamily: 'inherit', fontSize: 10,
                       letterSpacing: '0.12em', textTransform: 'uppercase',
-                      padding: '6px 0', cursor: secret ? 'pointer' : 'not-allowed',
+                      cursor: secret ? 'pointer' : 'not-allowed',
                       opacity: secret ? 1 : 0.45, transition: 'opacity 120ms',
                     }}
                   >

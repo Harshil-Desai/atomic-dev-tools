@@ -98,25 +98,25 @@ export default function HmacGeneratorPage() {
 
   return (
     <div className='h-full flex flex-col overflow-hidden' data-cat='security' style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}>
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>HMAC Generator</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Compute HMAC-SHA1, SHA-256 and SHA-512 message authentication codes</p>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>HMAC Generator</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Compute HMAC-SHA1, SHA-256 and SHA-512 message authentication codes</p>
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 overflow-hidden' style={{}}>
         {/* Left column: inputs */}
         <Panel title='Inputs' style={{ borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
 
             {/* Algorithm & Format controls */}
-            <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+            <div className='p-2 sm:p-3' style={{ borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-start' }}>
                 <div style={{ flex: 1, minWidth: 180 }}>
                   <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 6 }}>Algorithm</div>
                   <div style={{ display: 'flex', border: '1px solid var(--bp-border)', overflow: 'hidden' }}>
                     {(Object.keys(ALGO_LABELS) as HmacAlgorithm[]).map((algo) => (
-                      <button key={algo} type='button' onClick={() => setAlgorithm(algo)}
-                        style={{ flex: 1, padding: '4px 6px', fontSize: 10, fontFamily: 'inherit', cursor: 'pointer', border: 0, background: algorithm === algo ? 'var(--bp-accent)' : 'var(--bp-surface)', color: algorithm === algo ? '#fff' : 'var(--bp-ink-mute)', transition: 'background 0.15s, color 0.15s' }}>
+                      <button key={algo} type='button' onClick={() => setAlgorithm(algo)} className='flex-1 min-h-10 px-3 py-2'
+                        style={{ fontSize: 10, fontFamily: 'inherit', cursor: 'pointer', border: 0, background: algorithm === algo ? 'var(--bp-accent)' : 'var(--bp-surface)', color: algorithm === algo ? '#fff' : 'var(--bp-ink-mute)', transition: 'background 0.15s, color 0.15s' }}>
                         {ALGO_LABELS[algo]}
                       </button>
                     ))}
@@ -126,8 +126,8 @@ export default function HmacGeneratorPage() {
                   <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 6 }}>Output Format</div>
                   <div style={{ display: 'flex', border: '1px solid var(--bp-border)', overflow: 'hidden' }}>
                     {(['hex', 'base64'] as OutputFormat[]).map((fmt) => (
-                      <button key={fmt} type='button' onClick={() => setOutputFormat(fmt)}
-                        style={{ padding: '4px 10px', fontSize: 10, fontFamily: 'inherit', cursor: 'pointer', border: 0, background: outputFormat === fmt ? 'var(--bp-accent)' : 'var(--bp-surface)', color: outputFormat === fmt ? '#fff' : 'var(--bp-ink-mute)', transition: 'background 0.15s, color 0.15s' }}>
+                      <button key={fmt} type='button' onClick={() => setOutputFormat(fmt)} className='min-h-10 px-3 py-2'
+                        style={{ fontSize: 10, fontFamily: 'inherit', cursor: 'pointer', border: 0, background: outputFormat === fmt ? 'var(--bp-accent)' : 'var(--bp-surface)', color: outputFormat === fmt ? '#fff' : 'var(--bp-ink-mute)', transition: 'background 0.15s, color 0.15s' }}>
                         {fmt === 'hex' ? 'Hex' : 'Base64'}
                       </button>
                     ))}
@@ -160,8 +160,8 @@ export default function HmacGeneratorPage() {
                 <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>Secret Key</span>
                 <div style={{ marginLeft: 'auto', display: 'flex', border: '1px solid var(--bp-border)', overflow: 'hidden' }}>
                   {(['utf8', 'hex', 'base64'] as KeyEncoding[]).map((enc) => (
-                    <button key={enc} type='button' onClick={() => setKeyEncoding(enc)}
-                      style={{ padding: '2px 8px', fontSize: 9, fontFamily: 'inherit', cursor: 'pointer', border: 0, background: keyEncoding === enc ? 'var(--bp-accent)' : 'var(--bp-surface)', color: keyEncoding === enc ? '#fff' : 'var(--bp-ink-mute)', transition: 'background 0.15s, color 0.15s' }}>
+                    <button key={enc} type='button' onClick={() => setKeyEncoding(enc)} className='min-h-10 px-3 py-2'
+                      style={{ fontSize: 9, fontFamily: 'inherit', cursor: 'pointer', border: 0, background: keyEncoding === enc ? 'var(--bp-accent)' : 'var(--bp-surface)', color: keyEncoding === enc ? '#fff' : 'var(--bp-ink-mute)', transition: 'background 0.15s, color 0.15s' }}>
                       {enc === 'utf8' ? 'UTF-8' : enc.toUpperCase()}
                     </button>
                   ))}
@@ -187,8 +187,8 @@ export default function HmacGeneratorPage() {
           </div>
 
           {/* Action bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
-            <button type='button' className='bp-btn bp-btn-solid' onClick={handleGenerateClick} disabled={!message || !secretKey || loading}>
+          <div className='flex items-center gap-2 sm:gap-3 p-2 sm:p-3' style={{ borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <button type='button' className='bp-btn bp-btn-solid min-h-10 px-3 py-2' onClick={handleGenerateClick} disabled={!message || !secretKey || loading}>
               {loading ? <><RefreshCw className='w-4 h-4 mr-2 inline animate-spin' />Computing...</> : <><ShieldCheck className='w-4 h-4 mr-2 inline' />GENERATE HMAC</>}
             </button>
           </div>

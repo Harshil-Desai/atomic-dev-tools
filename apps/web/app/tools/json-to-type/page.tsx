@@ -229,13 +229,13 @@ export default function JsonToTypePage() {
       style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>JSON → Types</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Generate TypeScript, Go and Rust struct definitions from JSON</p>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>JSON → Types</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Generate TypeScript, Go and Rust struct definitions from JSON</p>
       </div>
 
       {/* Settings bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '8px 16px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0, flexWrap: 'wrap' }}>
+      <div className='flex items-center gap-4 p-2 sm:p-3 md:p-4 flex-wrap border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0' style={{ borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
         {/* Language selector */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Language</span>
@@ -244,6 +244,7 @@ export default function JsonToTypePage() {
               <button
                 key={l.value}
                 type='button'
+                className='min-h-10 px-3 py-2 text-xs sm:text-sm font-semibold'
                 onClick={() => { setLang(l.value); if (output) convert(input, l.value, rootName); }}
                 style={{
                   padding: '3px 10px',
@@ -283,6 +284,7 @@ export default function JsonToTypePage() {
               <button
                 key={ex.label}
                 type='button'
+                className='min-h-10 px-3 py-2 text-xs sm:text-sm'
                 onClick={() => setInput(ex.json)}
                 style={{
                   padding: '3px 10px',
@@ -302,7 +304,7 @@ export default function JsonToTypePage() {
       </div>
 
       {/* Main content — 2-column split */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='grid grid-cols-1 lg:grid-cols-2 flex-1 min-h-0 overflow-hidden'>
         {/* Left: JSON Input */}
         <Panel title='JSON Input' style={{ borderRight: 0, borderLeft: 0, borderBottom: 0, borderTop: 0 }}>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
@@ -313,10 +315,10 @@ export default function JsonToTypePage() {
               style={{ flex: 1, width: '100%', background: 'var(--bp-bg)', border: 0, color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '12px 14px', resize: 'none', outline: 'none', boxSizing: 'border-box', lineHeight: 1.65, minHeight: 200 }}
             />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+          <div className='flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-t border-dashed border-[var(--bp-border-str)] flex-shrink-0' style={{ borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
             <button
               type='button'
-              className='bp-btn bp-btn-solid'
+              className='bp-btn bp-btn-solid min-h-10 px-3 py-2 flex-1'
               onClick={handleConvert}
               disabled={!input.trim()}
               style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
@@ -333,12 +335,12 @@ export default function JsonToTypePage() {
           style={{ borderLeft: '1px solid var(--bp-border)', borderRight: 0, borderBottom: 0, borderTop: 0 }}
         >
           {output && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '4px 10px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
+            <div className='flex items-center justify-end p-2 sm:p-3 border-b border-[var(--bp-border)] flex-shrink-0'>
               <BpCopyBtn text={output} label='COPY' />
             </div>
           )}
           {error && (
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 14px', color: '#f87171', fontSize: 12, flexShrink: 0 }}>
+            <div className='flex items-start gap-2 sm:gap-3 p-2 sm:p-3 md:p-4 flex-shrink-0' style={{ color: '#f87171', fontSize: 12 }}>
               <AlertCircle style={{ width: 14, height: 14, flexShrink: 0, marginTop: 1 }} />
               <span>{error}</span>
             </div>

@@ -104,12 +104,12 @@ export default function BcryptGeneratorPage() {
 
   return (
     <div className='h-full flex flex-col overflow-hidden' data-cat='security' style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}>
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Bcrypt / Argon2 Generator</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Generate and verify bcrypt and Argon2 password hashes — all in-browser, nothing leaves your machine</p>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>Bcrypt / Argon2 Generator</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Generate and verify bcrypt and Argon2 password hashes — all in-browser, nothing leaves your machine</p>
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div className='p-4 sm:p-5 md:p-6 flex-1' style={{ minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
         {/* Tab switcher */}
         <div style={{ display: 'flex', gap: 4, background: 'var(--bp-surface)', border: '1px solid var(--bp-border)', padding: 4, width: 'fit-content' }}>
@@ -124,11 +124,11 @@ export default function BcryptGeneratorPage() {
         {tab === 'hash' && (
           <>
             <Panel title='Algorithm'>
-              <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div className='p-2 sm:p-3 md:p-4' style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div className='grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3' style={{}}>
                   {algorithms.map((a) => (
-                    <button key={a.value} type='button' onClick={() => setAlgorithm(a.value)}
-                      style={{ textAlign: 'left', padding: '8px 12px', border: `1px solid ${algorithm === a.value ? 'var(--bp-accent)' : 'var(--bp-border)'}`, background: algorithm === a.value ? 'rgba(255,122,133,0.08)' : 'var(--bp-bg)', cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, background 0.15s' }}>
+                    <button key={a.value} type='button' onClick={() => setAlgorithm(a.value)} className='min-h-10 px-3 py-2'
+                      style={{ textAlign: 'left', border: `1px solid ${algorithm === a.value ? 'var(--bp-accent)' : 'var(--bp-border)'}`, background: algorithm === a.value ? 'rgba(255,122,133,0.08)' : 'var(--bp-bg)', cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, background 0.15s' }}>
                       <p style={{ fontSize: 12, fontWeight: 600, color: '#fff', margin: 0 }}>{a.label}</p>
                       <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', margin: 0, marginTop: 2 }}>{a.desc}</p>
                     </button>
@@ -146,7 +146,7 @@ export default function BcryptGeneratorPage() {
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4' style={{}}>
                     {[{ label: 'Iterations', key: 'argon2Iterations' as const, min: 1, max: 16 }, { label: 'Memory (KB)', key: 'argon2Memory' as const, min: 4096, max: 262144, step: 4096 }, { label: 'Parallelism', key: 'argon2Parallelism' as const, min: 1, max: 8 }].map(({ label, key, min, max, step = 1 }) => (
                       <div key={key}>
                         <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>{label}</label>
@@ -160,18 +160,18 @@ export default function BcryptGeneratorPage() {
             </Panel>
 
             <Panel title='Password'>
-              <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div className='p-2 sm:p-3 md:p-4' style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <input value={password} onChange={(e) => setPassword(e.target.value)} type='text' placeholder='Enter password to hash…'
                   style={{ width: '100%', background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
                   onKeyDown={(e) => e.key === 'Enter' && handleHash()} />
-                <button type='button' className='bp-btn bp-btn-solid' onClick={handleHash} disabled={loading || !password} style={{ width: '100%' }}>
+                <button type='button' className='bp-btn bp-btn-solid min-h-10 px-3' onClick={handleHash} disabled={loading || !password} style={{ width: '100%' }}>
                   <Scan className='w-4 h-4 mr-2 inline' />{loading ? 'Hashing…' : `GENERATE ${algorithms.find(a => a.value === algorithm)?.label.toUpperCase()} HASH`}
                 </button>
               </div>
             </Panel>
 
             {error && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(127,29,29,0.15)' }}>
+              <div className='p-2 sm:p-3' style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(127,29,29,0.15)' }}>
                 <AlertCircle style={{ width: 16, height: 16, color: '#f87171', flexShrink: 0 }} />
                 <span style={{ fontSize: 12, color: '#fca5a5' }}>{error}</span>
               </div>
@@ -179,12 +179,12 @@ export default function BcryptGeneratorPage() {
 
             {hashResult && (
               <Panel title={`${algorithms.find(a => a.value === hashResult.algorithm)?.label} Hash`} meta={`Generated in ${hashResult.durationMs}ms`}>
-                <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div className='p-2 sm:p-3 md:p-4' style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                     <BpCopyBtn text={hashResult.hash} label='COPY' />
                   </div>
                   <div style={{ background: 'var(--bp-bg)', padding: '10px 14px', fontSize: 11, color: '#4ade80', wordBreak: 'break-all', lineHeight: 1.65 }}>{hashResult.hash}</div>
-                  <button type='button' className='bp-btn' onClick={() => { setTab('verify'); setVerifyHash(hashResult.hash); }} style={{ width: '100%' }}>
+                  <button type='button' className='bp-btn min-h-10 px-3 py-2' onClick={() => { setTab('verify'); setVerifyHash(hashResult.hash); }} style={{ width: '100%' }}>
                     Test this hash in Verify tab →
                   </button>
                 </div>
@@ -196,7 +196,7 @@ export default function BcryptGeneratorPage() {
         {tab === 'verify' && (
           <>
             <Panel title='Verify Password'>
-              <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div className='p-2 sm:p-3 md:p-4' style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Password</label>
                   <input value={verifyPassword_} onChange={(e) => setVerifyPassword_(e.target.value)} type='text' placeholder='Password to test…'
@@ -209,14 +209,14 @@ export default function BcryptGeneratorPage() {
                     style={{ width: '100%', background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', resize: 'none', outline: 'none', boxSizing: 'border-box', lineHeight: 1.65 }} />
                   <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', margin: '4px 0 0' }}>Algorithm is auto-detected from the hash prefix</p>
                 </div>
-                <button type='button' className='bp-btn bp-btn-solid' onClick={handleVerify} disabled={loading || !verifyPassword_ || !verifyHash} style={{ width: '100%' }}>
+                <button type='button' className='bp-btn bp-btn-solid min-h-10 px-3 py-2' onClick={handleVerify} disabled={loading || !verifyPassword_ || !verifyHash} style={{ width: '100%' }}>
                   <Scan className='w-4 h-4 mr-2 inline' />{loading ? 'Verifying…' : 'VERIFY PASSWORD'}
                 </button>
               </div>
             </Panel>
 
             {error && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(127,29,29,0.15)' }}>
+              <div className='p-2 sm:p-3' style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(127,29,29,0.15)' }}>
                 <AlertCircle style={{ width: 16, height: 16, color: '#f87171', flexShrink: 0 }} />
                 <span style={{ fontSize: 12, color: '#fca5a5' }}>{error}</span>
               </div>
@@ -237,7 +237,7 @@ export default function BcryptGeneratorPage() {
         )}
 
         <Panel title='Algorithm Guide'>
-          <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className='p-2 sm:p-3 md:p-4' style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[
               { key: 'bcrypt', color: '#60a5fa', text: 'Widely supported, 72-char password limit, cost factor controls speed' },
               { key: 'argon2id', color: '#4ade80', text: 'Winner of Password Hashing Competition. Resistant to both side-channel and GPU attacks. Recommended for new systems' },

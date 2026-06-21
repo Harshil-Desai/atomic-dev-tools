@@ -80,15 +80,15 @@ export default function UuidGeneratorPage() {
 
   return (
     <div className='h-full flex flex-col overflow-hidden' data-cat='time' style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}>
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>UUID Generator</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Generate RFC-compliant v4 and v7 UUIDs in bulk</p>
+      <div className='border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0 p-4 sm:p-5 md:p-6'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>UUID Generator</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Generate RFC-compliant v4 and v7 UUIDs in bulk</p>
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '320px 1fr', overflow: 'hidden' }}>
+      <div className='flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 overflow-hidden'>
         {/* Left: Configuration */}
         <Panel title='Configuration' style={{ borderRight: 0 }}>
-          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '12px 14px', gap: 16 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }} className='p-3 sm:p-4'>
             <div>
               <label style={{ display: 'block', fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)', marginBottom: 6 }}>UUID Version</label>
               <select value={version} onChange={(e) => setVersion(e.target.value as UuidVersion)} style={{ width: '100%', background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 11, padding: '5px 8px', outline: 'none' }}>
@@ -126,10 +126,10 @@ export default function UuidGeneratorPage() {
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
-            <button type='button' className='bp-btn bp-btn-solid' onClick={generateUuids} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div className='flex items-center gap-2 p-3 sm:p-4 border-t border-dashed border-[var(--bp-border-str)] flex-shrink-0'>
+            <button type='button' className='bp-btn bp-btn-solid min-h-11 px-3 py-2 flex items-center gap-2' onClick={generateUuids}>
               <Fingerprint style={{ width: 14, height: 14 }} />
-              GENERATE UUIDs
+              GENERATE
             </button>
           </div>
         </Panel>
@@ -138,13 +138,13 @@ export default function UuidGeneratorPage() {
         <Panel title='Generated UUIDs' meta={uuids.length > 0 ? `${uuids.length} UUIDs` : undefined}>
           {uuids.length > 0 ? (
             <>
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, padding: '6px 10px', borderBottom: '1px dashed var(--bp-border-str)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+              <div className='flex flex-wrap items-center gap-2 p-3 sm:p-4 border-b border-dashed border-[var(--bp-border-str)] bg-[var(--bp-surface)] flex-shrink-0'>
                 <BpCopyBtn text={uuids.join('\n')} label='COPY ALL' />
-                <BpCopyBtn text={JSON.stringify(uuids, null, 2)} label='COPY AS ARRAY' />
-                <BpCopyBtn text={uuids.join(',')} label='COPY AS CSV' />
-                <button type='button' className='bp-btn' onClick={downloadAsTxt} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <BpCopyBtn text={JSON.stringify(uuids, null, 2)} label='COPY ARRAY' />
+                <BpCopyBtn text={uuids.join(',')} label='COPY CSV' />
+                <button type='button' className='bp-btn min-h-11 px-2 sm:px-3 py-2 flex items-center gap-2' onClick={downloadAsTxt}>
                   <Download style={{ width: 12, height: 12 }} />
-                  DOWNLOAD .TXT
+                  DL
                 </button>
               </div>
               <div style={{ flex: 1, overflowY: 'auto', padding: '6px 4px' }}>

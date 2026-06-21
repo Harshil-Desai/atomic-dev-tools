@@ -239,19 +239,20 @@ export default function CorsCheckerPage() {
       }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0 flex items-center gap-3 sm:gap-4 md:gap-5'>
         <Shield size={14} style={{ color: 'var(--bp-ink-mute)', flexShrink: 0 }} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <h1 style={{ fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--bp-ink)', margin: 0, fontWeight: 600 }}>
+          <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1' style={{ letterSpacing: '0.18em', textTransform: 'uppercase' }}>
             CORS Checker
           </h1>
-          <p style={{ fontSize: 10, color: 'var(--bp-ink-faint)', margin: 0, letterSpacing: '0.08em' }}>
+          <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0' style={{ letterSpacing: '0.08em' }}>
             Simulate preflight requests and diagnose CORS issues
           </p>
         </div>
         <div style={{ flex: 1 }} />
         {result && (
           <span
+            className='text-xs sm:text-sm whitespace-nowrap'
             style={{
               fontSize: 10,
               letterSpacing: '0.12em',
@@ -266,7 +267,7 @@ export default function CorsCheckerPage() {
       </div>
 
       {/* Body */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '300px 1fr', overflow: 'hidden' }}>
+      <div className='flex-1 grid grid-cols-1 lg:grid-cols-[320px_1fr] overflow-hidden' style={{ minHeight: 0 }}>
         {/* Left — inputs panel */}
         <Panel title="Request Config" style={{ borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '16px 14px', gap: 16 }}>
@@ -328,8 +329,8 @@ export default function CorsCheckerPage() {
                   <button
                     key={m}
                     onClick={() => setMethod(m)}
+                    className='min-h-10 px-3'
                     style={{
-                      padding: '3px 8px',
                       fontSize: 10,
                       letterSpacing: '0.1em',
                       fontFamily: 'inherit',
@@ -408,13 +409,12 @@ export default function CorsCheckerPage() {
           </div>
 
           {/* Actions bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+          <div className='p-2 sm:p-3 flex items-center gap-2 sm:gap-3' style={{ borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
             <button
               onClick={check}
               disabled={loading || !target.trim()}
+              className='flex-1 min-h-10 px-3'
               style={{
-                flex: 1,
-                padding: '7px 16px',
                 fontSize: 10,
                 letterSpacing: '0.14em',
                 textTransform: 'uppercase',
@@ -472,11 +472,8 @@ export default function CorsCheckerPage() {
                 {analysis.items.map(item => (
                   <div
                     key={item.id}
+                    className='grid grid-cols-[36px_1fr] gap-3 py-3'
                     style={{
-                      display: 'grid',
-                      gridTemplateColumns: '36px 1fr',
-                      gap: 12,
-                      padding: '12px 0',
                       borderBottom: '1px solid var(--bp-border)',
                     }}
                   >

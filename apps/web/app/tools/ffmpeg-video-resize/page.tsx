@@ -134,13 +134,13 @@ export default function FfmpegVideoResizePage() {
       style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Video Resize & Convert</h1>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>Video Resize & Convert</h1>
         <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Resize video to standard presets and convert between formats</p>
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 overflow-hidden'>
 
         {/* Left: Configuration */}
         <Panel title='Configuration' style={{ borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
@@ -158,7 +158,7 @@ export default function FfmpegVideoResizePage() {
             {/* Input / Output */}
             <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
               <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: 8 }}>Input / Output</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3'>
                 <div>
                   <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Input Video</div>
                   <input
@@ -184,9 +184,9 @@ export default function FfmpegVideoResizePage() {
             {resizeMethod === 'preset' && (
               <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
                 <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: 8 }}>Preset Resolutions</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                <div className='flex flex-wrap gap-1.5 mb-2.5'>
                   {[['4K', '4K (3840x2160)'], ['1080p', '1080p'], ['720p', '720p'], ['480p', '480p'], ['instagram', 'Instagram (1:1)'], ['instagram-story', 'IG Story (9:16)'], ['youtube-thumbnail', 'YT Thumbnail']].map(([key, label]) => (
-                    <button key={key} type='button' className='bp-btn' style={{ fontSize: 10 }} onClick={() => applyPreset(key)}>{label}</button>
+                    <button key={key} type='button' className='bp-btn min-h-10 px-2 sm:px-3 text-xs' onClick={() => applyPreset(key)}>{label}</button>
                   ))}
                 </div>
                 <div>
@@ -212,7 +212,7 @@ export default function FfmpegVideoResizePage() {
             {resizeMethod === 'custom' && (
               <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
                 <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: 8 }}>Custom Size</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-2.5'>
                   <div>
                     <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Width (pixels)</div>
                     <input
@@ -251,7 +251,7 @@ export default function FfmpegVideoResizePage() {
             {resizeMethod === 'percentage' && (
               <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
                 <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: 8 }}>Scale by Percentage</div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                <div className='flex gap-1.5 flex-wrap items-center'>
                   <input
                     type='number'
                     value={percentage}
@@ -260,7 +260,7 @@ export default function FfmpegVideoResizePage() {
                     style={{ ...inputStyle, width: 80 }}
                   />
                   {[25, 50, 75, 100, 150, 200].map((p) => (
-                    <button key={p} type='button' className='bp-btn' style={{ fontSize: 10 }} onClick={() => setPercentage(p.toString())}>{p}%</button>
+                    <button key={p} type='button' className='bp-btn min-h-10 px-2 sm:px-3 text-xs' onClick={() => setPercentage(p.toString())}>{p}%</button>
                   ))}
                 </div>
               </div>
@@ -269,7 +269,7 @@ export default function FfmpegVideoResizePage() {
             {/* Options */}
             <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
               <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', marginBottom: 8 }}>Options</div>
-              <div style={{ display: 'grid', gridTemplateColumns: resizeMethod === 'preset' ? '1fr 1fr' : '1fr', gap: 8, marginBottom: 10 }}>
+              <div className={resizeMethod === 'preset' ? 'grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-2.5' : 'grid grid-cols-1 gap-2 mb-2.5'}>
                 <div>
                   <div style={{ fontSize: 10, color: 'var(--bp-ink-mute)', marginBottom: 4 }}>Scaling Algorithm</div>
                   <select
@@ -311,11 +311,10 @@ export default function FfmpegVideoResizePage() {
           </div>
 
           {/* Action bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+          <div className='flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-t border-dashed border-[var(--bp-border-str)] flex-shrink-0'>
             <button
               type='button'
-              className='bp-btn bp-btn-solid'
-              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              className='bp-btn bp-btn-solid min-h-10 px-2 sm:px-3 flex-1 flex items-center justify-center gap-1.5'
               onClick={generateCommand}
             >
               <Maximize2 style={{ width: 13, height: 13 }} />

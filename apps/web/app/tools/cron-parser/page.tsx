@@ -153,13 +153,13 @@ export default function CronParserPage() {
 
   return (
     <div className='h-full flex flex-col overflow-hidden' data-cat='time' style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}>
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Cron Expression Parser</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Parse cron expressions and preview next scheduled run times</p>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>Cron Expression Parser</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Parse cron expressions and preview next scheduled run times</p>
       </div>
 
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 16px' }}>
+        <div className='p-2 sm:p-3 md:p-4' style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
 
           <Panel title='Cron Expression'>
             <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -170,7 +170,7 @@ export default function CronParserPage() {
                   placeholder='e.g. */5 * * * * or @daily'
                   style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border-str)', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', outline: 'none', boxSizing: 'border-box' }}
                 />
-                <BpCopyBtn text={expression} label='COPY' />
+                <BpCopyBtn text={expression} label='COPY' className='min-h-10 px-2 py-1' />
               </div>
               <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Supports 5-field (min hr day month weekday), 6-field (sec min hr day month weekday), and shortcuts like @daily, @hourly</p>
             </div>
@@ -228,10 +228,10 @@ export default function CronParserPage() {
           )}
 
           <Panel title='Quick Examples'>
-            <div style={{ padding: '10px 12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 6 }}>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 p-2 sm:p-3'>
               {EXAMPLES.map((ex) => (
                 <button key={ex.expr} type='button' onClick={() => handleExprChange(ex.expr)}
-                  className='bp-btn text-left flex flex-col gap-0.5'>
+                  className='bp-btn text-left flex flex-col gap-0.5 min-h-10 px-3'>
                   <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)' }}>{ex.label}</span>
                   <span style={{ fontFamily: 'inherit', fontSize: 11, color: 'var(--bp-accent)' }}>{ex.expr}</span>
                 </button>
@@ -240,7 +240,7 @@ export default function CronParserPage() {
           </Panel>
 
           <Panel title='Syntax Reference'>
-            <div style={{ padding: '10px 12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 6 }}>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 p-2 sm:p-3'>
               {[['*', 'Any value'], ['*/n', 'Every n units'], ['n', 'Exact value'], ['n-m', 'Range'], ['n,m', 'List'], ['n-m/s', 'Range with step']].map(([token, desc]) => (
                 <div key={token} style={{ display: 'flex', gap: 8, fontSize: 11 }}>
                   <code style={{ color: 'var(--bp-accent)', fontFamily: 'inherit', width: 52, flexShrink: 0 }}>{token}</code>

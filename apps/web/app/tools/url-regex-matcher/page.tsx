@@ -87,26 +87,26 @@ export default function URLRegexMatcherPage() {
       }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 13, fontWeight: 700, color: '#fff', margin: 0, letterSpacing: '0.01em' }}>URL Regex Matcher</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: '2px 0 0' }}>Test URL patterns against regular expressions</p>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>URL Regex Matcher</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Test URL patterns against regular expressions</p>
       </div>
 
       {/* Main content */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='grid grid-cols-1 lg:grid-cols-2' style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
 
         {/* Left: Input panel */}
         <Panel title='Input' style={{ borderRight: 0, borderTop: 0 }}>
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
             {/* Controls bar */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0, flexWrap: 'wrap' }}>
+            <div className='p-2 sm:p-3 flex items-center gap-1.5 border-b border-[var(--bp-border)] flex-shrink-0 flex-wrap' style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--bp-border)', flexShrink: 0, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)', marginRight: 2 }}>Extract:</span>
               {(Object.entries(PATTERNS) as [PatternKey, typeof PATTERNS[PatternKey]][]).map(([key, def]) => (
                 <button
                   key={key}
                   onClick={() => togglePattern(key)}
                   type='button'
-                  className={`bp-chip ${enabledPatterns.has(key) ? def.color : ''}`}
+                  className={`bp-chip min-h-10 px-3 py-2 ${enabledPatterns.has(key) ? def.color : ''}`}
                   style={!enabledPatterns.has(key) ? { background: 'var(--bp-elevated)', color: 'var(--bp-ink-mute)', borderColor: 'var(--bp-border-str)' } : {}}
                 >
                   {def.label}
@@ -144,14 +144,14 @@ export default function URLRegexMatcherPage() {
               }}
             />
             {/* Stats / actions bar */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0, flexWrap: 'wrap' }}>
+            <div className='p-2 sm:p-3 flex items-center gap-2 border-t border-dashed border-[var(--bp-border-str)] flex-shrink-0 flex-wrap' style={{ display: 'flex', alignItems: 'center', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)', flex: 1 }}>
                 Found{' '}
                 <span style={{ color: 'var(--bp-ink)', fontWeight: 600 }}>{totalMatches}</span>
                 {' '}match{totalMatches !== 1 ? 'es' : ''}{dedup ? ' (unique)' : ''}
               </span>
               {totalMatches > 0 && (
-                <button className='bp-btn' onClick={copyAllResults} type='button'>
+                <button className='bp-btn min-h-10 px-3 py-2' onClick={copyAllResults} type='button'>
                   COPY ALL
                 </button>
               )}
@@ -169,20 +169,20 @@ export default function URLRegexMatcherPage() {
                 return (
                   <div key={key} style={{ borderBottom: '1px solid var(--bp-border)', flexShrink: 0 }}>
                     {/* Result section header */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', background: 'var(--bp-elevated)', borderBottom: matches.length > 0 ? '1px solid var(--bp-border)' : 'none' }}>
+                    <div className='p-2 sm:p-3 flex items-center gap-2' style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bp-elevated)', borderBottom: matches.length > 0 ? '1px solid var(--bp-border)' : 'none' }}>
                       <span className={`bp-chip ${def.color}`}>{def.label}</span>
                       <span style={{ fontSize: 10, color: 'var(--bp-ink-mute)', flex: 1 }}>{def.description}</span>
                       <span style={{ fontSize: 10, color: 'var(--bp-ink-faint)' }}>{matches.length} match{matches.length !== 1 ? 'es' : ''}</span>
-                      {matches.length > 0 && <BpCopyBtn text={matches.join('\n')} label='COPY' />}
+                      {matches.length > 0 && <BpCopyBtn text={matches.join('\n')} className='min-h-10 px-3 py-2' label='COPY' />}
                     </div>
                     {/* Match list or empty state */}
                     {matches.length === 0 ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', color: 'var(--bp-ink-faint)', fontSize: 11 }}>
+                      <div className='p-2 sm:p-3 flex items-center gap-2' style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--bp-ink-faint)', fontSize: 11 }}>
                         <AlertCircle style={{ width: 13, height: 13, flexShrink: 0 }} />
                         <span>No {def.label.toLowerCase()} found</span>
                       </div>
                     ) : (
-                      <div style={{ padding: '6px 12px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <div className='p-2 sm:p-3 flex flex-col gap-1' style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                         {matches.map((match, i) => (
                           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }} className='group'>
                             <code style={{
@@ -198,7 +198,7 @@ export default function URLRegexMatcherPage() {
                               display: 'block',
                             }}>{match}</code>
                             <div className='opacity-0 group-hover:opacity-100 transition-opacity' style={{ flexShrink: 0 }}>
-                              <BpCopyBtn text={match} label='COPY' />
+                              <BpCopyBtn text={match} className='min-h-10 px-3 py-2' label='COPY' />
                             </div>
                           </div>
                         ))}
@@ -214,7 +214,7 @@ export default function URLRegexMatcherPage() {
                 <span style={{ width: 6, height: 6, background: 'var(--bp-accent)', flexShrink: 0 }} />
                 <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>Regex Patterns</span>
               </div>
-              <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div className='p-2 sm:p-3 flex flex-col gap-1.5' style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {(Object.entries(PATTERNS) as [PatternKey, typeof PATTERNS[PatternKey]][]).map(([key, def]) => (
                   <div key={key} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                     <span className={`bp-chip ${def.color}`} style={{ flexShrink: 0 }}>{def.label}</span>

@@ -109,18 +109,11 @@ export default function CaseConverterPage() {
       }}
     >
       {/* Header */}
-      <div
-        style={{
-          padding: '12px 20px 10px',
-          borderBottom: '1px solid var(--bp-border)',
-          background: 'var(--bp-surface)',
-          flexShrink: 0,
-        }}
-      >
-        <h1 style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: 0, marginBottom: 2, letterSpacing: '0.01em' }}>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>
           Case Converter
         </h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>
           Convert between camelCase, snake_case, kebab-case and more
         </p>
       </div>
@@ -128,7 +121,7 @@ export default function CaseConverterPage() {
       {/* Main content */}
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Top: 2-col layout — input left, preview right */}
-        <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+        <div className='grid grid-cols-1 lg:grid-cols-2' style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
           {/* Input panel */}
           <Panel
             title='Input Text'
@@ -169,7 +162,7 @@ export default function CaseConverterPage() {
           <Panel title='All Format Preview' style={{ borderTop: 0 }}>
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
               {input.trim() ? (
-                <div style={{ padding: '10px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div className='p-2 sm:p-3 grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3'>
                   {caseButtons.map((btn) => {
                     const result = convertToCase(input, btn.type);
                     return (
@@ -206,15 +199,15 @@ export default function CaseConverterPage() {
 
         {/* Convert & Copy panel */}
         <Panel title='Convert & Copy' style={{ borderTop: 0, flexShrink: 0 }}>
-          <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
+          <div className='p-2 sm:p-3 flex flex-col gap-2 sm:gap-3' style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(70px, 1fr))', gap: 6 }}>
               {caseButtons.map((btn) => (
                 <button
                   key={btn.type}
                   onClick={() => setCurrentCase(btn.type)}
                   disabled={!input.trim()}
                   type='button'
-                  className={`bp-btn ${currentCase === btn.type ? 'bp-btn-solid' : ''}`}
+                  className={`bp-btn min-h-10 px-3 py-2 ${currentCase === btn.type ? 'bp-btn-solid' : ''}`}
                   style={{ textAlign: 'left', justifyContent: 'flex-start', fontSize: 11 }}
                 >
                   {btn.label}

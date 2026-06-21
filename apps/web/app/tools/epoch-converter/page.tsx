@@ -103,13 +103,13 @@ export default function EpochConverterPage() {
 
   return (
     <div className='h-full flex flex-col overflow-hidden' data-cat='time' style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}>
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>Epoch Converter</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Convert between Unix timestamps and human-readable dates</p>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>Epoch Converter</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Convert between Unix timestamps and human-readable dates</p>
       </div>
 
       {/* Current epoch + quick actions bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 16px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0, flexWrap: 'wrap' }}>
+      <div className='p-2 sm:p-3 flex items-center gap-2 sm:gap-3 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0 flex-wrap' style={{ display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Clock style={{ width: 12, height: 12, color: 'var(--bp-accent)', flexShrink: 0 }} />
           <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)' }}>Now:</span>
@@ -119,13 +119,13 @@ export default function EpochConverterPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto', flexWrap: 'wrap' }}>
           {[['now', 'Now'], ['+1hour', '+1 hour'], ['+1day', '+1 day'], ['+1week', '+1 week'], ['today', 'Start of Today'], ['yesterday', 'Yesterday']].map(([action, label]) => (
-            <button key={action} type='button' className='bp-btn' onClick={() => quickAction(action)} style={{ fontSize: 10 }}>{label}</button>
+            <button key={action} type='button' className='bp-btn min-h-10 px-3 py-2' onClick={() => quickAction(action)} style={{ fontSize: 10 }}>{label}</button>
           ))}
         </div>
       </div>
 
       {/* Main 2-column layout */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='grid grid-cols-1 lg:grid-cols-2' style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         {/* Human to Epoch */}
         <Panel title='Human to Epoch' style={{ borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '12px 14px', gap: 10 }}>
@@ -161,8 +161,8 @@ export default function EpochConverterPage() {
               </div>
             )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
-            <button type='button' className='bp-btn bp-btn-solid' onClick={humanToEpoch} disabled={!humanInput.trim()} style={{ flex: 1, fontSize: 11 }}>CONVERT</button>
+          <div className='p-2 sm:p-3 flex items-center gap-2 sm:gap-3 flex-shrink-0' style={{ display: 'flex', alignItems: 'center', gap: 8, borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <button type='button' className='bp-btn bp-btn-solid min-h-10 px-3 py-2' onClick={humanToEpoch} disabled={!humanInput.trim()} style={{ flex: 1, fontSize: 11 }}>CONVERT</button>
           </div>
         </Panel>
 
@@ -202,8 +202,8 @@ export default function EpochConverterPage() {
               </div>
             )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
-            <button type='button' className='bp-btn bp-btn-solid' onClick={epochToHuman} disabled={!epochInput.trim()} style={{ flex: 1, fontSize: 11 }}>CONVERT</button>
+          <div className='p-2 sm:p-3 flex items-center gap-2 sm:gap-3 flex-shrink-0' style={{ display: 'flex', alignItems: 'center', gap: 8, borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+            <button type='button' className='bp-btn bp-btn-solid min-h-10 px-3 py-2' onClick={epochToHuman} disabled={!epochInput.trim()} style={{ flex: 1, fontSize: 11 }}>CONVERT</button>
           </div>
         </Panel>
       </div>

@@ -183,13 +183,13 @@ export default function SQLFormatterPage() {
       style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>SQL Formatter</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Format and beautify SQL queries with syntax highlighting</p>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>SQL Formatter</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Format and beautify SQL queries with syntax highlighting</p>
       </div>
 
       {/* Options bar */}
-      <div style={{ borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0, padding: '8px 16px', display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end' }}>
+      <div className='p-2 sm:p-3 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0 flex flex-wrap gap-2 sm:gap-4 items-end' style={{ gap: 16 }}>
         {/* Indent */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--bp-ink-mute)' }}>Indent</span>
@@ -199,7 +199,7 @@ export default function SQLFormatterPage() {
                 key={n}
                 type='button'
                 onClick={() => setIndentSize(n)}
-                className='bp-chip'
+                className='bp-chip min-h-10 px-3 py-2'
                 style={indentSize === n ? { background: 'var(--bp-accent)', color: '#000', borderColor: 'var(--bp-accent)' } : {}}
               >
                 {n} spaces
@@ -215,7 +215,7 @@ export default function SQLFormatterPage() {
             <button
               type='button'
               onClick={() => setUppercase(true)}
-              className='bp-chip'
+              className='bp-chip min-h-10 px-3 py-2'
               style={uppercase ? { background: 'var(--bp-accent)', color: '#000', borderColor: 'var(--bp-accent)' } : {}}
             >
               UPPERCASE
@@ -223,7 +223,7 @@ export default function SQLFormatterPage() {
             <button
               type='button'
               onClick={() => setUppercase(false)}
-              className='bp-chip'
+              className='bp-chip min-h-10 px-3 py-2'
               style={!uppercase ? { background: 'var(--bp-accent)', color: '#000', borderColor: 'var(--bp-accent)' } : {}}
             >
               lowercase
@@ -240,7 +240,7 @@ export default function SQLFormatterPage() {
                 key={d}
                 type='button'
                 onClick={() => setDialect(d)}
-                className='bp-chip'
+                className='bp-chip min-h-10 px-3 py-2'
                 style={dialect === d ? { background: 'var(--bp-accent)', color: '#000', borderColor: 'var(--bp-accent)' } : {}}
               >
                 {label}
@@ -258,7 +258,7 @@ export default function SQLFormatterPage() {
                 key={ex.label}
                 type='button'
                 onClick={() => setInput(ex.sql)}
-                className='bp-chip'
+                className='bp-chip min-h-10 px-3 py-2'
               >
                 {ex.label}
               </button>
@@ -268,7 +268,7 @@ export default function SQLFormatterPage() {
       </div>
 
       {/* Main 2-col layout */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+      <div className='grid grid-cols-1 lg:grid-cols-2' style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         {/* Input panel */}
         <Panel title='Input SQL' style={{ borderTop: 0, borderLeft: 0, borderBottom: 0 }}>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
@@ -279,10 +279,10 @@ export default function SQLFormatterPage() {
               style={{ flex: 1, width: '100%', background: 'var(--bp-bg)', border: 0, color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, padding: '12px 14px', resize: 'none', outline: 'none', boxSizing: 'border-box', lineHeight: 1.65, minHeight: 200 }}
             />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+          <div className='p-2 sm:p-3 flex items-center gap-2 sm:gap-1 flex-shrink-0' style={{ borderTop: '1px dashed var(--bp-border-str)' }}>
             <button
               type='button'
-              className='bp-btn bp-btn-solid'
+              className='bp-btn bp-btn-solid min-h-10 px-3 py-2'
               onClick={handleFormat}
               disabled={!input.trim()}
               style={{ display: 'flex', alignItems: 'center', gap: 6 }}
@@ -296,7 +296,7 @@ export default function SQLFormatterPage() {
         {/* Output panel */}
         <Panel title='Formatted Output' style={{ borderTop: 0, borderBottom: 0, borderRight: 0 }}>
           {output && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 12px', borderBottom: '1px solid var(--bp-border)', flexShrink: 0, background: 'var(--bp-surface)' }}>
+            <div className='p-1 sm:p-2 flex items-center gap-2 sm:gap-1 flex-shrink-0' style={{ borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)' }}>
               <BpCopyBtn text={output} label='COPY' />
             </div>
           )}
@@ -312,9 +312,9 @@ export default function SQLFormatterPage() {
       {warnings.length > 0 && (
         <div style={{ flexShrink: 0, borderTop: '1px solid var(--bp-border)' }}>
           <Panel title='Lint Warnings' meta={`${warnings.length} issue${warnings.length !== 1 ? 's' : ''}`} style={{ border: 0 }}>
-            <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div className='p-2 sm:p-3 flex flex-col gap-1 sm:gap-1' style={{}}>
               {warnings.map((w, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: w.severity === 'error' ? '#f87171' : '#fbbf24' }}>
+                <div key={i} className='flex items-start gap-2 sm:gap-1' style={{ fontSize: 12, color: w.severity === 'error' ? '#f87171' : '#fbbf24' }}>
                   <AlertCircle style={{ width: 14, height: 14, flexShrink: 0, marginTop: 1 }} />
                   <span>{w.message}</span>
                 </div>

@@ -113,9 +113,9 @@ export default function LLMTokenCounterPage() {
       style={{ ...CSS_VARS, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', background: 'var(--bp-bg)', color: 'var(--bp-ink)' }}
     >
       {/* header */}
-      <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 2 }}>LLM Token Counter</h1>
-        <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Count tokens using cl100k_base, estimate API costs, and preview text chunks — all in-browser</p>
+      <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+        <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>LLM Token Counter</h1>
+        <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Count tokens using cl100k_base, estimate API costs, and preview text chunks — all in-browser</p>
       </div>
 
       {/* content */}
@@ -123,16 +123,15 @@ export default function LLMTokenCounterPage() {
 
         {/* model selector */}
         <Panel title='Model' style={{ margin: 16, marginBottom: 0 }}>
-          <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className='p-2 sm:p-3' style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {Object.entries(MODELS).map(([key, m]) => (
                 <button
                   key={key}
                   type='button'
                   onClick={() => setModelKey(key)}
-                  className={modelKey === key ? '' : 'bp-btn'}
+                  className={modelKey === key ? 'min-h-10 px-3 py-2' : 'bp-btn min-h-10 px-3 py-2'}
                   style={modelKey === key ? {
-                    padding: '4px 10px',
                     fontSize: 12,
                     fontWeight: 500,
                     background: 'var(--bp-accent)',
@@ -169,7 +168,7 @@ export default function LLMTokenCounterPage() {
         </Panel>
 
         {/* stats */}
-        <div style={{ margin: 16, marginBottom: 0, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' style={{ margin: 16, marginBottom: 0, gap: 8 }}>
           {[
             { label: 'Tokens', value: tokenCount.toLocaleString(), highlight: true },
             { label: 'Characters', value: charCount.toLocaleString() },
@@ -186,7 +185,7 @@ export default function LLMTokenCounterPage() {
         {/* context window usage */}
         {tokenCount > 0 && (
           <Panel title='Context Window Usage' style={{ margin: 16, marginBottom: 0 }}>
-            <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div className='p-2 sm:p-3' style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 11, color: 'var(--bp-ink-mute)' }}>Usage</span>
                 <span style={{ fontSize: 12, fontFamily: 'inherit', fontWeight: 700, color: statColor }}>
@@ -204,13 +203,13 @@ export default function LLMTokenCounterPage() {
         {/* token visualization */}
         {tokenCount > 0 && tokenCount <= 2000 && (
           <Panel title='Token Visualization' style={{ margin: 16, marginBottom: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderBottom: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
-              <button type='button' className='bp-btn' style={{ fontSize: 11 }} onClick={() => setShowTokenViz((v) => !v)}>
+            <div className='p-2 sm:p-3 flex items-center gap-2 sm:gap-3 flex-shrink-0' style={{ borderBottom: '1px dashed var(--bp-border-str)' }}>
+              <button type='button' className='bp-btn min-h-10 px-3 py-2' style={{ fontSize: 11 }} onClick={() => setShowTokenViz((v) => !v)}>
                 {showTokenViz ? 'Hide' : 'Show'} tokens
               </button>
             </div>
             {showTokenViz && (
-              <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div className='p-2 sm:p-3' style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div className='flex flex-wrap gap-0.5 max-h-48 overflow-auto'>
                   {tokens.map((t, i) => (
                     <span key={i} title={`Token ID: ${t}`} className={`inline-block text-xs font-mono px-1 py-0.5 rounded ${TOKEN_COLORS[i % TOKEN_COLORS.length]}`}>
@@ -225,7 +224,7 @@ export default function LLMTokenCounterPage() {
         )}
         {tokenCount > 2000 && (
           <Panel title='Token Visualization' style={{ margin: 16, marginBottom: 0 }}>
-            <div style={{ padding: '10px 12px' }}>
+            <div className='p-2 sm:p-3' style={{ display: 'flex', flexDirection: 'column' }}>
               <p style={{ fontSize: 11, color: 'var(--bp-ink-mute)', margin: 0 }}>Token visualization is limited to texts under 2,000 tokens to keep the UI responsive.</p>
             </div>
           </Panel>
@@ -233,10 +232,10 @@ export default function LLMTokenCounterPage() {
 
         {/* text chunking */}
         <Panel title='Text Chunking' style={{ margin: 16, marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderBottom: '1px dashed var(--bp-border-str)', flexShrink: 0 }}>
+          <div className='p-2 sm:p-3 flex items-center gap-2 sm:gap-3 flex-shrink-0' style={{ borderBottom: '1px dashed var(--bp-border-str)' }}>
             <button
               type='button'
-              className='bp-btn'
+              className='bp-btn min-h-10 px-3 py-2'
               style={{ fontSize: 11 }}
               onClick={() => setShowChunks((v) => !v)}
               disabled={!text.trim()}
@@ -244,8 +243,8 @@ export default function LLMTokenCounterPage() {
               {showChunks ? 'Hide' : 'Preview'} chunks
             </button>
           </div>
-          <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className='p-2 sm:p-3' style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div className='grid grid-cols-1 lg:grid-cols-2' style={{ gap: 8 }}>
               <div>
                 <label style={{ display: 'block', fontSize: 11, color: 'var(--bp-ink-mute)', marginBottom: 6 }}>Chunk size (tokens)</label>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>

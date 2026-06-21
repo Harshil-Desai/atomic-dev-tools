@@ -153,7 +153,7 @@ function ParamTable({ params, onChange, onAdd, onRemove }: {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* col headers */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 28px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-bg)', flexShrink: 0 }}>
+      <div className='grid grid-cols-[1fr_1fr_28px] border-b border-[var(--bp-border)] bg-[var(--bp-bg)]' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 28px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-bg)', flexShrink: 0 }}>
         <div style={{ padding: '4px 10px', fontSize: 9, color: 'var(--bp-ink-faint)', letterSpacing: '0.18em', textTransform: 'uppercase', borderRight: '1px solid var(--bp-border)' }}>KEY</div>
         <div style={{ padding: '4px 10px', fontSize: 9, color: 'var(--bp-ink-faint)', letterSpacing: '0.18em', textTransform: 'uppercase', borderRight: '1px solid var(--bp-border)' }}>VALUE</div>
         <div />
@@ -163,10 +163,11 @@ function ParamTable({ params, onChange, onAdd, onRemove }: {
         {params.map(p => (
           <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 28px', borderBottom: '1px solid var(--bp-border)' }}>
             <input value={p.key} onChange={e => onChange(p.id, 'key', e.target.value)} placeholder='key'
-              style={{ background: 'transparent', border: 0, borderRight: '1px solid var(--bp-border)', padding: '6px 10px', color: C.query, fontFamily: 'inherit', fontSize: 12, outline: 'none', width: '100%', boxSizing: 'border-box' }} />
+              style={{ background: 'transparent', border: 0, borderRight: '1px solid var(--bp-border)', padding: '6px 10px', color: C.query, fontFamily: 'inherit', fontSize: 12, outline: 'none', width: '100%', boxSizing: 'border-box', minHeight: '40px' }} />
             <input value={p.value} onChange={e => onChange(p.id, 'value', e.target.value)} placeholder='value'
-              style={{ background: 'transparent', border: 0, borderRight: '1px solid var(--bp-border)', padding: '6px 10px', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, outline: 'none', width: '100%', boxSizing: 'border-box' }} />
+              style={{ background: 'transparent', border: 0, borderRight: '1px solid var(--bp-border)', padding: '6px 10px', color: 'var(--bp-ink)', fontFamily: 'inherit', fontSize: 12, outline: 'none', width: '100%', boxSizing: 'border-box', minHeight: '40px' }} />
             <button onClick={() => onRemove(p.id)}
+              className='min-h-10 px-3 py-2 flex items-center justify-center'
               style={{ background: 'transparent', border: 0, color: 'var(--bp-ink-faint)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Trash2 size={10} />
             </button>
@@ -174,6 +175,7 @@ function ParamTable({ params, onChange, onAdd, onRemove }: {
         ))}
       </div>
       <button onClick={onAdd}
+        className='min-h-10 px-3 py-2'
         style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', background: 'transparent', border: 0, borderTop: '1px solid var(--bp-border)', color: 'var(--bp-ink-faint)', fontFamily: 'inherit', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0 }}>
         <Plus size={10} /> Add param
       </button>
@@ -186,9 +188,9 @@ function ParamTable({ params, onChange, onAdd, onRemove }: {
 function Panel({ title, accent, children, style }: { title: string; accent?: string; children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div style={{ border: '1px solid var(--bp-border)', display: 'flex', flexDirection: 'column', overflow: 'hidden', ...style }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 26, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
+      <div className='flex items-center gap-2 p-2 sm:p-3 border-b border-[var(--bp-border)] bg-[var(--bp-surface)]' style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 26, borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
         <span style={{ width: 6, height: 6, background: accent ?? 'var(--bp-accent)', flexShrink: 0, display: 'inline-block' }} />
-        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
+        <span className='text-xs sm:text-sm' style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{title}</span>
       </div>
       {children}
     </div>
@@ -199,7 +201,7 @@ function Panel({ title, accent, children, style }: { title: string; accent?: str
 
 function CompRow({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr', borderBottom: '1px solid var(--bp-border)', minHeight: 30 }}>
+    <div className='grid grid-cols-[90px_1fr] border-b border-[var(--bp-border)]' style={{ display: 'grid', gridTemplateColumns: '90px 1fr', borderBottom: '1px solid var(--bp-border)', minHeight: 40 }}>
       <div style={{ padding: '6px 10px', fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', borderRight: '1px solid var(--bp-border)', display: 'flex', alignItems: 'center' }}>{label}</div>
       <div style={{ padding: '6px 10px', fontSize: 11, color, wordBreak: 'break-all', display: 'flex', alignItems: 'center' }}>{value || <span style={{ color: 'var(--bp-ink-faint)', fontStyle: 'italic' }}>—</span>}</div>
     </div>
@@ -302,13 +304,13 @@ export default function URLParserPage() {
       <div className='bp-ruler-x' />
       <div className='bp-ruler-y' />
 
-      <div className='flex-1 min-h-0 flex flex-col overflow-hidden'
-        style={{ paddingLeft: 20, paddingTop: 18, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}>
+      <div className='flex-1 min-h-0 flex flex-col overflow-hidden pl-5'
+        style={{ fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}>
 
         {/* ── Tool header ───────────────────────────────────────── */}
-        <div style={{ padding: '14px 20px 10px', borderBottom: '1px solid var(--bp-border)', background: 'var(--bp-surface)', flexShrink: 0 }}>
-          <h1 style={{ fontSize: 17, fontWeight: 700, color: 'var(--bp-ink)', margin: '0 0 3px', letterSpacing: '-0.01em' }}>URL Parser</h1>
-          <p style={{ fontSize: 10, color: 'var(--bp-ink-mute)', margin: 0, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Break down URLs into components — and rebuild them from scratch</p>
+        <div className='p-4 sm:p-5 md:p-6 border-b border-[var(--bp-border)] bg-[var(--bp-surface)] flex-shrink-0'>
+          <h1 className='text-sm sm:text-base font-semibold text-white m-0 mb-1'>URL Parser</h1>
+          <p className='text-xs sm:text-sm text-[var(--bp-ink-mute)] m-0'>Break down URLs into components — and rebuild them from scratch</p>
         </div>
 
         {/* ── Tab bar ───────────────────────────────────────────── */}
@@ -350,7 +352,7 @@ export default function URLParserPage() {
 
             {/* Main two-column area */}
             {parsed ? (
-              <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+              <div className='grid grid-cols-1 lg:grid-cols-2 flex-1 min-h-0 overflow-hidden'>
 
                 {/* Left: URL components */}
                 <Panel title='URL COMPONENTS' style={{ borderRight: 0, borderBottom: 0, borderLeft: 0 }}>
@@ -421,23 +423,23 @@ export default function URLParserPage() {
             {builtURL && <SegmentStrip p={{} as Parsed} raw={builtURL} />}
 
             {/* Build fields + params */}
-            <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', overflow: 'hidden' }}>
+            <div className='grid grid-cols-1 lg:grid-cols-2 flex-1 min-h-0 overflow-hidden'>
 
               {/* Left: URL part inputs */}
               <Panel title='URL PARTS' style={{ borderRight: 0, borderBottom: 0, borderLeft: 0 }}>
-                <div style={{ overflowY: 'auto', flex: 1, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div className='p-2 sm:p-3 flex flex-col gap-2 sm:gap-3' style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column' }}>
                   {/* Protocol + host + port */}
-                  <div style={{ display: 'flex', gap: 0 }}>
+                  <div className='flex gap-0' style={{ display: 'flex', gap: 0 }}>
                     <select value={bProto} onChange={e => setBProto(e.target.value)}
-                      style={{ background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', borderRight: 0, color: C.scheme, fontFamily: 'inherit', fontSize: 11, padding: '6px 8px', outline: 'none', cursor: 'pointer', flexShrink: 0 }}>
+                      style={{ background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', borderRight: 0, color: C.scheme, fontFamily: 'inherit', fontSize: 11, padding: '6px 8px', outline: 'none', cursor: 'pointer', flexShrink: 0, minHeight: '40px' }}>
                       <option value='https:'>https://</option>
                       <option value='http:'>http://</option>
                       <option value='ftp:'>ftp://</option>
                     </select>
                     <input value={bHost} onChange={e => setBHost(e.target.value)} placeholder='hostname (e.g. example.com)'
-                      style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', borderRight: 0, color: C.host, fontFamily: 'inherit', fontSize: 11, padding: '6px 8px', outline: 'none', boxSizing: 'border-box' }} />
+                      style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', borderRight: 0, color: C.host, fontFamily: 'inherit', fontSize: 11, padding: '6px 8px', outline: 'none', boxSizing: 'border-box', minHeight: '40px' }} />
                     <input value={bPort} onChange={e => setBPort(e.target.value)} placeholder='port'
-                      style={{ width: 64, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: C.port, fontFamily: 'inherit', fontSize: 11, padding: '6px 8px', outline: 'none', boxSizing: 'border-box' }} />
+                      style={{ width: 64, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: C.port, fontFamily: 'inherit', fontSize: 11, padding: '6px 8px', outline: 'none', boxSizing: 'border-box', minHeight: '40px' }} />
                   </div>
 
                   {[
@@ -446,10 +448,10 @@ export default function URLParserPage() {
                     { label: 'PATH',     val: bPath, set: setBPath, color: C.path,     ph: '/api/v1/resource' },
                     { label: 'FRAGMENT', val: bHash, set: setBHash, color: C.fragment, ph: 'section-id (no # needed)' },
                   ].map(f => (
-                    <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-                      <div style={{ width: 80, flexShrink: 0, fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', padding: '0 10px 0 0' }}>{f.label}</div>
+                    <div key={f.label} className='flex items-center gap-0' style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+                      <div className='text-xs sm:text-sm' style={{ width: 80, flexShrink: 0, fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--bp-ink-faint)', padding: '0 10px 0 0' }}>{f.label}</div>
                       <input value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.ph}
-                        style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: f.color, fontFamily: 'inherit', fontSize: 11, padding: '6px 8px', outline: 'none', boxSizing: 'border-box' }} />
+                        style={{ flex: 1, background: 'var(--bp-bg)', border: '1px solid var(--bp-border)', color: f.color, fontFamily: 'inherit', fontSize: 11, padding: '6px 8px', outline: 'none', boxSizing: 'border-box', minHeight: '40px' }} />
                     </div>
                   ))}
                 </div>
